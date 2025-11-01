@@ -1,0 +1,87 @@
+Legend (status markers)
+- [ ] Not started
+- [>] In progress
+- [x] Completed
+
+Overview / Phases
+- MVP: Institution management, User management, Staff management
+- Phase 1: Course management, Attendance management, Quizzes & Assignments
+- Phase 2: Reporting, Fee Management, Subscriptions
+
+Roles
+- Institution Owner
+- Staff
+- Student
+- Parents
+- Super Admin
+- User (Custom)
+
+Requirements (with status, priority, owner, estimate)
+
+-- Institution management (MVP)
+- [ ] Create institution with basic details | Priority: High | Owner: @OWNER | Est: 3d
+- [ ] View & update institution information (owner) | Priority: High | Owner: @OWNER | Est: 2d
+- [ ] Deactivate & delete institution (owner) | Priority: Medium | Owner: @OWNER | Est: 2d
+- [ ] Super admin can view/block institutions | Priority: Medium | Owner: @OWNER | Est: 1d
+
+-- User management (MVP)
+- [ ] Create account (signup) | Priority: High | Owner: @OWNER | Est: 3d
+- [ ] Login/logout | Priority: High | Owner: @OWNER | Est: 1d
+- [ ] Join multiple institutes | Priority: Medium | Owner: @OWNER | Est: 2d
+- [ ] View & update account details | Priority: Medium | Owner: @OWNER | Est: 1d
+
+-- Staff management (MVP)
+- [ ] Create staff accounts (by institution owner) | Priority: High | Owner: @OWNER | Est: 2d
+- [ ] Assign custom roles & permissions | Priority: High | Owner: @OWNER | Est: 3d
+- [ ] Block/delete staff accounts | Priority: Medium | Owner: @OWNER | Est: 1d
+
+-- Course management (Phase 1)
+- [ ] Add course (staff) | Priority: High | Owner: @OWNER | Est: 2d
+- [ ] Update/delete course | Priority: Medium | Owner: @OWNER | Est: 1d
+- [ ] Add/remove students to/from course | Priority: Medium | Owner: @OWNER | Est: 2d
+- [ ] Assign teacher to course | Priority: Medium | Owner: @OWNER | Est: 1d
+- [ ] Add timetable for course | Priority: Low | Owner: @OWNER | Est: 2d
+
+-- Attendance management (Phase 1)
+- [ ] Mark attendance for course | Priority: High | Owner: @OWNER | Est: 2d
+- [ ] Update attendance | Priority: Medium | Owner: @OWNER | Est: 1d
+- [ ] Download attendance | Priority: Low | Owner: @OWNER | Est: 1d
+- [ ] Student view attendance | Priority: Medium | Owner: @OWNER | Est: 1d
+
+-- Quizzes & Assignments (Phase 1)
+- [ ] Create MCQ quiz (staff) | Priority: Medium | Owner: @OWNER | Est: 2d
+- [ ] Student complete quiz | Priority: Medium | Owner: @OWNER | Est: 1d
+- [ ] Create assignment (staff) | Priority: Medium | Owner: @OWNER | Est: 1d
+- [ ] Student upload assignment | Priority: Medium | Owner: @OWNER | Est: 1d
+- [ ] Review & mark assignments | Priority: Medium | Owner: @OWNER | Est: 2d
+
+-- Reporting (Phase 2)
+- [ ] Reports for quiz/assignment per course | Priority: Medium | Owner: @OWNER | Est: 2d
+- [ ] Add grades with custom names | Priority: Medium | Owner: @OWNER | Est: 1d
+- [ ] Student view grades | Priority: Medium | Owner: @OWNER | Est: 1d
+- [ ] Parents view grades & attendance | Priority: Medium | Owner: @OWNER | Est: 1d
+
+-- Fee Management (Phase 2)
+- [ ] Add fees for students | Priority: Medium | Owner: @OWNER | Est: 2d
+- [ ] Parents view pending fees | Priority: Medium | Owner: @OWNER | Est: 1d
+- [ ] Parents pay fees | Priority: High | Owner: @OWNER | Est: 2d
+- [ ] View fee statuses | Priority: Medium | Owner: @OWNER | Est: 1d
+
+-- Subscriptions (Phase 2)
+- [ ] Get subscription (purchase/subscribe) | Priority: Low | Owner: @OWNER | Est: 2d
+- [ ] Enable/disable features per subscription | Priority: Medium | Owner: @OWNER | Est: 3d
+
+Project structure (recommended)
+- src/
+  - components/         # reusable UI components
+  - features/           # feature folders with domain logic (api, ui, hooks)
+  - pages/              # top-level route pages
+  - services/           # shared API clients and services
+  - models/             # types and interfaces
+  - store/              # global state (redux/zustand)
+  - hooks/              # shared React hooks
+  - utils/              # helper utilities
+  - styles/             # tokens and global styles
+  - i18n/               # translations
+  - tests/              # test utilities and fixtures
+  - mocks/              # mock responses for dev/tests

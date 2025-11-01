@@ -1,0 +1,87 @@
+Purpose
+- Quick onboarding and reference for developers contributing to Edunexs.
+
+Prerequisites
+- Node.js (LTS, e.g., 18.x or 20.x) and npm installed.
+- Recommended: VS Code with TypeScript and ESLint plugins.
+
+Initial setup
+
+1. Clone the repository
+
+    git clone <repo-url>
+    cd Edunexs
+
+2. Install dependencies
+
+    npm install
+
+3. Start the dev server
+
+    npm run dev
+
+Build and preview
+
+    npm run build
+    npm run preview
+
+Linting and formatting
+
+- ESLint and Prettier are used (project may include config files). Run:
+
+    npm run lint   # (if script exists)
+    npm run format # (if script exists)
+
+TypeScript
+- Project prefers TypeScript. Use .ts/.tsx for new files. Keep `tsconfig.json` up to date.
+
+Coding conventions
+- Components: PascalCase filenames. Default-export allowed for components; prefer named exports for utilities.
+- Folders: kebab-case. Use `index.ts` to re-export when helpful.
+- State: keep global state small; prefer local state for UI-only concerns.
+
+Files & models
+- Centralize shared types in `src/models`.
+- Feature-specific API code goes under `features/<name>/api.ts` or `services/`.
+
+Testing
+- Co-locate unit tests. Use React Testing Library + Jest or the project's chosen framework.
+- Run tests locally with `npm test`.
+
+Git & branching (Git Flow)
+
+We follow Git Flow branching. Key branches: `main`, `develop`, `feature/*`, `release/*`, `hotfix/*`.
+
+Pull request checklist and code review expectations
+- See the PR checklist and require at least one human reviewer for substantial changes.
+
+Environment variables and secrets
+- Never commit secrets. Use `.env.example` and CI secrets.
+
+Debugging tips
+- If dev server exits with code 130, check stack traces, syntax errors, and port conflicts.
+
+High-level principles
+- Safety first: never add or reveal secrets, credentials, API keys, private tokens, or personal data in commits or PRs.
+- Small, explicit changes: prefer focused commits and small PRs — one feature or fix per PR.
+- Prefer TypeScript and typed interfaces for new public code. If adding JS, include JSDoc and tests.
+
+Coding conventions
+- Language: TypeScript (.ts/.tsx). JS allowed only when explicitly requested.
+- File naming: PascalCase for React components; kebab-case for directories.
+- Exports: prefer named exports for utilities and types.
+
+Tests & validation
+- Add unit tests for new logic; include simple integration tests for non-trivial flows.
+- Run build and tests locally before opening PRs.
+
+How should suggest code
+- Provide concise diffs and explain changes in 2–4 bullets.
+- Prefer a testing-first approach: propose a small test, then implement changes to satisfy it.
+- Explain assumptions and required environment variables.
+
+When edits files (required safety checklist)
+1. Confirm no secrets or hard-coded credentials.
+2. Confirm TypeScript types and tests are added/updated for added behaviour.
+3. Run build and test commands and attach a short summary to the PR description.
+4. If any check fails, create an issue describing the blocker instead of opening a PR.
