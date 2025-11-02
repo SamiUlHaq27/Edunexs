@@ -1,13 +1,14 @@
 :root {
-  --color-primary-500: #1E3A8A;
-  --color-primary-400: #3B82F6;
-  --color-primary-300: #60A5FA;
-  --color-primary-200: #93C5FD;
-  --color-primary-100: #BFDBFE;
-  --color-primary-50:  #EFF6FF;
-  --color-secondary-500: #2563EB;
-  --color-secondary-400: #3B82F6;
-  --color-secondary-300: #60A5FA;
+  /* Modern vibrant blue palette */
+  --color-primary-500: #0066FF; /* vibrant core blue */
+  --color-primary-400: #3385FF;
+  --color-primary-300: #66A3FF;
+  --color-primary-200: #99C2FF;
+  --color-primary-100: #CCE0FF;
+  --color-primary-50:  #E6F0FF;
+  --color-secondary-500: #0052CC; /* deeper accent */
+  --color-secondary-400: #0066FF;
+  --color-secondary-300: #3385FF;
   --color-surface-base: #FFFFFF;
   --color-surface-raised: #F9FAFB;
   --color-surface-elevated-1: #F3F4F6;
@@ -21,7 +22,7 @@
   --color-success: #10B981;
   --color-warning: #F59E0B;
   --color-danger: #EF4444;
-  --color-info: #3B82F6;
+  --color-info: #3AA0F7;
 
   /* Font family tokens should be unquoted lists so they expand correctly */
   --font-family-base: Inter, sans-serif;
