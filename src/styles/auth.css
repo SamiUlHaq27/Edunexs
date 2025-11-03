@@ -26,7 +26,11 @@
   display: block;
   margin: 0 auto var(--spacing-3) auto;
   border-radius: 12px;
-  background: linear-gradient(135deg, var(--color-primary-50) 0%, var(--color-primary-100) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary-50) 0%,
+    var(--color-primary-100) 100%
+  );
   padding: 0.5rem;
 }
 
@@ -71,7 +75,9 @@
 
 /* Row layout on larger screens */
 @media (min-width: 900px) {
-  .auth-split { flex-direction: row; }
+  .auth-split {
+    flex-direction: row;
+  }
 }
 
 /* Reasonable sizing for columns */
@@ -82,8 +88,13 @@
 
 /* Card ~40%, side panel ~60% on desktop */
 @media (min-width: 900px) {
-  .auth-card { flex: 0 0 40%; }
-  .auth-hero, .auth-sidebar { flex: 0 0 60%; }
+  .auth-card {
+    flex: 0 0 40%;
+  }
+  .auth-hero,
+  .auth-sidebar {
+    flex: 0 0 60%;
+  }
 }
 
 .auth-main {
@@ -92,12 +103,59 @@
 }
 
 .auth-sidebar {
+  position: relative; /* Needed for slider positioning */
   border-radius: 20px;
-  /* User-provided gradient */
-  background: rgb(0,71,171);
-  background: linear-gradient(159deg, rgba(0,71,171,1) 0%, rgba(28,169,201,1) 100%);
   color: #ffffff;
   padding: var(--spacing-4);
+  overflow: hidden; /* Hide overflowing slider images */
+  display: grid; /* Use grid to layer content over slider */
+}
+
+/* Slider container */
+.sidebar-slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* Slider images */
+.slider-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 1.5s ease-in-out;
+}
+
+.slider-image.active {
+  opacity: 1;
+}
+
+/* Dark overlay for text readability */
+.sidebar-slider::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5); /* Adjust darkness */
+  z-index: 2;
+}
+
+/* Content must be on top of the slider and overlay */
+.sidebar-content {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Center content vertically */
 }
 
 /* Visual hero panel variant (image or illustration) */
@@ -105,10 +163,17 @@
   position: relative;
   overflow: hidden;
   border-radius: 20px;
-  background:
-    radial-gradient(1000px 600px at 70% 30%, rgba(0, 102, 255, 0.15), transparent 60%),
-    radial-gradient(800px 500px at 30% 70%, rgba(51, 133, 255, 0.12), transparent 60%),
-    linear-gradient(135deg, #E6F0FF 0%, #CCE0FF 100%);
+  background: radial-gradient(
+      1000px 600px at 70% 30%,
+      rgba(0, 102, 255, 0.15),
+      transparent 60%
+    ),
+    radial-gradient(
+      800px 500px at 30% 70%,
+      rgba(51, 133, 255, 0.12),
+      transparent 60%
+    ),
+    linear-gradient(135deg, #e6f0ff 0%, #cce0ff 100%);
   border: 1px solid rgba(0, 102, 255, 0.1);
   display: grid;
   place-items: center;
@@ -125,12 +190,21 @@
 /* Remove page horizontal padding on desktop so panes touch screen edges */
 @media (min-width: 900px) {
   /* keep a small left gutter, no right gutter on desktop */
-  .auth-page { padding-left: var(--spacing-3); padding-right: 0; }
+  .auth-page {
+    padding-left: var(--spacing-3);
+    padding-right: 0;
+  }
 }
 
 /* Make the visual pane flush with the right edge on desktop */
 @media (min-width: 900px) {
-  .auth-hero { border-radius: 0; border: none; }
+  .auth-hero {
+    border-radius: 0;
+    border: none;
+  }
+  .auth-sidebar {
+    border-radius: 0;
+  } /* Also make sidebar flush */
 }
 
 .sidebar-title {
@@ -153,17 +227,17 @@
   display: flex;
   align-items: flex-start;
   gap: 0.625rem;
-  color: rgba(255,255,255,0.95);
+  color: rgba(255, 255, 255, 0.95);
 }
 
 .feature-item .icon {
-  color: rgba(255,255,255,0.95);
+  color: rgba(255, 255, 255, 0.95);
   line-height: 0;
   font-size: 1.125rem;
 }
 
 /* Sidebar intro paragraph */
 .sidebar-intro {
-  color: rgba(255,255,255,0.92);
+  color: rgba(255, 255, 255, 0.92);
   margin: 0 0 var(--spacing-2) 0;
 }
