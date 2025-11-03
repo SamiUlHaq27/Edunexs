@@ -174,19 +174,58 @@
 
 /* Main Content Header */
 .main-header {
-  margin-bottom: var(--spacing-4);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-2) 0;
+  margin-bottom: var(--spacing-3);
+  border-bottom: 1px solid var(--color-border-muted);
 }
 
 .main-header h2 {
-  font-size: var(--font-size-xl);
-  line-height: var(--line-height-xl);
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-lg);
   color: var(--color-text-primary);
-  margin: 0 0 var(--spacing-0_5) 0;
+  margin: 0;
 }
 
 .main-header p {
   color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
   margin: 0;
+}
+
+.header-profile {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.time-display {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.user-name {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.user-role {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.user-avatar {
+  font-size: 36px;
+  color: var(--color-text-secondary);
 }
 
 /* Dashboard Content & Cards */

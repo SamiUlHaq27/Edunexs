@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -9,12 +9,21 @@ import {
   faSignOutAlt,
   faChevronLeft,
   faChevronRight,
+  faUserCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { ASSETS } from "../config/assets";
 import "../styles/dashboard.css";
 
 export default function AdminDashboard(): React.JSX.Element {
   const [isMinimized, setIsMinimized] = useState(false);
+  const [currentDateTime, setCurrentDateTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentDateTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const toggleSidebar = () => {
     setIsMinimized(!isMinimized);
@@ -67,8 +76,27 @@ export default function AdminDashboard(): React.JSX.Element {
       </aside>
       <main className="dashboard-main">
         <header className="main-header">
-          <h2>Welcome, Admin!</h2>
-          <p>Here's a summary of your institution.</p>
+          <div className="header-greeting">
+            <h2>Welcome, Admin!</h2>
+            <p>
+              {currentDateTime.toLocaleDateString("en-US", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </p>
+          </div>
+          <div className="header-profile">
+            <div className="time-display">
+              {currentDateTime.toLocaleTimeString("en-US")}
+            </div>
+            <div className="user-info">
+              <span className="user-name">Sami Ul Haq</span>
+              <span className="user-role">Administrator</span>
+            </div>
+            <FontAwesomeIcon icon={faUserCircle} className="user-avatar" />
+          </div>
         </header>
         <div className="dashboard-content">
           {/* Placeholder cards */}
