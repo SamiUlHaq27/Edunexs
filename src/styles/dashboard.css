@@ -48,6 +48,7 @@
 
 .sidebar-minimized .nav-item {
   justify-content: center;
+  gap: 0;
 }
 
 /* Sidebar Header */
