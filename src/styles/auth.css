@@ -2,7 +2,6 @@
 .auth-page {
   min-height: 100vh;
   display: grid;
-  padding-left: var(--spacing-3);
 }
 
 .auth-container {
@@ -63,7 +62,11 @@
 .auth-split {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-4);
+}
+
+/* Add spacing for mobile view, which was the gap before */
+.auth-card {
+  /* No margin needed if sidebar is hidden */
 }
 
 /* Wider container when using split layout */
@@ -77,6 +80,11 @@
 @media (min-width: 900px) {
   .auth-split {
     flex-direction: row;
+    align-items: stretch;
+  }
+  .auth-card {
+    margin-bottom: 0; /* Remove mobile margin */
+    padding-right: var(--spacing-4); /* Create gutter */
   }
 }
 
@@ -103,12 +111,18 @@
 }
 
 .auth-sidebar {
-  position: relative; /* Needed for slider positioning */
+  display: none; /* Hide by default on mobile */
+  position: relative;
   border-radius: 20px;
   color: #ffffff;
   padding: var(--spacing-4);
-  overflow: hidden; /* Hide overflowing slider images */
-  display: grid; /* Use grid to layer content over slider */
+  overflow: hidden;
+}
+
+@media (min-width: 900px) {
+  .auth-sidebar {
+    display: grid; /* Show on desktop */
+  }
 }
 
 /* Slider container */
@@ -191,8 +205,7 @@
 @media (min-width: 900px) {
   /* keep a small left gutter, no right gutter on desktop */
   .auth-page {
-    padding-left: var(--spacing-3);
-    padding-right: 0;
+    margin-right: 0;
   }
 }
 
