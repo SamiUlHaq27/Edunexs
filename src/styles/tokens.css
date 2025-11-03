@@ -1,28 +1,36 @@
 :root {
+  /* Sidebar Gradient */
+  --color-sidebar-start: #0047ab; /* rgb(0, 71, 171) */
+  --color-sidebar-end: #1ca9c9; /* rgb(28, 169, 201) */
+  --color-sidebar-text: rgba(255, 255, 255, 0.8);
+  --color-sidebar-text-hover: #ffffff;
+  --color-sidebar-active-bg: rgba(255, 255, 255, 0.2);
+  --color-sidebar-hover-bg: rgba(255, 255, 255, 0.1);
+
   /* Modern vibrant blue palette */
-  --color-primary-500: #0066FF; /* vibrant core blue */
-  --color-primary-400: #3385FF;
-  --color-primary-300: #66A3FF;
-  --color-primary-200: #99C2FF;
-  --color-primary-100: #CCE0FF;
-  --color-primary-50:  #E6F0FF;
-  --color-secondary-500: #0052CC; /* deeper accent */
-  --color-secondary-400: #0066FF;
-  --color-secondary-300: #3385FF;
-  --color-surface-base: #FFFFFF;
-  --color-surface-raised: #F9FAFB;
-  --color-surface-elevated-1: #F3F4F6;
-  --color-surface-elevated-2: #E5E7EB;
+  --color-primary-500: #0066ff; /* vibrant core blue */
+  --color-primary-400: #3385ff;
+  --color-primary-300: #66a3ff;
+  --color-primary-200: #99c2ff;
+  --color-primary-100: #cce0ff;
+  --color-primary-50: #e6f0ff;
+  --color-secondary-500: #0052cc; /* deeper accent */
+  --color-secondary-400: #0066ff;
+  --color-secondary-300: #3385ff;
+  --color-surface-base: #ffffff;
+  --color-surface-raised: #f9fafb;
+  --color-surface-elevated-1: #f3f4f6;
+  --color-surface-elevated-2: #e5e7eb;
   --color-surface-overlay: #111827;
-  --color-border-default: #D1D5DB;
-  --color-border-muted: #E5E7EB;
+  --color-border-default: #d1d5db;
+  --color-border-muted: #e5e7eb;
   --color-text-primary: #111827;
-  --color-text-secondary: #4B5563;
-  --color-text-muted: #6B7280;
-  --color-success: #10B981;
-  --color-warning: #F59E0B;
-  --color-danger: #EF4444;
-  --color-info: #3AA0F7;
+  --color-text-secondary: #4b5563;
+  --color-text-muted: #6b7280;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #3aa0f7;
 
   /* Font family tokens should be unquoted lists so they expand correctly */
   --font-family-base: Inter, sans-serif;
@@ -73,11 +81,11 @@
   --radius-2xl: 1.5rem;
 
   --elevation-0: none;
-  --elevation-1: 0 1px 2px 0 rgba(0,0,0,0.05);
-  --elevation-2: 0 2px 4px 0 rgba(0,0,0,0.08);
-  --elevation-3: 0 4px 8px 0 rgba(0,0,0,0.10);
-  --elevation-4: 0 8px 16px 0 rgba(0,0,0,0.12);
-  --elevation-5: 0 16px 24px 0 rgba(0,0,0,0.15);
+  --elevation-1: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --elevation-2: 0 2px 4px 0 rgba(0, 0, 0, 0.08);
+  --elevation-3: 0 4px 8px 0 rgba(0, 0, 0, 0.1);
+  --elevation-4: 0 8px 16px 0 rgba(0, 0, 0, 0.12);
+  --elevation-5: 0 16px 24px 0 rgba(0, 0, 0, 0.15);
 
   --motion-duration-fast: 150ms;
   --motion-duration-medium: 300ms;
@@ -87,9 +95,15 @@
   --motion-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.text-primary { color: var(--color-text-primary); }
-.text-secondary { color: var(--color-text-secondary); }
-.bg-surface { background-color: var(--color-surface-base); }
+.text-primary {
+  color: var(--color-text-primary);
+}
+.text-secondary {
+  color: var(--color-text-secondary);
+}
+.bg-surface {
+  background-color: var(--color-surface-base);
+}
 .card {
   background: var(--color-surface-base);
   border: 1px solid var(--color-border-muted);
@@ -102,6 +116,8 @@
   border-radius: var(--radius-md);
   padding: 0.5rem 0.875rem;
   transition: background var(--motion-duration-medium) var(--motion-ease-out),
-              box-shadow var(--motion-duration-fast) var(--motion-ease-out);
+    box-shadow var(--motion-duration-fast) var(--motion-ease-out);
 }
-.btn-primary:hover { box-shadow: var(--elevation-2); }
+.btn-primary:hover {
+  box-shadow: var(--elevation-2);
+}
