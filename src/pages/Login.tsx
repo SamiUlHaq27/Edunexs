@@ -17,52 +17,30 @@ export default function Login(): React.JSX.Element {
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // UI-only: no real auth. You can wire this later.
     alert(`Attempt login as ${email}`);
   };
 
   return (
     <div className="auth-page">
       <div className="auth-container auth-split">
-        {/* Left: Login card */}
         <div className="auth-card">
-          <img
-            src={ASSETS.logo}
-            alt={ASSETS.alt}
-            className="auth-logo"
-            loading="lazy"
-          />
+          <img src={ASSETS.logo} alt={ASSETS.alt} className="auth-logo" loading="lazy" />
           <h2 className="auth-title">Welcome back</h2>
           <p className="auth-subtitle">Sign in to your account</p>
 
-          {/* Tabs for switching */}
           <div className="tabs">
-            <NavLink
-              to="/login"
-              className={({ isActive }) =>
-                `tab${isActive ? " tab-active" : ""}`
-              }
-            >
+            <NavLink to="/login" className={({ isActive }) => `tab${isActive ? " tab-active" : ""}`}>
               Sign In
             </NavLink>
-            <NavLink
-              to="/signup"
-              className={({ isActive }) =>
-                `tab${isActive ? " tab-active" : ""}`
-              }
-            >
+            <NavLink to="/signup" className={({ isActive }) => `tab${isActive ? " tab-active" : ""}`}>
               Signup
             </NavLink>
           </div>
 
           <form onSubmit={onSubmit} className="auth-form">
-            <label className="auth-label" htmlFor="email">
-              Email
-            </label>
+            <label className="auth-label" htmlFor="email">Email</label>
             <div className="input-with-icon">
-              <span className="input-icon" aria-hidden>
-                <FontAwesomeIcon icon={faEnvelope} />
-              </span>
+              <span className="input-icon" aria-hidden><FontAwesomeIcon icon={faEnvelope} /></span>
               <input
                 id="email"
                 type="email"
@@ -74,13 +52,9 @@ export default function Login(): React.JSX.Element {
               />
             </div>
 
-            <label className="auth-label" htmlFor="password">
-              Password
-            </label>
+            <label className="auth-label" htmlFor="password">Password</label>
             <div className="input-with-icon has-right">
-              <span className="input-icon" aria-hidden>
-                <FontAwesomeIcon icon={faLock} />
-              </span>
+              <span className="input-icon" aria-hidden><FontAwesomeIcon icon={faLock} /></span>
               <input
                 id="password"
                 type={showPassword ? "text" : "password"}
@@ -93,26 +67,26 @@ export default function Login(): React.JSX.Element {
               <button
                 type="button"
                 className="input-right-icon"
-                aria-label={showPassword ? "Hide password" : "Show password"}
                 onClick={() => setShowPassword((v) => !v)}
               >
                 <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
               </button>
             </div>
 
-            <button type="submit" className="btn btn-primary auth-submit">
-              Continue
-            </button>
+            {/* Forgot Password Link */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+                <Link to="/forgot-password" style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-secondary-500)', textDecoration: 'none' }}>
+                    Forgot Password?
+                </Link>
+            </div>
+
+            <button type="submit" className="btn btn-primary auth-submit">Continue</button>
           </form>
 
           <p className="auth-switch">
-            Don't have an account?{" "}
-            <Link to="/signup" className="link">
-              Create one
-            </Link>
+            Don't have an account? <Link to="/signup" className="link">Create one</Link>
           </p>
         </div>
-        {/* Right sidebar for Login */}
         <AuthSidebar />
       </div>
     </div>
