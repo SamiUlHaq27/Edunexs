@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Outlet, NavLink } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faTachometerAlt, // Added this icon
+  faTachometerAlt,
   faUniversity,
   faUserShield,
   faChalkboardTeacher,
@@ -19,12 +19,26 @@ import "../../styles/owner.css";
 
 export default function OwnerLayout(): React.JSX.Element {
   const [isMinimized, setIsMinimized] = useState(false);
+  // Default changed to 'My Institution' to indicate no data found yet
+  const [instProfile, setInstProfile] = useState({ name: "My Institution", logo: ASSETS.logo });
+
+  useEffect(() => {
+    const saved = localStorage.getItem("institution_profile");
+    if (saved) {
+      setInstProfile(JSON.parse(saved));
+    }
+  }, []);
 
   return (
     <div className={`dashboard-layout ${isMinimized ? "sidebar-minimized" : ""}`}>
       <aside className="dashboard-sidebar">
         <div className="sidebar-header">
-          <img src={ASSETS.logo} alt={ASSETS.alt} className="sidebar-logo" />
+          <img 
+            src={instProfile.logo} 
+            alt="Inst Logo" 
+            className="sidebar-logo" 
+            style={{ borderRadius: '50%', objectFit: 'cover', background: '#fff' }} 
+          />
         </div>
         
         <div className="sidebar-title-div">
@@ -35,7 +49,6 @@ export default function OwnerLayout(): React.JSX.Element {
         </div>
 
         <nav className="sidebar-nav">
-          {/* New Dashboard Link */}
           <NavLink to="/owner/dashboard" className="nav-item">
             <FontAwesomeIcon icon={faTachometerAlt} className="nav-icon" />
             <span className="nav-text">Dashboard</span>
@@ -88,8 +101,9 @@ export default function OwnerLayout(): React.JSX.Element {
       <main className="dashboard-main">
         <header className="main-header">
           <div className="header-greeting">
-            <h2>Institution Management</h2>
-            <p>Overview</p>
+            {/* Dynamic Name and Subtitle */}
+            <h2>{instProfile.name}</h2>
+            <p>Institution Overview</p>
           </div>
           <div className="header-profile">
             <div className="user-info">

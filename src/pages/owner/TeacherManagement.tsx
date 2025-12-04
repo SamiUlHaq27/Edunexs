@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlus, faEdit, faTrash, faChalkboardTeacher, faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import { faPlus, faEdit, faTrash, faChalkboardTeacher, faArrowLeft, faEllipsisH } from "@fortawesome/free-solid-svg-icons";
 
 interface Teacher {
   id: number;
@@ -16,11 +16,17 @@ export default function TeacherManagement() {
   ]);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState({ name: "", email: "", subject: "" });
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+
+  const toggleMenu = (id: number) => {
+    setOpenMenuId(openMenuId === id ? null : id);
+  };
 
   const handleEdit = (teacher: Teacher) => {
     setEditingId(teacher.id);
     setFormData({ name: teacher.name, email: teacher.email, subject: teacher.subject });
     setView("form");
+    setOpenMenuId(null);
   };
 
   const handleSave = (e: React.FormEvent) => {
@@ -57,7 +63,7 @@ export default function TeacherManagement() {
   }
 
   return (
-    <div>
+    <div onClick={() => setOpenMenuId(null)}>
       <div className="toolbar">
         <h3>Teachers</h3>
         <button className="btn btn-primary" onClick={() => { setEditingId(null); setFormData({name:"", email:"", subject:""}); setView("form"); }}>
@@ -74,8 +80,27 @@ export default function TeacherManagement() {
                 <td>{t.email}</td>
                 <td>{t.subject}</td>
                 <td>
-                  <button className="btn action-btn" onClick={() => handleEdit(t)}><FontAwesomeIcon icon={faEdit} /></button>
-                  <button className="btn action-btn btn-delete" onClick={() => setTeachers(teachers.filter(teacher => teacher.id !== t.id))}><FontAwesomeIcon icon={faTrash} /></button>
+                  <div className="action-menu-wrapper" onClick={(e) => e.stopPropagation()}>
+                    <button className="action-menu-btn" onClick={() => toggleMenu(t.id)}>
+                       <FontAwesomeIcon icon={faEllipsisH} />
+                    </button>
+                    {openMenuId === t.id && (
+                      <div className="action-dropdown">
+                        <button className="dropdown-item" onClick={() => handleEdit(t)}>
+                          <FontAwesomeIcon icon={faEdit} fixedWidth /> Edit
+                        </button>
+                        <button 
+                          className="dropdown-item danger" 
+                          onClick={() => {
+                            setTeachers(teachers.filter(teacher => teacher.id !== t.id));
+                            setOpenMenuId(null);
+                          }}
+                        >
+                          <FontAwesomeIcon icon={faTrash} fixedWidth /> Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}

@@ -36,17 +36,38 @@ export default function CreateInstitution(): React.JSX.Element {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // API Call would go here to POST /api/v1/institutions
-    // On success:
-    alert("Institution created successfully! You are now the owner.");
-    navigate("/owner/dashboard");
+    
+    // Helper to save and redirect
+    const saveToStorageAndRedirect = (logoData: string | null) => {
+      const profile = {
+        name: formData.name,
+        logo: logoData || ASSETS.logo // Use uploaded logo or default
+      };
+      
+      // Save to localStorage so other dashboards can read it
+      localStorage.setItem("institution_profile", JSON.stringify(profile));
+      
+      alert(`Institution "${formData.name}" created!`);
+      navigate("/owner/dashboard");
+    };
+
+    // Process image to Base64 string for storage
+    if (formData.logo) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        saveToStorageAndRedirect(reader.result as string);
+      };
+      reader.readAsDataURL(formData.logo);
+    } else {
+      saveToStorageAndRedirect(null);
+    }
   };
 
   return (
     <div className="auth-page">
       <div className="auth-container auth-split">
         <div className="auth-card">
-          <img src={ASSETS.logo} alt={ASSETS.alt} className="auth-logo" />
+          <img src={ASSETS.logo} alt="Logo" className="auth-logo" />
           <h2 className="auth-title">Setup Institution</h2>
           <p className="auth-subtitle">
             Enter your institution's details to get started.

@@ -8,7 +8,7 @@ import CreateInstitution from "./pages/CreateInstitution";
 
 // Owner Pages
 import OwnerLayout from "./pages/owner/OwnerLayout";
-import OwnerDashboard from "./pages/owner/OwnerDashboard"; // Import the new dashboard
+import OwnerDashboard from "./pages/owner/OwnerDashboard";
 import InstitutionSettings from "./pages/owner/InstitutionSettings";
 import AdminManagement from "./pages/owner/AdminManagement";
 import TeacherManagement from "./pages/owner/TeacherManagement";
@@ -16,7 +16,39 @@ import StudentManagement from "./pages/owner/StudentManagement";
 import CourseManagement from "./pages/owner/CourseManagement";
 import ClassManagement from "./pages/owner/ClassManagement";
 
+// Teacher Pages
+import TeacherLayout from "./pages/teacher/TeacherLayout";
+import TeacherDashboard from "./pages/teacher/TeacherDashboard"; // Specific Teacher Dashboard
+import TeacherAttendance from "./pages/teacher/TeacherAttendance";
+import TeacherAssignments from "./pages/teacher/TeacherAssignments";
+import TeacherQuizzes from "./pages/teacher/TeacherQuizzes";
+import TeacherGrades from "./pages/teacher/TeacherGrades";
+
+// Student Pages
+import StudentLayout from "./pages/student/StudentLayout";
+import StudentCourses from "./pages/student/StudentCourses";
+import StudentQuizAttempt from "./pages/student/StudentQuizAttempt";
+import StudentAssignmentSubmit from "./pages/student/StudentAssignmentSubmit";
+
+// Parent Pages
+import ParentLayout from "./pages/parent/ParentLayout";
+import ParentDashboard from "./pages/parent/ParentDashboard";
+import ParentCourses from "./pages/parent/ParentCourses";
+import ParentFees from "./pages/parent/ParentFees";
+
+import Loader from "./components/Loader";
+
 export default function App(): React.JSX.Element {
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    // Simulate initial loading
+    const timer = setTimeout(() => setLoading(false), 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading) return <Loader />;
+
   return (
     <Routes>
       <Route
@@ -27,17 +59,14 @@ export default function App(): React.JSX.Element {
             <p style={{ marginTop: "0.5rem" }}>
               Explore the UI: <Link to="/login">Login</Link> •{" "}
               <Link to="/signup">Signup</Link> •{" "}
-              <Link to="/admin/dashboard">Admin Dashboard</Link> •{" "}
+              <Link to="/owner/dashboard">Owner Portal</Link> •{" "}
+              <Link to="/teacher/dashboard">Teacher Portal</Link> •{" "}
+              <Link to="/student/dashboard">Student Portal</Link> •{" "}
+              <Link to="/parent/dashboard">Parent Portal</Link>•{" "}
+              <Link to="/create-institution">Create Institution</Link> •{" "}
               <Link to="/forgot-password">Forgot Password</Link> •{" "}
               <Link to="/verify-email">Verify Email</Link> •{" "}
-              <Link to="/owner/institution">Owner Institution</Link> •{" "}
-              <Link to="/owner/staff">Owner Staff</Link> •{" "}
-              <Link to="/owner/roles">Owner Roles</Link> •{" "}
-              <Link to="/create-institution">Create Institution</Link>
-
-
-              
-              
+          
             </p>
           </div>
         }
@@ -48,17 +77,10 @@ export default function App(): React.JSX.Element {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/create-institution" element={<CreateInstitution />} />
-      
 
-    
-      <Route path="*" element={<Navigate to="/" replace />} />
-
-
-       {/* Owner Portal Routes */}
+      {/* Owner Portal Routes */}
       <Route path="/owner" element={<OwnerLayout />}>
-        {/* Default to Dashboard */}
         <Route index element={<Navigate to="dashboard" replace />} />
-        
         <Route path="dashboard" element={<OwnerDashboard />} />
         <Route path="institution" element={<InstitutionSettings />} />
         <Route path="admins" element={<AdminManagement />} />
@@ -68,6 +90,34 @@ export default function App(): React.JSX.Element {
         <Route path="classes" element={<ClassManagement />} />
       </Route>
 
+      {/* Teacher Portal Routes */}
+      <Route path="/teacher" element={<TeacherLayout />}>
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<TeacherDashboard />} /> 
+        <Route path="attendance" element={<TeacherAttendance />} />
+        <Route path="assignments" element={<TeacherAssignments />} />
+        <Route path="quizzes" element={<TeacherQuizzes />} />
+        <Route path="grades" element={<TeacherGrades />} /> 
+      </Route>
+
+      {/* Student Portal Routes */}
+      <Route path="/student" element={<StudentLayout />}>
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<StudentCourses />} />
+        <Route path="courses" element={<StudentCourses />} />
+        <Route path="attempt-quiz" element={<StudentQuizAttempt />} />
+        <Route path="submit-assignment" element={<StudentAssignmentSubmit />} />
+      </Route>
+
+      {/* Parent Portal Routes */}
+      <Route path="/parent" element={<ParentLayout />}>
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<ParentDashboard />} />
+        <Route path="courses" element={<ParentCourses />} />
+        <Route path="fees" element={<ParentFees />} />
+      </Route>
+      
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlus, faEdit, faTrash, faUserGraduate, faUsers, faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import { faPlus, faEdit, faTrash, faUserGraduate, faUsers, faArrowLeft, faEllipsisH } from "@fortawesome/free-solid-svg-icons";
 
 interface Student {
   id: number;
@@ -14,7 +14,6 @@ export default function StudentManagement() {
   const [activeTab, setActiveTab] = useState<"students" | "groups">("students");
   const [view, setView] = useState<"list" | "form">("list");
   
-  // Mock Data
   const [students, setStudents] = useState<Student[]>([
     { id: 1, name: "Student A", email: "std1@school.com", rollNo: "S-101", group: "Class 10-A" },
     { id: 2, name: "Student B", email: "std2@school.com", rollNo: "S-102", group: "Class 10-A" }
@@ -23,8 +22,12 @@ export default function StudentManagement() {
   
   const [formData, setFormData] = useState({ name: "", email: "", rollNo: "", group: "" });
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
 
-  // --- Handlers ---
+  const toggleMenu = (id: number) => {
+    setOpenMenuId(openMenuId === id ? null : id);
+  };
+
   const handleSaveStudent = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingId) {
@@ -42,7 +45,6 @@ export default function StudentManagement() {
     if (name) setGroups([...groups, name]);
   };
 
-  // --- Forms ---
   if (view === "form") {
     return (
       <div className="card settings-container">
@@ -70,10 +72,8 @@ export default function StudentManagement() {
     );
   }
 
-  // --- Main View ---
   return (
-    <div>
-      {/* Tabs */}
+    <div onClick={() => setOpenMenuId(null)}>
       <div className="tabs" style={{ maxWidth: '400px', margin: '0 0 1.5rem 0' }}>
         <button className={`tab ${activeTab === 'students' ? 'tab-active' : ''}`} onClick={() => setActiveTab("students")}>Students</button>
         <button className={`tab ${activeTab === 'groups' ? 'tab-active' : ''}`} onClick={() => setActiveTab("groups")}>Groups</button>
@@ -98,8 +98,29 @@ export default function StudentManagement() {
                     <td>{s.email}</td>
                     <td>{s.group ? <span className="assignment-tag">{s.group}</span> : '-'}</td>
                     <td>
-                      <button className="btn action-btn" onClick={() => { setEditingId(s.id); setFormData(s); setView("form"); }}><FontAwesomeIcon icon={faEdit} /></button>
-                      <button className="btn action-btn btn-delete" onClick={() => setStudents(students.filter(std => std.id !== s.id))}><FontAwesomeIcon icon={faTrash} /></button>
+                      <div className="action-menu-wrapper" onClick={(e) => e.stopPropagation()}>
+                        <button className="action-menu-btn" onClick={() => toggleMenu(s.id)}>
+                          <FontAwesomeIcon icon={faEllipsisH} />
+                        </button>
+                        {openMenuId === s.id && (
+                          <div className="action-dropdown">
+                            <button className="dropdown-item" onClick={() => {
+                              setEditingId(s.id); 
+                              setFormData({name: s.name, email: s.email, rollNo: s.rollNo, group: s.group || ""}); 
+                              setView("form");
+                              setOpenMenuId(null);
+                            }}>
+                              <FontAwesomeIcon icon={faEdit} fixedWidth /> Edit
+                            </button>
+                            <button className="dropdown-item danger" onClick={() => {
+                              setStudents(students.filter(std => std.id !== s.id));
+                              setOpenMenuId(null);
+                            }}>
+                              <FontAwesomeIcon icon={faTrash} fixedWidth /> Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

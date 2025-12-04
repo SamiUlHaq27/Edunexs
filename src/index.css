@@ -1,4 +1,14 @@
+
 @import './styles/tokens.css';
+@import './styles/base.css';
+@import './styles/components.css';
+@import './styles/forms.css';
+@import './styles/auth.css';
+@import './styles/dashboard.css';
+@import './styles/owner.css';
+@import './styles/teacher.css'; /* Your teacher specific styles */
+@import './styles/student.css'; /* Your student specific styles */
+@import './styles/loader.css';  /* Add this line */
 
 /* Basic reset for consistent sizing */
 *, *::before, *::after { box-sizing: border-box; }

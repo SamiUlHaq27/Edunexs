@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlus, faSearch, faTrash, faUserShield, faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import { faPlus, faTrash, faUserShield, faArrowLeft, faEllipsisH } from "@fortawesome/free-solid-svg-icons";
 
 interface Admin {
   id: number;
@@ -14,6 +14,11 @@ export default function AdminManagement() {
     { id: 1, name: "Admin One", email: "admin1@school.com" }
   ]);
   const [formData, setFormData] = useState({ name: "", email: "", password: "" });
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+
+  const toggleMenu = (id: number) => {
+    setOpenMenuId(openMenuId === id ? null : id);
+  };
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,7 +51,7 @@ export default function AdminManagement() {
   }
 
   return (
-    <div>
+    <div onClick={() => setOpenMenuId(null)}>
       <div className="toolbar">
         <h3>Institution Admins</h3>
         <button className="btn btn-primary" onClick={() => setView("create")}><FontAwesomeIcon icon={faPlus} /> Add Admin</button>
@@ -60,9 +65,24 @@ export default function AdminManagement() {
                 <td><FontAwesomeIcon icon={faUserShield} style={{marginRight: '8px', color: '#0066ff'}}/> {admin.name}</td>
                 <td>{admin.email}</td>
                 <td>
-                  <button className="btn action-btn btn-delete" onClick={() => setAdmins(admins.filter(a => a.id !== admin.id))}>
-                    <FontAwesomeIcon icon={faTrash} />
-                  </button>
+                  <div className="action-menu-wrapper" onClick={(e) => e.stopPropagation()}>
+                    <button className="action-menu-btn" onClick={() => toggleMenu(admin.id)}>
+                      <FontAwesomeIcon icon={faEllipsisH} />
+                    </button>
+                    {openMenuId === admin.id && (
+                      <div className="action-dropdown">
+                        <button 
+                          className="dropdown-item danger" 
+                          onClick={() => {
+                            setAdmins(admins.filter(a => a.id !== admin.id));
+                            setOpenMenuId(null);
+                          }}
+                        >
+                          <FontAwesomeIcon icon={faTrash} fixedWidth /> Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
