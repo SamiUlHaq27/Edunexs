@@ -1,7 +1,8 @@
 /* Dashboard Layout */
 .dashboard-layout {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   background-color: var(--color-surface-raised);
 }
 
@@ -19,15 +20,18 @@
   color: var(--color-sidebar-text);
   border-top-right-radius: var(--radius-lg);
   border-bottom-right-radius: var(--radius-lg);
-  transition: width 0.3s var(--motion-ease-in-out);
-  overflow-x: hidden; /* Hide text when collapsing */
+  /* Animation removed */
+  overflow-x: hidden;
+  overflow-y: auto;
+  height: 100%;
 }
 
 .dashboard-main {
   flex: 1;
-  padding: var(--spacing-4);
+  padding: 0px 40px 40px 40px;
   overflow-y: auto;
-  transition: margin-left 0.3s var(--motion-ease-in-out);
+  height: 100%;
+  /* Animation removed */
 }
 
 /* Minimized state */
@@ -40,26 +44,29 @@
   opacity: 0;
   width: 0;
   visibility: hidden;
+  display: none; /* Added to ensure complete removal from flow */
 }
 
+/* Removed centering rule for sidebar-header to keep items fixed */
 .sidebar-minimized .sidebar-header {
-  justify-content: center;
+  /* justify-content: center; <-- Removed */
 }
 
+/* Removed centering rule for nav-items to keep icons on the left */
 .sidebar-minimized .nav-item {
-  justify-content: center;
-  gap: 0;
+  /* justify-content: center; <-- Removed */
+  /* gap: 0; <-- Removed */
 }
 
 /* Sidebar Header */
 .sidebar-header {
-  position: relative; /* For positioning the toggle button */
+  position: relative;
   display: flex;
-  justify-content: center; /* Center the logo */
+  justify-content: center;
   align-items: center;
   padding-bottom: var(--spacing-3);
   border-bottom: 1px solid var(--color-border-muted);
-  transition: justify-content 0.3s var(--motion-ease-in-out);
+  /* Animation removed */
 }
 
 .sidebar-logo {
@@ -73,7 +80,7 @@
     var(--color-primary-50) 0%,
     var(--color-primary-100) 100%
   );
-  flex-shrink: 0; /* Prevent logo from shrinking */
+  flex-shrink: 0;
 }
 
 .dashboard-sidebar-title {
@@ -81,13 +88,13 @@
   line-height: var(--line-height-lg);
   font-weight: var(--font-weight-semibold);
   color: var(--color-sidebar-text-hover);
-  text-align: center; /* Center the title */
-  white-space: nowrap; /* Prevent title from wrapping */
-  transition: opacity 0.3s, width 0.3s, margin 0.3s, padding 0.3s;
+  text-align: center;
+  white-space: nowrap;
+  /* Animation removed */
 }
 
 .sidebar-title-div {
-  position: relative; /* Set relative positioning for the child button */
+  position: relative;
   display: flex;
   justify-content: center;
   column-gap: 5px;
@@ -105,6 +112,7 @@
 
 .nav-item {
   display: flex;
+  margin-bottom: 10px;
   align-items: center;
   gap: var(--spacing-2);
   padding: var(--spacing-1_5) var(--spacing-2);
@@ -112,12 +120,13 @@
   color: var(--color-sidebar-text);
   text-decoration: none;
   font-weight: var(--font-weight-medium);
-  transition: background-color 0.2s, color 0.2s, justify-content 0.3s;
-  white-space: nowrap; /* Prevent text from wrapping */
+  /* Animations removed */
+  transition: background-color 0.2s, color 0.2s; /* Kept only hover colors */
+  white-space: nowrap;
 }
 
 .nav-text {
-  transition: opacity 0.3s, width 0.3s;
+  /* Animation removed */
 }
 
 .nav-item:hover {
@@ -134,7 +143,7 @@
 .nav-icon {
   width: 20px;
   height: 20px;
-  flex-shrink: 0; /* Prevent icon from shrinking */
+  flex-shrink: 0;
 }
 
 /* Sidebar Footer */
@@ -156,7 +165,8 @@
   display: grid;
   border: none;
   place-items: center;
-  transition: right 0.3s var(--motion-ease-in-out), transform 0.3s;
+  /* Animation removed */
+  transition: transform 0.2s; /* Kept hover scale only */
 }
 
 .toggle-btn:hover {
@@ -169,7 +179,7 @@
 }
 
 .sidebar-minimized .toggle-btn {
-  position: static; /* Reset position to be part of the flex flow */
+  position: static;
 }
 
 /* Main Content Header */

@@ -6,6 +6,11 @@ import ForgotPassword from "./pages/ForgotPassword";
 import VerifyEmail from "./pages/VerifyEmail";
 import CreateInstitution from "./pages/CreateInstitution";
 
+// System Admin Pages
+import SystemAdminLayout from "./pages/system-admin/SystemAdminLayout";
+import SystemAdminDashboard from "./pages/system-admin/SystemAdminDashboard";
+import SystemAdminInstitutions from "./pages/system-admin/SystemAdminInstitutions";
+
 // Owner Pages
 import OwnerLayout from "./pages/owner/OwnerLayout";
 import OwnerDashboard from "./pages/owner/OwnerDashboard";
@@ -18,7 +23,7 @@ import ClassManagement from "./pages/owner/ClassManagement";
 
 // Teacher Pages
 import TeacherLayout from "./pages/teacher/TeacherLayout";
-import TeacherDashboard from "./pages/teacher/TeacherDashboard"; // Specific Teacher Dashboard
+import TeacherDashboard from "./pages/teacher/TeacherDashboard"; 
 import TeacherAttendance from "./pages/teacher/TeacherAttendance";
 import TeacherAssignments from "./pages/teacher/TeacherAssignments";
 import TeacherQuizzes from "./pages/teacher/TeacherQuizzes";
@@ -59,14 +64,12 @@ export default function App(): React.JSX.Element {
             <p style={{ marginTop: "0.5rem" }}>
               Explore the UI: <Link to="/login">Login</Link> •{" "}
               <Link to="/signup">Signup</Link> •{" "}
+              <Link to="/system-admin/dashboard">System Admin</Link> •{" "}
               <Link to="/owner/dashboard">Owner Portal</Link> •{" "}
               <Link to="/teacher/dashboard">Teacher Portal</Link> •{" "}
               <Link to="/student/dashboard">Student Portal</Link> •{" "}
-              <Link to="/parent/dashboard">Parent Portal</Link>•{" "}
-              <Link to="/create-institution">Create Institution</Link> •{" "}
-              <Link to="/forgot-password">Forgot Password</Link> •{" "}
-              <Link to="/verify-email">Verify Email</Link> •{" "}
-          
+              <Link to="/parent/dashboard">Parent Portal</Link> •{" "}
+              <Link to="/create-institution">Create Institution</Link>
             </p>
           </div>
         }
@@ -77,6 +80,13 @@ export default function App(): React.JSX.Element {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/create-institution" element={<CreateInstitution />} />
+
+      {/* System Admin Routes */}
+      <Route path="/system-admin" element={<SystemAdminLayout />}>
+         <Route index element={<Navigate to="dashboard" replace />} />
+         <Route path="dashboard" element={<SystemAdminDashboard />} />
+         <Route path="institutions" element={<SystemAdminInstitutions />} />
+      </Route>
 
       {/* Owner Portal Routes */}
       <Route path="/owner" element={<OwnerLayout />}>
