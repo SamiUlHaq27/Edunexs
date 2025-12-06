@@ -47,16 +47,7 @@
   display: none; /* Added to ensure complete removal from flow */
 }
 
-/* Removed centering rule for sidebar-header to keep items fixed */
-.sidebar-minimized .sidebar-header {
-  /* justify-content: center; <-- Removed */
-}
 
-/* Removed centering rule for nav-items to keep icons on the left */
-.sidebar-minimized .nav-item {
-  /* justify-content: center; <-- Removed */
-  /* gap: 0; <-- Removed */
-}
 
 /* Sidebar Header */
 .sidebar-header {
@@ -112,7 +103,7 @@
 
 .nav-item {
   display: flex;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
   align-items: center;
   gap: var(--spacing-2);
   padding: var(--spacing-1_5) var(--spacing-2);
@@ -125,9 +116,7 @@
   white-space: nowrap;
 }
 
-.nav-text {
-  /* Animation removed */
-}
+
 
 .nav-item:hover {
   background-color: var(--color-sidebar-hover-bg);
@@ -158,6 +147,7 @@
   position: absolute;
   right: 0;
   width: 24px;
+  padding: 0px;
   height: 24px;
   border-radius: 50%;
   background-color: transparent;

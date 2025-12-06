@@ -1,0 +1,263 @@
+@import './tokens.css';
+
+.owner-dashboard-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+/* Summary Cards */
+.summary-cards-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-4);
+}
+
+.summary-card {
+  background: var(--color-surface-base);
+  padding: var(--spacing-3);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-muted);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: var(--elevation-1);
+}
+
+.summary-icon-container {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 1.5rem;
+}
+
+/* Attendance Section Container */
+.attendance-section {
+  background: var(--color-surface-base);
+  padding: var(--spacing-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-muted);
+  box-shadow: var(--elevation-1);
+}
+
+/* Split Layout for Charts */
+.attendance-charts-split {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--spacing-4);
+  align-items: center;
+}
+
+/* --- Bar Chart Styles --- */
+.chart-wrapper {
+  display: flex;
+  height: 250px;
+  width: 100%;
+}
+
+.chart-y-axis {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: space-between;
+  padding-right: 1rem;
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  padding-bottom: 20px;
+}
+
+.chart-content {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--color-border-muted);
+  border-bottom: 1px solid var(--color-border-muted);
+}
+
+.chart-grid-lines {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.grid-line {
+  width: 100%;
+  height: 1px;
+  background-color: var(--color-border-muted);
+}
+
+.grid-line:first-child {
+  background-color: transparent;
+}
+
+.chart-bars-container {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  padding: 0 10px;
+  z-index: 1;
+}
+
+.chart-bar-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.chart-bar {
+  width: 45%;
+  background-color: #1e3a8a;
+  border-radius: 4px 4px 0 0;
+  transition: height 0.3s ease;
+  position: relative;
+}
+
+.chart-bar:hover {
+  opacity: 0.9;
+}
+
+/* X-Axis Labels */
+.chart-x-axis {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 0.5rem;
+  padding-left: 2rem;
+}
+
+.x-axis-label {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  text-align: center;
+  width: 100%;
+}
+
+/* --- Donut Chart Styles --- */
+.donut-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.donut-chart {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  /* UPDATED: Conic Gradient with only 2 segments (Present & Absent) */
+  background: conic-gradient(
+    #1e3a8a 0% 75%,   /* Present (Increased percentage) */
+    #ef4444 75% 100%  /* Absent */
+  );
+  display: grid;
+  place-items: center;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.donut-inner {
+  width: 65%;
+  height: 65%;
+  background: var(--color-surface-base);
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.donut-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  padding-left: 1rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+/* Bottom Row */
+.bottom-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--spacing-4);
+}
+
+/* Activity List Item Padding */
+.activity-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.activity-item {
+  display: flex;
+  /* ADDED: Padding for spacing */
+  padding: 1rem 0; 
+  border-bottom: 1px solid var(--color-border-muted);
+}
+
+.activity-item:last-child {
+  border-bottom: none;
+}
+
+/* Calendar */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.calendar-header {
+  font-weight: bold;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+}
+
+.calendar-day {
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  cursor: default;
+}
+
+.calendar-day.active {
+  background-color: var(--color-primary-500);
+  color: white;
+}
+
+.calendar-title-box {
+  background: #000;
+  color: #fff;
+  padding: 0.5rem 1rem;
+  font-weight: bold;
+  font-size: 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: var(--radius-md);
+}

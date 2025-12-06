@@ -6,7 +6,8 @@ import {
   faGlobe, 
   faMapMarkerAlt, 
   faUpload, 
-  faArrowRight 
+  faArrowRight,
+  faTag 
 } from "@fortawesome/free-solid-svg-icons";
 import { ASSETS } from "../config/assets";
 import AuthSidebar from "../components/AuthSidebar";
@@ -15,6 +16,7 @@ export default function CreateInstitution(): React.JSX.Element {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
+    prefix: "",
     country: "",
     city: "",
     address: "",
@@ -37,21 +39,19 @@ export default function CreateInstitution(): React.JSX.Element {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Helper to save and redirect
     const saveToStorageAndRedirect = (logoData: string | null) => {
       const profile = {
         name: formData.name,
-        logo: logoData || ASSETS.logo // Use uploaded logo or default
+        prefix: formData.prefix,
+        logo: logoData || ASSETS.logo 
       };
       
-      // Save to localStorage so other dashboards can read it
       localStorage.setItem("institution_profile", JSON.stringify(profile));
       
       alert(`Institution "${formData.name}" created!`);
       navigate("/owner/dashboard");
     };
 
-    // Process image to Base64 string for storage
     if (formData.logo) {
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -74,7 +74,7 @@ export default function CreateInstitution(): React.JSX.Element {
           </p>
 
           <form onSubmit={handleSubmit} className="auth-form">
-            {/* Logo Upload */}
+            {/* 1. Logo Upload */}
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
                <div style={{ textAlign: 'center' }}>
                  <div style={{ 
@@ -95,6 +95,22 @@ export default function CreateInstitution(): React.JSX.Element {
                </div>
             </div>
 
+            {/* 2. Section Prefix (Moved Up) */}
+            <label className="auth-label" htmlFor="prefix">Prefix (ID)</label>
+            <div className="input-with-icon">
+              <span className="input-icon"><FontAwesomeIcon icon={faTag} /></span>
+              <input
+                id="prefix"
+                type="text"
+                className="auth-input"
+                placeholder="e.g. (Unique ID)"
+                value={formData.prefix}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            {/* 3. Institution Name */}
             <label className="auth-label" htmlFor="name">Institution Name</label>
             <div className="input-with-icon">
               <span className="input-icon"><FontAwesomeIcon icon={faBuilding} /></span>
@@ -109,6 +125,7 @@ export default function CreateInstitution(): React.JSX.Element {
               />
             </div>
 
+            {/* 4. Country */}
             <label className="auth-label" htmlFor="country">Country</label>
             <div className="input-with-icon">
               <span className="input-icon"><FontAwesomeIcon icon={faGlobe} /></span>
@@ -123,6 +140,7 @@ export default function CreateInstitution(): React.JSX.Element {
               />
             </div>
 
+            {/* 5. City & Address */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div>
                 <label className="auth-label" htmlFor="city">City</label>

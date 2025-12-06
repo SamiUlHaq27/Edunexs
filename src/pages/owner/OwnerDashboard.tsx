@@ -3,235 +3,225 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faUserGraduate,
   faChalkboardTeacher,
+  faUserShield,
   faBookOpen,
-  faChalkboard,
-  faArrowUp,
-  faEllipsisH
+  faEllipsisH,
+  faBell,
+  faCheckCircle
 } from "@fortawesome/free-solid-svg-icons";
+import "../../styles/owner-dashboard.css";
 
-// --- Custom Simple Chart Components (No external lib needed) ---
-
-const BarChart = () => {
-  // Mock Data: Weekly Attendance
-  const data = [65, 59, 80, 81, 56, 90, 78];
-  const labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  const max = Math.max(...data);
-
-  return (
-    <div style={{ width: "100%", height: "200px", display: "flex", alignItems: "flex-end", gap: "12px" }}>
-      {data.map((value, idx) => (
-        <div key={idx} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
-          <div
-            style={{
-              width: "100%",
-              height: `${(value / max) * 100}%`,
-              backgroundColor: "#0066ff",
-              borderRadius: "4px 4px 0 0",
-              opacity: 0.8,
-              transition: "height 0.3s ease"
-            }}
-          />
-          <span style={{ fontSize: "0.75rem", color: "#6b7280" }}>{labels[idx]}</span>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-const LineChart = () => {
-  // Mock Data: Monthly Enrollment
-  // Points logic: 100 wide viewbox, map data to y coordinates
-  const data = [30, 45, 40, 60, 75, 70, 90];
+// --- Bar Chart: Monthly Trends ---
+const AttendanceChart = () => {
+  const data = [65, 80, 45, 90, 60, 75, 50, 85, 95, 70];
   const max = 100;
-  const points = data
-    .map((val, idx) => `${idx * (100 / (data.length - 1))},${100 - val}`)
-    .join(" ");
+  const steps = [0, 25, 50, 75, 100];
+  const labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct"];
 
   return (
-    <div style={{ width: "100%", height: "200px", position: "relative" }}>
-      <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ width: "100%", height: "100%", overflow: 'visible' }}>
-        {/* Grid lines */}
-        <line x1="0" y1="25" x2="100" y2="25" stroke="#e5e7eb" strokeWidth="0.5" />
-        <line x1="0" y1="50" x2="100" y2="50" stroke="#e5e7eb" strokeWidth="0.5" />
-        <line x1="0" y1="75" x2="100" y2="75" stroke="#e5e7eb" strokeWidth="0.5" />
-        
-        {/* The Graph Line */}
-        <polyline
-          fill="none"
-          stroke="#10b981"
-          strokeWidth="3"
-          points={points}
-          vectorEffect="non-scaling-stroke"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        
-        {/* Dots */}
-        {data.map((val, idx) => (
-           <circle 
-             key={idx}
-             cx={idx * (100 / (data.length - 1))}
-             cy={100 - val}
-             r="1.5"
-             fill="#fff"
-             stroke="#10b981"
-             strokeWidth="0.5"
-             vectorEffect="non-scaling-stroke" // keeps dots round
-           />
+    <div style={{ width: '100%' }}>
+      <div className="chart-wrapper">
+        <div className="chart-y-axis">
+          {steps.map(step => <span key={step}>{step}%</span>)}
+        </div>
+        <div className="chart-content">
+          <div className="chart-grid-lines">
+            {steps.map((_, i) => (
+              <div key={i} className="grid-line"></div>
+            ))}
+          </div>
+          <div className="chart-bars-container">
+            {data.map((value, index) => (
+              <div key={index} className="chart-bar-group">
+                <div 
+                  className="chart-bar" 
+                  style={{ height: `${(value / max) * 100}%` }}
+                  title={`${value}%`}
+                ></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="chart-x-axis">
+        {labels.map((label, index) => (
+          <span key={index} className="x-axis-label">{label}</span>
         ))}
-      </svg>
-      {/* X-Axis Labels positioned absolutely */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px' }}>
-         {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'].map(m => (
-            <span key={m} style={{fontSize: '0.7rem', color: '#9ca3af'}}>{m}</span>
-         ))}
       </div>
     </div>
   );
 };
 
-// --- Main Dashboard Component ---
+// --- Donut Chart: Breakdown ---
+const AttendanceBreakdown = () => {
+  return (
+    <div className="donut-wrapper">
+      <h4 style={{ marginBottom: '1rem', fontSize: '0.9rem', color: '#6b7280' }}>Average Daily Status</h4>
+      <div className="donut-chart">
+        <div className="donut-inner">
+           <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1e3a8a' }}>92%</span>
+           <span style={{ fontSize: '0.7rem', color: '#6b7280' }}>Present</span>
+        </div>
+      </div>
+      <div className="donut-legend">
+        <div className="legend-item">
+          <div className="legend-dot" style={{ background: '#1e3a8a' }}></div>
+          <span>Present (75%)</span>
+        </div>
+        <div className="legend-item">
+          <div className="legend-dot" style={{ background: '#ef4444' }}></div>
+          <span>Absent (25%)</span>
+        </div>
+      </div>
+    </div>
+  );
+};
 
-export default function OwnerDashboard(): React.JSX.Element {
+const EventCalendar = () => {
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const dates = Array.from({ length: 31 }, (_, i) => i + 1);
+  const activeDate = 9; // Updated active date
+
   return (
     <div>
-      {/* Header */}
-      <div style={{ marginBottom: "2rem" }}>
-        <h2 style={{ fontSize: "1.75rem", fontWeight: "bold", color: "#111827", marginBottom: "0.5rem" }}>
-          Dashboard Overview
-        </h2>
-        <p style={{ color: "#6b7280" }}>Welcome back! Here's what's happening at your institution today.</p>
+      <div className="calendar-title-box">
+        <span>DECEMBER</span>
+        <span>2025</span>
       </div>
-
-      {/* 1. Stats Grid */}
-      <div className="dashboard-grid-modern">
-        <div className="stat-card-modern stat-blue">
-          <div className="stat-content">
-            <div className="stat-value">1,250</div>
-            <div className="stat-label">Total Students</div>
+      <div className="calendar-grid">
+        {days.map(day => (
+          <div key={day} className="calendar-header">{day}</div>
+        ))}
+        {/* Dec 1, 2025 is a Monday, so 1 empty slot for Sunday */}
+        <div /> 
+        {dates.map(date => (
+          <div 
+            key={date} 
+            className={`calendar-day ${date === activeDate ? 'active' : ''}`}
+          >
+            {date}
           </div>
-          <div className="stat-icon-wrapper">
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default function OwnerDashboard() {
+  return (
+    <div className="owner-dashboard-container">
+      
+      {/* 1. Summary Cards */}
+      <div className="summary-cards-row">
+        <div className="summary-card">
+          <div>
+            <p className="card-title">Total Students</p>
+            <h3 className="card-value">1,500</h3>
+          </div>
+          <div className="summary-icon-container" style={{ background: '#dbeafe', color: '#2563eb' }}>
             <FontAwesomeIcon icon={faUserGraduate} />
           </div>
         </div>
 
-        <div className="stat-card-modern stat-green">
-          <div className="stat-content">
-            <div className="stat-value">48</div>
-            <div className="stat-label">Total Teachers</div>
+        <div className="summary-card">
+          <div>
+            <p className="card-title">Total Courses</p>
+            <h3 className="card-value">60</h3>
           </div>
-          <div className="stat-icon-wrapper">
-            <FontAwesomeIcon icon={faChalkboardTeacher} />
-          </div>
-        </div>
-
-        <div className="stat-card-modern stat-purple">
-          <div className="stat-content">
-            <div className="stat-value">12</div>
-            <div className="stat-label">Active Courses</div>
-          </div>
-          <div className="stat-icon-wrapper">
+          <div className="summary-icon-container" style={{ background: '#fef3c7', color: '#d97706' }}>
             <FontAwesomeIcon icon={faBookOpen} />
           </div>
         </div>
 
-        <div className="stat-card-modern stat-orange">
-          <div className="stat-content">
-            <div className="stat-value">24</div>
-            <div className="stat-label">Active Classes</div>
+        <div className="summary-card">
+          <div>
+            <p className="card-title">Total Teachers</p>
+            <h3 className="card-value">90</h3>
           </div>
-          <div className="stat-icon-wrapper">
-            <FontAwesomeIcon icon={faChalkboard} />
+          <div className="summary-icon-container" style={{ background: '#fce7f3', color: '#db2777' }}>
+            <FontAwesomeIcon icon={faChalkboardTeacher} />
+          </div>
+        </div>
+
+        <div className="summary-card">
+          <div>
+            <p className="card-title">Inst. Admins</p>
+            <h3 className="card-value">5</h3>
+          </div>
+          <div className="summary-icon-container" style={{ background: '#d1fae5', color: '#059669' }}>
+            <FontAwesomeIcon icon={faUserShield} />
           </div>
         </div>
       </div>
 
-      {/* 2. Charts & Activity Grid */}
-      <div className="charts-grid">
+      {/* 2. Attendance Section (Bar + Donut) */}
+      <div className="attendance-section">
+        <h3 className="card-title" style={{ marginBottom: '1.5rem', fontWeight: 'bold', fontSize: '1.1rem' }}>
+          Monthly Student Attendance
+        </h3>
+        <div className="attendance-charts-split">
+           <AttendanceChart />
+           <div style={{ borderLeft: '1px solid #e5e7eb', paddingLeft: '1.5rem' }}>
+              <AttendanceBreakdown />
+           </div>
+        </div>
+      </div>
+
+      {/* 3. Bottom Row */}
+      <div className="bottom-row">
         
-        {/* Main Chart Column */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }}>
-          {/* Attendance Chart */}
-          <div className="chart-card">
-            <div className="chart-header">
-              <h3 className="chart-title">Weekly Attendance</h3>
-              <button className="btn" style={{ padding: '4px 8px', fontSize: '0.8rem' }}>View Report</button>
-            </div>
-            <BarChart />
+        {/* Recent Activities */}
+        <div className="card" style={{ flex: 1 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h3 className="card-title" style={{ marginBottom: 0, fontWeight: 'bold' }}>Recent Activities</h3>
+            <FontAwesomeIcon icon={faEllipsisH} color="var(--color-text-secondary)" cursor="pointer" />
           </div>
-
-           {/* Growth Chart */}
-          <div className="chart-card">
-            <div className="chart-header">
-              <h3 className="chart-title">Student Enrollment Growth</h3>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#10b981', fontSize: '0.9rem', fontWeight: 'bold' }}>
-                <FontAwesomeIcon icon={faArrowUp} /> 12% vs last month
-              </div>
-            </div>
-            <LineChart />
-          </div>
-        </div>
-
-        {/* Side Column: Activity & Quick Actions */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }}>
           
-          {/* Quick Stats / Gender Dist */}
-          <div className="chart-card">
-            <h3 className="chart-title" style={{ marginBottom: '1rem' }}>Demographics</h3>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '180px', position: 'relative' }}>
-              {/* Simple CSS Donut Chart */}
-              <div style={{
-                width: '140px', height: '140px', borderRadius: '50%',
-                background: 'conic-gradient(#0066ff 0% 60%, #e5e7eb 60% 100%)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center'
-              }}>
-                <div style={{ width: '100px', height: '100px', background: 'white', borderRadius: '50%', display: 'grid', placeItems: 'center' }}>
-                  <span style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>60%</span>
-                </div>
+          <div className="activity-list">
+            <div className="activity-item" style={{ alignItems: 'center' }}>
+              <div className="summary-icon-container" style={{ width: 40, height: 40, background: '#e0f2fe', color: '#0284c7', fontSize: '1rem' }}>
+                <FontAwesomeIcon icon={faCheckCircle} />
               </div>
+              <div style={{ flex: 1, paddingLeft: '1rem' }}>
+                <p style={{ fontWeight: '600', margin: 0 }}>Attendance Marked</p>
+                <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', margin: 0 }}>Class 10-A • Physics</p>
+              </div>
+              <span style={{ fontSize: '0.8rem', color: '#6b7280' }}>10 min ago</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '1rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
-                <span style={{ width: 10, height: 10, background: '#0066ff', borderRadius: '50%' }}></span> Male
+
+            <div className="activity-item" style={{ alignItems: 'center' }}>
+              <div className="summary-icon-container" style={{ width: 40, height: 40, background: '#dcfce7', color: '#16a34a', fontSize: '1rem' }}>
+                <FontAwesomeIcon icon={faUserGraduate} />
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
-                 <span style={{ width: 10, height: 10, background: '#e5e7eb', borderRadius: '50%' }}></span> Female
+              <div style={{ flex: 1, paddingLeft: '1rem' }}>
+                <p style={{ fontWeight: '600', margin: 0 }}>New Student Enrolled</p>
+                <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', margin: 0 }}>Ali Khan • Class 9-B</p>
               </div>
+              <span style={{ fontSize: '0.8rem', color: '#6b7280' }}>1 hour ago</span>
+            </div>
+
+            <div className="activity-item" style={{ alignItems: 'center' }}>
+              <div className="summary-icon-container" style={{ width: 40, height: 40, background: '#fef3c7', color: '#d97706', fontSize: '1rem' }}>
+                <FontAwesomeIcon icon={faBell} />
+              </div>
+              <div style={{ flex: 1, paddingLeft: '1rem' }}>
+                <p style={{ fontWeight: '600', margin: 0 }}>Exam Schedule Published</p>
+                <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', margin: 0 }}>Mid-Term Fall 2025</p>
+              </div>
+              <span style={{ fontSize: '0.8rem', color: '#6b7280' }}>Yesterday</span>
             </div>
           </div>
-
-          {/* Activity Feed */}
-          <div className="chart-card" style={{ flexGrow: 1 }}>
-            <div className="chart-header">
-               <h3 className="chart-title">Recent Activity</h3>
-               <FontAwesomeIcon icon={faEllipsisH} style={{ color: '#9ca3af', cursor: 'pointer' }} />
-            </div>
-            <div className="activity-list">
-              <div className="activity-item">
-                <div className="activity-time">2 mins ago</div>
-                <div className="activity-content">
-                  <p><strong>Ali Khan</strong> was added as a Teacher</p>
-                  <span className="activity-sub">By Admin One</span>
-                </div>
-              </div>
-              <div className="activity-item">
-                <div className="activity-time">1 hour ago</div>
-                <div className="activity-content">
-                  <p>New Class <strong>CS101-A</strong> created</p>
-                  <span className="activity-sub">Computer Science Dept</span>
-                </div>
-              </div>
-              <div className="activity-item">
-                <div className="activity-time">3 hours ago</div>
-                <div className="activity-content">
-                  <p><strong>15 Students</strong> added to Batch 2024</p>
-                  <span className="activity-sub">Bulk Import</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
         </div>
+
+        {/* Event Calendar */}
+        <div className="card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+            <h3 className="card-title" style={{ marginBottom: 0 }}>Event Calendar</h3>
+            <FontAwesomeIcon icon={faEllipsisH} color="var(--color-text-secondary)" cursor="pointer" />
+          </div>
+          <EventCalendar />
+        </div>
+
       </div>
     </div>
   );

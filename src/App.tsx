@@ -69,7 +69,9 @@ export default function App(): React.JSX.Element {
               <Link to="/teacher/dashboard">Teacher Portal</Link> •{" "}
               <Link to="/student/dashboard">Student Portal</Link> •{" "}
               <Link to="/parent/dashboard">Parent Portal</Link> •{" "}
-              <Link to="/create-institution">Create Institution</Link>
+              <Link to="/create-institution">Create Institution</Link> •{" "}
+              <Link to="/forgot-password">Forgot Password</Link> •{" "}
+              <Link to="/verify-email">Verify Email</Link>
             </p>
           </div>
         }

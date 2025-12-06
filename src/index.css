@@ -6,6 +6,7 @@
 @import './styles/auth.css';
 @import './styles/system-admin.css';
 @import './styles/dashboard.css';
+@import './styles/owner-dashboard.css';
 @import './styles/owner.css';
 @import './styles/teacher.css'; /* Your teacher specific styles */
 @import './styles/student.css'; /* Your student specific styles */
