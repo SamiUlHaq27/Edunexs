@@ -1,0 +1,68 @@
+@import './tokens.css';
+
+/* Teacher Specific Layouts */
+.teacher-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-4);
+  background: var(--color-surface-base);
+  padding: var(--spacing-2) var(--spacing-3);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-muted);
+}
+
+/* Quiz Builder Specifics */
+.quiz-builder-card {
+  border-left: 4px solid var(--color-primary-500);
+}
+
+.question-block {
+  background: var(--color-surface-raised);
+  padding: var(--spacing-3);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-3);
+  border: 1px solid var(--color-border-default);
+  transition: box-shadow var(--motion-duration-fast);
+}
+
+.question-block:hover {
+  box-shadow: var(--elevation-1);
+}
+
+/* Gradebook Table Overrides */
+.gradebook-container {
+  overflow-x: auto;
+}
+
+.gradebook-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.gradebook-table th {
+  background: var(--color-surface-elevated-1);
+  padding: var(--spacing-2);
+  text-align: left;
+  border-bottom: 2px solid var(--color-border-muted);
+  white-space: nowrap;
+}
+
+.gradebook-table td {
+  padding: var(--spacing-2);
+  border-bottom: 1px solid var(--color-border-muted);
+}
+
+.grade-input {
+  width: 60px;
+  padding: 4px 8px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  text-align: center;
+}
+
+.grade-input:focus {
+  border-color: var(--color-primary-500);
+  outline: none;
+}

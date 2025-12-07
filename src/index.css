@@ -1,24 +1,191 @@
+
+@import './styles/tokens.css';
+@import './styles/base.css';
+@import './styles/components.css';
+@import './styles/forms.css';
+@import './styles/auth.css';
+@import './styles/system-admin.css';
+@import './styles/dashboard.css';
+@import './styles/owner-dashboard.css';
+@import './styles/owner.css';
+@import './styles/teacher.css'; /* Your teacher specific styles */
+@import './styles/student.css'; /* Your student specific styles */
+@import './styles/loader.css';  /* Add this line */
+
+/* Basic reset for consistent sizing */
+*, *::before, *::after { box-sizing: border-box; }
+
 body {
-  font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  font-family: var(--font-family-base), system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
   margin: 0;
   padding: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: #f7fafc;
-  color: #111827;
+  background: var(--color-surface-raised);
+  color: var(--color-text-primary);
 }
 
 .app {
   max-width: 800px;
-  margin: 6rem auto;
-  padding: 1.5rem;
-  background: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+  margin: var(--spacing-12) auto;
+  padding: var(--spacing-3);
+  background: var(--color-surface-base);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elevation-2);
 }
 
 h1 {
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 var(--spacing-1) 0;
+  font-family: var(--font-family-heading);
+  font-size: var(--font-size-2xl);
+  line-height: var(--line-height-2xl);
 }
 
 p { margin: 0; }
+
+/* Auth pages layout */
+.auth-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: var(--spacing-6) var(--spacing-2);
+  /* TeamViewer-like layered blue gradients */
+  background:
+    radial-gradient(1200px 600px at -10% -10%, rgba(59, 130, 246, 0.20), transparent 60%),
+    radial-gradient(900px 500px at 110% 110%, rgba(96, 165, 250, 0.18), transparent 60%),
+    linear-gradient(180deg, var(--color-primary-50) 0%, var(--color-surface-raised) 28%, var(--color-surface-raised) 100%);
+}
+
+.auth-container {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-2);
+}
+
+.auth-card {
+  padding: var(--spacing-3);
+}
+
+.auth-logo {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto var(--spacing-2) auto;
+  border-radius: var(--radius-sm);
+}
+
+.auth-title {
+  margin: 0 0 var(--spacing-1) 0;
+  font-size: var(--font-size-2xl);
+  line-height: var(--line-height-2xl);
+}
+
+.auth-subtitle {
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--spacing-3) 0;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: 0.25rem;
+  font-weight: var(--font-weight-medium);
+}
+
+.auth-input {
+  width: 100%;
+  display: block;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-base);
+  color: var(--color-text-primary);
+  outline: none;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+  transition: border-color var(--motion-duration-fast) var(--motion-ease-out),
+              box-shadow var(--motion-duration-fast) var(--motion-ease-out),
+              background-color var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+.auth-input:focus {
+  border-color: var(--color-secondary-500);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.auth-input::placeholder { color: var(--color-text-muted); }
+.auth-input:disabled {
+  background: var(--color-surface-elevated-1);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.625rem 0.875rem;
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: transform var(--motion-duration-fast) var(--motion-ease-out),
+              box-shadow var(--motion-duration-fast) var(--motion-ease-out),
+              background var(--motion-duration-medium) var(--motion-ease-out);
+}
+
+.btn-primary {
+  background: var(--color-secondary-500);
+  color: #fff;
+  transition: box-shadow var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+.btn-primary:hover { box-shadow: var(--elevation-2); }
+.btn-primary:active {
+  transform: translateY(1px);
+  box-shadow: var(--elevation-2);
+}
+
+.auth-submit { margin-top: var(--spacing-1); }
+
+.auth-switch {
+  margin-top: var(--spacing-2);
+  color: var(--color-text-muted);
+}
+
+.link {
+  color: var(--color-secondary-500);
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+  color: var(--color-secondary-400);
+}
+
+/* Input with icon wrapper */
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Prefer spacing on the wrapper rather than the input element */
+.input-with-icon,
+.input-div {
+  margin-bottom: var(--spacing-2);
+}
+
+@import './styles/tokens.css';
+@import './styles/base.css';
+@import './styles/components.css';
+@import './styles/forms.css';
+@import './styles/auth.css';
+ 

@@ -1,0 +1,109 @@
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.625rem 0.875rem;
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: transform var(--motion-duration-fast) var(--motion-ease-out),
+              box-shadow var(--motion-duration-fast) var(--motion-ease-out),
+              background var(--motion-duration-medium) var(--motion-ease-out);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #0066FF 0%, #0052CC 100%);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 102, 255, 0.25);
+  transition: all var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+.btn-primary:hover { 
+  box-shadow: 0 6px 16px rgba(0, 102, 255, 0.35);
+  transform: translateY(-1px);
+}
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 102, 255, 0.25);
+}
+
+/* Tabs (login/signup switch) */
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem;
+  background: var(--color-surface-elevated-1);
+  padding: 0.25rem;
+  border-radius: 12px;
+  border: 1px solid var(--color-border-default);
+  margin: 0 auto var(--spacing-3);
+  max-width: 360px;
+}
+
+.tab {
+  text-align: center;
+  padding: 0.625rem 0.75rem;
+  border-radius: 10px;
+  color: var(--color-text-secondary);
+  background: transparent;
+  text-decoration: none;
+  font-weight: var(--font-weight-medium);
+  transition: all var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+.tab-active {
+  background: #fff;
+  color: var(--color-primary-500);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* Divider with text */
+.auth-divider {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--spacing-1);
+  color: var(--color-text-muted);
+  margin: var(--spacing-3) 0;
+}
+
+.auth-divider .line {
+  height: 1px;
+  background: var(--color-border-default);
+}
+
+/* Social buttons */
+.social-list {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-2);
+}
+
+.social-btn {
+  height: 44px;
+  width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid var(--color-border-default);
+  color: var(--color-text-primary);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: all var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+.social-btn:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+  border-color: var(--color-primary-200);
+}
+
+.social-btn svg {
+  font-size: 1.125rem;
+}

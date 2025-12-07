@@ -1,0 +1,184 @@
+/* Forms and inputs */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: 0.25rem;
+  font-weight: var(--font-weight-medium);
+}
+
+.auth-input {
+  width: 100%;
+  display: block;
+  padding: 0.75rem 1rem;
+  border: 1.5px solid var(--color-border-default);
+  border-radius: 12px;
+  background: var(--color-surface-base);
+  color: var(--color-text-primary);
+  outline: none;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+  transition: border-color var(--motion-duration-fast) var(--motion-ease-out),
+              box-shadow var(--motion-duration-fast) var(--motion-ease-out),
+              background-color var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+.auth-input:focus {
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 4px rgba(0, 102, 255, 0.1);
+}
+
+.auth-input::placeholder { color: var(--color-text-muted); }
+.auth-input:disabled {
+  background: var(--color-surface-elevated-1);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+/* Input with icon wrapper */
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Prefer spacing on the wrapper rather than the input element */
+.input-with-icon,
+.input-div {
+  margin-bottom: var(--spacing-2);
+}
+
+.input-with-icon .input-icon {
+  position: absolute;
+  left: 1rem;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  color: var(--color-text-muted);
+  pointer-events: none;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.input-with-icon .auth-input {
+  width: 100%;
+  padding-left: 2.75rem; /* room for icon */
+}
+
+/* Right-side action icon (e.g., show/hide password) */
+.input-with-icon .input-right-icon {
+  position: absolute;
+  right: 0.75rem;
+  top: 0;
+  bottom: 0;
+  width: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: 1rem;
+  background: transparent;
+  border: none;
+  padding: 0;
+  line-height: 0; /* remove baseline gap below SVG */
+}
+
+.input-with-icon .input-right-icon svg { display: block; }
+
+.input-with-icon.has-right .auth-input {
+  padding-right: 2.5rem; /* room for right icon */
+}
+
+/* --- OTP Input Styles --- */
+.otp-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: var(--spacing-3);
+}
+
+.otp-input {
+  width: 100%; /* Flexible width to fit container */
+  height: 50px;
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-align: center;
+  border: 1.5px solid var(--color-border-default);
+  border-radius: 12px;
+  background: var(--color-surface-base);
+  color: var(--color-text-primary);
+  outline: none;
+  transition: all 0.2s ease-in-out;
+}
+
+.otp-input:focus {
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 4px rgba(0, 102, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+/* --- Password Requirements List --- */
+.password-requirements {
+  margin-top: -0.5rem;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem;
+  background: var(--color-surface-elevated-1);
+  border-radius: 8px;
+  border: 1px solid var(--color-border-default);
+}
+
+.password-requirements p {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.requirements-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.requirements-list li {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+  transition: color 0.2s;
+}
+
+.requirements-list li::before {
+  content: "•";
+  color: var(--color-text-muted);
+  font-weight: bold;
+  transition: color 0.2s;
+}
+
+/* Valid State for Requirements */
+.requirements-list li.valid {
+  color: var(--color-success);
+}
+
+.requirements-list li.valid::before {
+  content: "✓";
+  color: var(--color-success);
+}
+
+/* Disabled Button Style */
+.btn:disabled, .btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+  box-shadow: none;
+  transform: none !important;
+  filter: grayscale(0.5);
+}
