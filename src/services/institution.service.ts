@@ -54,6 +54,43 @@ class InstitutionService {
       throw error;
     }
   }
+
+  /**
+   * Get all institutions for system admin with filters
+   */
+  async getAllInstitutions(filters: {
+    page?: number;
+    size?: number;
+    filters?: {
+      name?: string;
+      isBlocked?: boolean;
+    };
+  }): Promise<any> {
+    try {
+      const response = await apiClient.post(
+        `${this.BASE_PATH}/admin/all`,
+        filters
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Update institution status (block/unblock)
+   */
+  async updateStatus(data: {
+    prefix: string;
+    isBlocked: boolean;
+    message: string;
+  }): Promise<void> {
+    try {
+      await apiClient.post(`${this.BASE_PATH}/admin/status`, data);
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 // Export singleton instance

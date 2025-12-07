@@ -86,8 +86,33 @@ export interface Institution {
   country: string;
   address: string;
   logoUrl?: string;
+  logo?: {
+    id: string;
+    fileId: string;
+    publicUrl: string;
+  } | null;
   isBlocked: boolean;
+  owner?: {
+    id: number;
+    email: string;
+    name: string;
+  };
   createdAt: string;
+  updatedAt?: string;
+}
+
+export interface UpdateInstitutionStatusDto {
+  prefix: string;
+  isBlocked: boolean;
+  message: string;
+}
+
+export interface PaginatedInstitutionsResponse {
+  data: Institution[];
+  total: number;
+  page: number;
+  size: number;
+  totalPages: number;
 }
 
 // Institution Admin DTOs
