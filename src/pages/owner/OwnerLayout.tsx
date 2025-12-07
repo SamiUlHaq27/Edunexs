@@ -80,7 +80,9 @@ export default function OwnerLayout(): React.JSX.Element {
       setUserProfile({
         name: storedUser.name,
         role: formatRole(storedUser.role),
-        avatar: storedUser.profilePicture?.publicUrl,
+        avatar:
+          storedUser.profilePicture?.publicUrl ||
+          "/dummy/institution-owner-dummy-profile-picture.png",
       });
     }
   }, []);
