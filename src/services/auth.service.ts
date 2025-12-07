@@ -31,11 +31,35 @@ class AuthService {
   /**
    * Sign up a new user with OTP verification
    */
-  async signup(data: SignupDto): Promise<AuthResponse> {
+  async signup(
+    data: SignupDto,
+    profilePictureFile?: File
+  ): Promise<AuthResponse> {
     try {
+      const hasFile = !!profilePictureFile;
+
+      let payload: FormData | SignupDto;
+
+      if (hasFile) {
+        const formData = new FormData();
+        formData.append("email", data.email);
+        formData.append("name", data.name);
+        formData.append("password", data.password);
+        formData.append("otp", data.otp);
+        formData.append("profilePicture", profilePictureFile as Blob);
+        payload = formData;
+      } else {
+        payload = data;
+      }
+
       const response = await apiClient.post<AuthResponse>(
         `${this.BASE_PATH}/signup`,
-        data
+        payload,
+        hasFile
+          ? {
+              headers: { "Content-Type": "multipart/form-data" },
+            }
+          : undefined
       );
 
       // Store auth data in localStorage

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { ASSETS } from "../config/assets";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -10,10 +10,12 @@ import {
   faEyeSlash,
   faArrowLeft,
   faPaperPlane,
+  faUpload,
+  faUserCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import AuthSidebar from "../components/AuthSidebar";
 import { authService } from "../services/auth.service";
-import { OtpType } from "../types";
+import { OtpType, UserRole } from "../types";
 
 export default function Signup(): React.JSX.Element {
   const navigate = useNavigate(); // Initialize navigation
@@ -28,6 +30,25 @@ export default function Signup(): React.JSX.Element {
   const [confirm, setConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const rolePlaceholder = (role: UserRole): string => {
+    const map: Record<UserRole, string> = {
+      [UserRole.INSTITUTION_OWNER]:
+        "/dummy/institution-owner-dummy-profile-picture.png",
+      [UserRole.INSTITUTION_ADMIN]:
+        "/dummy/institution-admin-dummy-profile-picture.jpg",
+      [UserRole.SYSTEM_ADMIN]: "/dummy/system-admin-dummy-profile-picture.jpg",
+      [UserRole.TEACHER]: "/dummy/teacher-dummy-profile-picture.png",
+      [UserRole.STUDENT]: "/dummy/student-dummy-profile-picture.png",
+      [UserRole.PARENT]: "/dummy/student-dummy-profile-picture.png",
+    };
+    return map[role] || map[UserRole.INSTITUTION_OWNER];
+  };
+
+  const [profilePicture, setProfilePicture] = useState<File | null>(null);
+  const [profilePreview, setProfilePreview] = useState<string | null>(
+    rolePlaceholder(UserRole.INSTITUTION_OWNER)
+  );
+  const [selectedRole] = useState<UserRole>(UserRole.INSTITUTION_OWNER);
 
   // Step 2 State (OTP)
   const [otp, setOtp] = useState<string[]>(new Array(6).fill(""));
@@ -37,6 +58,18 @@ export default function Signup(): React.JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (profilePicture) {
+      const url = URL.createObjectURL(profilePicture);
+      setProfilePreview(url);
+      return () => URL.revokeObjectURL(url);
+    }
+
+    // Fallback to role-based dummy asset when no file is selected
+    setProfilePreview(rolePlaceholder(selectedRole));
+    return undefined;
+  }, [profilePicture, selectedRole]);
 
   // --- Password Validation Logic ---
   const checks = {
@@ -92,12 +125,15 @@ export default function Signup(): React.JSX.Element {
     setSuccessMessage(null);
 
     try {
-      const response = await authService.signup({
-        name,
-        email,
-        password,
-        otp: code,
-      });
+      const response = await authService.signup(
+        {
+          name,
+          email,
+          password,
+          otp: code,
+        },
+        profilePicture || undefined
+      );
 
       setSuccessMessage("Account created successfully!");
 
@@ -161,7 +197,7 @@ export default function Signup(): React.JSX.Element {
               <h2 className="auth-title">Create your account</h2>
               <p className="auth-subtitle">It only takes a minute</p>
 
-              <div className="tabs">
+              <div className="tabs" style={{ marginBottom: "1.25rem" }}>
                 <NavLink
                   to="/login"
                   className={({ isActive }) =>
@@ -178,6 +214,69 @@ export default function Signup(): React.JSX.Element {
                 >
                   Signup
                 </NavLink>
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: "0.75rem",
+                  marginBottom: "1rem",
+                }}
+              >
+                <div
+                  style={{
+                    width: "110px",
+                    height: "110px",
+                    borderRadius: "50%",
+                    background: "#f3f4f6",
+                    border: "2px dashed #d1d5db",
+                    display: "grid",
+                    placeItems: "center",
+                    overflow: "hidden",
+                  }}
+                >
+                  {profilePreview ? (
+                    <img
+                      src={profilePreview}
+                      alt="Preview"
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
+                    />
+                  ) : (
+                    <FontAwesomeIcon
+                      icon={faUserCircle}
+                      style={{ fontSize: "2.8rem", color: "#9ca3af" }}
+                    />
+                  )}
+                </div>
+                <label
+                  htmlFor="profilePicture"
+                  className="link"
+                  style={{
+                    cursor: isLoading ? "not-allowed" : "pointer",
+                    fontSize: "0.95rem",
+                    opacity: isLoading ? 0.5 : 1,
+                  }}
+                >
+                  <FontAwesomeIcon icon={faUpload} /> Upload picture
+                </label>
+                <input
+                  id="profilePicture"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      setProfilePicture(e.target.files[0]);
+                    }
+                  }}
+                  style={{ display: "none" }}
+                  disabled={isLoading}
+                />
               </div>
 
               <div className="auth-main">

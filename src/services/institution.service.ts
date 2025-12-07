@@ -36,6 +36,24 @@ class InstitutionService {
       throw error;
     }
   }
+
+  /**
+   * Upload logo for the institution
+   */
+  async uploadLogo(logoFile: File): Promise<void> {
+    try {
+      const formData = new FormData();
+      formData.append("logoFile", logoFile);
+
+      await apiClient.post(`${this.BASE_PATH}/upload-logo`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 // Export singleton instance
