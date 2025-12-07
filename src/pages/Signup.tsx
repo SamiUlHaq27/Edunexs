@@ -9,16 +9,18 @@ import {
   faEye,
   faEyeSlash,
   faArrowLeft,
-  faPaperPlane
+  faPaperPlane,
 } from "@fortawesome/free-solid-svg-icons";
 import AuthSidebar from "../components/AuthSidebar";
+import { authService } from "../services/auth.service";
+import { OtpType } from "../types";
 
 export default function Signup(): React.JSX.Element {
   const navigate = useNavigate(); // Initialize navigation
 
   // Steps: 1 = Details, 2 = Verification
   const [step, setStep] = useState<1 | 2>(1);
-  
+
   // Step 1 State
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -31,41 +33,83 @@ export default function Signup(): React.JSX.Element {
   const [otp, setOtp] = useState<string[]>(new Array(6).fill(""));
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
+  // Loading & Error States
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
   // --- Password Validation Logic ---
   const checks = {
     length: password.length >= 8,
     number: /[0-9]/.test(password),
     special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
-    capital: /[A-Z]/.test(password)
+    capital: /[A-Z]/.test(password),
   };
   const isPasswordValid = Object.values(checks).every(Boolean);
-  const canSubmitDetails = name && email && isPasswordValid && confirm && password === confirm;
+  const canSubmitDetails =
+    name && email && isPasswordValid && confirm && password === confirm;
 
   // --- Handlers ---
 
-  const onDetailsSubmit = (e: React.FormEvent) => {
+  const onDetailsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmitDetails) return;
-    
-    // Simulate API call to send OTP
-    // console.log(`Sending OTP to ${email}...`);
-    alert(`Verification code sent to ${email}`);
-    setStep(2);
+
+    setIsLoading(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      await authService.sendOtp({
+        email,
+        type: OtpType.SIGNUP,
+      });
+
+      setSuccessMessage(`Verification code sent to ${email}`);
+      setTimeout(() => {
+        setStep(2);
+        setSuccessMessage(null);
+      }, 1500);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to send verification code"
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const onVerifySubmit = (e: React.FormEvent) => {
+  const onVerifySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const code = otp.join("");
     if (code.length < 6) {
-      alert("Please enter the complete 6-digit code.");
+      setError("Please enter the complete 6-digit code.");
       return;
     }
 
-    // Simulate final signup success
-    // alert(`Account successfully created for ${name}!`);
-    
-    // Redirect to Create Institution Page
-    navigate("/create-institution");
+    setIsLoading(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      const response = await authService.signup({
+        name,
+        email,
+        password,
+        otp: code,
+      });
+
+      setSuccessMessage("Account created successfully!");
+
+      // Redirect to Create Institution Page after a short delay
+      setTimeout(() => {
+        navigate("/create-institution");
+      }, 1000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create account");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // --- OTP Input Handlers (Reused) ---
@@ -77,7 +121,10 @@ export default function Signup(): React.JSX.Element {
     if (value && index < 5) otpRefs.current[index + 1]?.focus();
   };
 
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleOtpKeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       otpRefs.current[index - 1]?.focus();
     }
@@ -86,12 +133,14 @@ export default function Signup(): React.JSX.Element {
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
     const pastedData = e.clipboardData.getData("text").slice(0, 6).split("");
-    if (pastedData.every(char => !isNaN(Number(char)))) {
-       const newOtp = [...otp];
-       pastedData.forEach((char, i) => { if (i < 6) newOtp[i] = char; });
-       setOtp(newOtp);
-       const focusIndex = Math.min(pastedData.length, 5);
-       otpRefs.current[focusIndex]?.focus();
+    if (pastedData.every((char) => !isNaN(Number(char)))) {
+      const newOtp = [...otp];
+      pastedData.forEach((char, i) => {
+        if (i < 6) newOtp[i] = char;
+      });
+      setOtp(newOtp);
+      const focusIndex = Math.min(pastedData.length, 5);
+      otpRefs.current[focusIndex]?.focus();
     }
   };
 
@@ -106,100 +155,216 @@ export default function Signup(): React.JSX.Element {
             className="auth-logo"
             loading="lazy"
           />
-          
+
           {step === 1 ? (
             <>
               <h2 className="auth-title">Create your account</h2>
               <p className="auth-subtitle">It only takes a minute</p>
 
               <div className="tabs">
-                <NavLink to="/login" className={({ isActive }) => `tab${isActive ? " tab-active" : ""}`}>
+                <NavLink
+                  to="/login"
+                  className={({ isActive }) =>
+                    `tab${isActive ? " tab-active" : ""}`
+                  }
+                >
                   Sign In
                 </NavLink>
-                <NavLink to="/signup" className={({ isActive }) => `tab${isActive ? " tab-active" : ""}`}>
+                <NavLink
+                  to="/signup"
+                  className={({ isActive }) =>
+                    `tab${isActive ? " tab-active" : ""}`
+                  }
+                >
                   Signup
                 </NavLink>
               </div>
 
               <div className="auth-main">
+                {/* Error Message */}
+                {error && (
+                  <div
+                    style={{
+                      padding: "0.75rem 1rem",
+                      marginBottom: "1rem",
+                      backgroundColor: "#fee",
+                      border: "1px solid #fcc",
+                      borderRadius: "0.5rem",
+                      color: "#c33",
+                      fontSize: "0.875rem",
+                    }}
+                  >
+                    {error}
+                  </div>
+                )}
+
+                {/* Success Message */}
+                {successMessage && (
+                  <div
+                    style={{
+                      padding: "0.75rem 1rem",
+                      marginBottom: "1rem",
+                      backgroundColor: "#efe",
+                      border: "1px solid #cfc",
+                      borderRadius: "0.5rem",
+                      color: "#383",
+                      fontSize: "0.875rem",
+                    }}
+                  >
+                    {successMessage}
+                  </div>
+                )}
+
                 <form onSubmit={onDetailsSubmit} className="auth-form">
                   {/* Name */}
-                  <label className="auth-label" htmlFor="name">Full name</label>
+                  <label className="auth-label" htmlFor="name">
+                    Full name
+                  </label>
                   <div className="input-with-icon">
-                    <span className="input-icon"><FontAwesomeIcon icon={faUser} /></span>
+                    <span className="input-icon">
+                      <FontAwesomeIcon icon={faUser} />
+                    </span>
                     <input
-                      id="name" type="text" className="auth-input" placeholder="Ahmad Raza"
-                      value={name} onChange={(e) => setName(e.target.value)} required
+                      id="name"
+                      type="text"
+                      className="auth-input"
+                      placeholder="Ahmad Raza"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
                     />
                   </div>
 
                   {/* Email */}
-                  <label className="auth-label" htmlFor="email">Email</label>
+                  <label className="auth-label" htmlFor="email">
+                    Email
+                  </label>
                   <div className="input-with-icon">
-                    <span className="input-icon"><FontAwesomeIcon icon={faEnvelope} /></span>
+                    <span className="input-icon">
+                      <FontAwesomeIcon icon={faEnvelope} />
+                    </span>
                     <input
-                      id="email" type="email" className="auth-input" placeholder="you@example.com"
-                      value={email} onChange={(e) => setEmail(e.target.value)} required
+                      id="email"
+                      type="email"
+                      className="auth-input"
+                      placeholder="you@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
                     />
                   </div>
 
                   {/* Password */}
-                  <label className="auth-label" htmlFor="password">Password</label>
+                  <label className="auth-label" htmlFor="password">
+                    Password
+                  </label>
                   <div className="input-with-icon has-right">
-                    <span className="input-icon"><FontAwesomeIcon icon={faLock} /></span>
+                    <span className="input-icon">
+                      <FontAwesomeIcon icon={faLock} />
+                    </span>
                     <input
-                      id="password" type={showPassword ? "text" : "password"} className="auth-input" placeholder="••••••••"
-                      value={password} onChange={(e) => setPassword(e.target.value)} required
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      className="auth-input"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
                     />
-                    <button type="button" className="input-right-icon" onClick={() => setShowPassword((v) => !v)}>
-                      <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+                    <button
+                      type="button"
+                      className="input-right-icon"
+                      onClick={() => setShowPassword((v) => !v)}
+                    >
+                      <FontAwesomeIcon
+                        icon={showPassword ? faEyeSlash : faEye}
+                      />
                     </button>
                   </div>
 
                   {/* Requirements */}
                   <div className="password-requirements">
-                     <p>Password requirements:</p>
-                     <ul className="requirements-list">
-                        <li className={checks.length ? "valid" : ""}>At least 8 characters</li>
-                        <li className={checks.capital ? "valid" : ""}>At least 1 capital letter (A-Z)</li>
-                        <li className={checks.number ? "valid" : ""}>At least 1 number (0-9)</li>
-                        <li className={checks.special ? "valid" : ""}>At least 1 special character</li>
-                     </ul>
+                    <p>Password requirements:</p>
+                    <ul className="requirements-list">
+                      <li className={checks.length ? "valid" : ""}>
+                        At least 8 characters
+                      </li>
+                      <li className={checks.capital ? "valid" : ""}>
+                        At least 1 capital letter (A-Z)
+                      </li>
+                      <li className={checks.number ? "valid" : ""}>
+                        At least 1 number (0-9)
+                      </li>
+                      <li className={checks.special ? "valid" : ""}>
+                        At least 1 special character
+                      </li>
+                    </ul>
                   </div>
 
                   {/* Confirm Password */}
                   {isPasswordValid && (
-                    <div style={{ animation: 'fadeIn 0.3s ease-in-out' }}>
-                      <label className="auth-label" htmlFor="confirm">Confirm password</label>
+                    <div style={{ animation: "fadeIn 0.3s ease-in-out" }}>
+                      <label className="auth-label" htmlFor="confirm">
+                        Confirm password
+                      </label>
                       <div className="input-with-icon has-right">
-                        <span className="input-icon"><FontAwesomeIcon icon={faLock} /></span>
+                        <span className="input-icon">
+                          <FontAwesomeIcon icon={faLock} />
+                        </span>
                         <input
-                          id="confirm" type={showConfirm ? "text" : "password"} className="auth-input" placeholder="••••••••"
-                          value={confirm} onChange={(e) => setConfirm(e.target.value)} required
+                          id="confirm"
+                          type={showConfirm ? "text" : "password"}
+                          className="auth-input"
+                          placeholder="••••••••"
+                          value={confirm}
+                          onChange={(e) => setConfirm(e.target.value)}
+                          required
                         />
-                        <button type="button" className="input-right-icon" onClick={() => setShowConfirm((v) => !v)}>
-                          <FontAwesomeIcon icon={showConfirm ? faEyeSlash : faEye} />
+                        <button
+                          type="button"
+                          className="input-right-icon"
+                          onClick={() => setShowConfirm((v) => !v)}
+                        >
+                          <FontAwesomeIcon
+                            icon={showConfirm ? faEyeSlash : faEye}
+                          />
                         </button>
                       </div>
                       {confirm && password !== confirm && (
-                        <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '-0.5rem', marginBottom: '1rem' }}>
+                        <p
+                          style={{
+                            color: "#ef4444",
+                            fontSize: "0.8rem",
+                            marginTop: "-0.5rem",
+                            marginBottom: "1rem",
+                          }}
+                        >
                           Passwords do not match
                         </p>
                       )}
                     </div>
                   )}
 
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     className="btn btn-primary auth-submit"
-                    disabled={!canSubmitDetails}
+                    disabled={!canSubmitDetails || isLoading}
                   >
-                    Continue <FontAwesomeIcon icon={faPaperPlane} style={{ marginLeft: '0.5rem' }}/>
+                    {isLoading ? "Sending..." : "Continue"}
+                    {!isLoading && (
+                      <FontAwesomeIcon
+                        icon={faPaperPlane}
+                        style={{ marginLeft: "0.5rem" }}
+                      />
+                    )}
                   </button>
                 </form>
-                
+
                 <p className="auth-switch">
-                  Already have an account? <Link to="/login" className="link">Sign in</Link>
+                  Already have an account?{" "}
+                  <Link to="/login" className="link">
+                    Sign in
+                  </Link>
                 </p>
               </div>
             </>
@@ -208,16 +373,52 @@ export default function Signup(): React.JSX.Element {
               {/* Step 2: Verification Screen */}
               <h2 className="auth-title">Verify Email</h2>
               <p className="auth-subtitle">
-                Enter the 6-digit code sent to <br/>
+                Enter the 6-digit code sent to <br />
                 <strong>{email}</strong>
               </p>
+
+              {/* Error Message */}
+              {error && (
+                <div
+                  style={{
+                    padding: "0.75rem 1rem",
+                    marginBottom: "1rem",
+                    backgroundColor: "#fee",
+                    border: "1px solid #fcc",
+                    borderRadius: "0.5rem",
+                    color: "#c33",
+                    fontSize: "0.875rem",
+                  }}
+                >
+                  {error}
+                </div>
+              )}
+
+              {/* Success Message */}
+              {successMessage && (
+                <div
+                  style={{
+                    padding: "0.75rem 1rem",
+                    marginBottom: "1rem",
+                    backgroundColor: "#efe",
+                    border: "1px solid #cfc",
+                    borderRadius: "0.5rem",
+                    color: "#383",
+                    fontSize: "0.875rem",
+                  }}
+                >
+                  {successMessage}
+                </div>
+              )}
 
               <form onSubmit={onVerifySubmit} className="auth-form">
                 <div className="otp-container" onPaste={handlePaste}>
                   {otp.map((digit, index) => (
                     <input
                       key={index}
-                      ref={(el) => { otpRefs.current[index] = el; }}
+                      ref={(el) => {
+                        otpRefs.current[index] = el;
+                      }}
                       type="text"
                       inputMode="numeric"
                       maxLength={1}
@@ -226,24 +427,37 @@ export default function Signup(): React.JSX.Element {
                       onChange={(e) => handleOtpChange(index, e.target.value)}
                       onKeyDown={(e) => handleOtpKeyDown(index, e)}
                       autoFocus={index === 0}
+                      disabled={isLoading}
                     />
                   ))}
                 </div>
 
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="btn btn-primary auth-submit"
-                  disabled={otp.join("").length < 6}
+                  disabled={otp.join("").length < 6 || isLoading}
                 >
-                  Verify & Create Account
+                  {isLoading
+                    ? "Creating Account..."
+                    : "Verify & Create Account"}
                 </button>
               </form>
 
-              <div className="auth-switch" style={{ marginTop: '1.5rem' }}>
-                <button 
-                  onClick={() => setStep(1)} 
-                  className="link" 
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 'inherit' }}
+              <div className="auth-switch" style={{ marginTop: "1.5rem" }}>
+                <button
+                  onClick={() => {
+                    setStep(1);
+                    setError(null);
+                    setOtp(new Array(6).fill(""));
+                  }}
+                  className="link"
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: "inherit",
+                  }}
+                  disabled={isLoading}
                 >
                   <FontAwesomeIcon icon={faArrowLeft} /> Change Email
                 </button>
