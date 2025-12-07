@@ -23,7 +23,7 @@ import ClassManagement from "./pages/owner/ClassManagement";
 
 // Teacher Pages
 import TeacherLayout from "./pages/teacher/TeacherLayout";
-import TeacherDashboard from "./pages/teacher/TeacherDashboard"; 
+import TeacherDashboard from "./pages/teacher/TeacherDashboard";
 import TeacherAttendance from "./pages/teacher/TeacherAttendance";
 import TeacherAssignments from "./pages/teacher/TeacherAssignments";
 import TeacherQuizzes from "./pages/teacher/TeacherQuizzes";
@@ -42,6 +42,7 @@ import ParentCourses from "./pages/parent/ParentCourses";
 import ParentFees from "./pages/parent/ParentFees";
 
 import Loader from "./components/Loader";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 export default function App(): React.JSX.Element {
   const [loading, setLoading] = React.useState(true);
@@ -81,17 +82,38 @@ export default function App(): React.JSX.Element {
       <Route path="/signup" element={<Signup />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
-      <Route path="/create-institution" element={<CreateInstitution />} />
+      <Route
+        path="/create-institution"
+        element={
+          <ProtectedRoute>
+            <CreateInstitution />
+          </ProtectedRoute>
+        }
+      />
 
       {/* System Admin Routes */}
-      <Route path="/system-admin" element={<SystemAdminLayout />}>
-         <Route index element={<Navigate to="dashboard" replace />} />
-         <Route path="dashboard" element={<SystemAdminDashboard />} />
-         <Route path="institutions" element={<SystemAdminInstitutions />} />
+      <Route
+        path="/system-admin"
+        element={
+          <ProtectedRoute>
+            <SystemAdminLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<SystemAdminDashboard />} />
+        <Route path="institutions" element={<SystemAdminInstitutions />} />
       </Route>
 
       {/* Owner Portal Routes */}
-      <Route path="/owner" element={<OwnerLayout />}>
+      <Route
+        path="/owner"
+        element={
+          <ProtectedRoute>
+            <OwnerLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<OwnerDashboard />} />
         <Route path="institution" element={<InstitutionSettings />} />
@@ -103,17 +125,31 @@ export default function App(): React.JSX.Element {
       </Route>
 
       {/* Teacher Portal Routes */}
-      <Route path="/teacher" element={<TeacherLayout />}>
+      <Route
+        path="/teacher"
+        element={
+          <ProtectedRoute>
+            <TeacherLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<TeacherDashboard />} /> 
+        <Route path="dashboard" element={<TeacherDashboard />} />
         <Route path="attendance" element={<TeacherAttendance />} />
         <Route path="assignments" element={<TeacherAssignments />} />
         <Route path="quizzes" element={<TeacherQuizzes />} />
-        <Route path="grades" element={<TeacherGrades />} /> 
+        <Route path="grades" element={<TeacherGrades />} />
       </Route>
 
       {/* Student Portal Routes */}
-      <Route path="/student" element={<StudentLayout />}>
+      <Route
+        path="/student"
+        element={
+          <ProtectedRoute>
+            <StudentLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<StudentCourses />} />
         <Route path="courses" element={<StudentCourses />} />
@@ -122,13 +158,20 @@ export default function App(): React.JSX.Element {
       </Route>
 
       {/* Parent Portal Routes */}
-      <Route path="/parent" element={<ParentLayout />}>
+      <Route
+        path="/parent"
+        element={
+          <ProtectedRoute>
+            <ParentLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<ParentDashboard />} />
         <Route path="courses" element={<ParentCourses />} />
         <Route path="fees" element={<ParentFees />} />
       </Route>
-      
+
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

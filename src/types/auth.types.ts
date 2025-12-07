@@ -76,3 +76,15 @@ export interface ApiError {
   statusCode?: number;
   error?: string;
 }
+
+// Institution Interface
+export interface Institution {
+  prefix: string;
+  name: string;
+  city: string;
+  country: string;
+  address: string;
+  logoUrl?: string;
+  isBlocked: boolean;
+  createdAt: string;
+}
