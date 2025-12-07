@@ -12,6 +12,7 @@ export enum UserRole {
 export enum OtpType {
   SIGNUP = "signup",
   PASSWORD_RESET = "password_reset",
+  EMAIL_VERIFICATION = "email_verification",
 }
 
 // User Interface
@@ -87,4 +88,33 @@ export interface Institution {
   logoUrl?: string;
   isBlocked: boolean;
   createdAt: string;
+}
+
+// Institution Admin DTOs
+export interface CreateInstitutionAdminDto {
+  username: string;
+  password: string;
+  name: string;
+  email?: string;
+  otp?: string;
+  profilePictureFileId?: string;
+}
+
+export interface UpdateInstitutionAdminDto {
+  institutionAdminId?: number;
+  username?: string;
+  password?: string;
+  name?: string;
+  email?: string;
+  otp?: string;
+  isActive?: boolean;
+  profilePictureFileId?: string;
+}
+
+// List Filters DTO
+export interface ListFiltersDto {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: "active" | "inactive";
 }
