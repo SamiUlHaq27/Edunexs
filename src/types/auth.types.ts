@@ -1,6 +1,6 @@
 // User Roles
 export enum UserRole {
-  SYSTEM_ADMIN = "system_admin",
+  SYSTEM_ADMIN = "admin",
   INSTITUTION_OWNER = "institution_owner",
   INSTITUTION_ADMIN = "institution_admin",
   TEACHER = "teacher",

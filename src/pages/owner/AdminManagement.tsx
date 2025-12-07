@@ -38,7 +38,6 @@ export default function AdminManagement() {
   const [institutionPrefix, setInstitutionPrefix] = useState<string>("EDU");
 
   // UI State
-  const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<
     "All" | "Active" | "Inactive"
   >("All");
@@ -109,14 +108,11 @@ export default function AdminManagement() {
 
   // --- Helpers ---
   const filteredAdmins = admins.filter((admin) => {
-    const matchesSearch =
-      admin.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      admin.email.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesFilter =
       filterStatus === "All" ||
       (filterStatus === "Active" && admin.isActive) ||
       (filterStatus === "Inactive" && !admin.isActive);
-    return matchesSearch && matchesFilter;
+    return matchesFilter;
   });
 
   // --- Handlers ---
@@ -431,34 +427,15 @@ export default function AdminManagement() {
           Registered Administrators
         </h3>
 
-        {/* Search & Filter Bar */}
+        {/* Filter Bar */}
         <div
           style={{
             display: "flex",
             justifyContent: "flex-end",
-            gap: "1rem",
             marginBottom: "1rem",
             position: "relative",
           }}
         >
-          {/* Search */}
-          <div
-            className="input-with-icon"
-            style={{ margin: 0, width: "250px" }}
-          >
-            <span className="input-icon">
-              <FontAwesomeIcon icon={faSearch} />
-            </span>
-            <input
-              className="auth-input"
-              placeholder="Search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ height: "38px", fontSize: "0.9rem" }}
-              disabled={isLoading}
-            />
-          </div>
-
           {/* Filter Dropdown */}
           <div style={{ position: "relative" }}>
             <button
@@ -736,48 +713,70 @@ export default function AdminManagement() {
                 {/* Employee ID */}
                 <div>
                   <label className="auth-label">Employee ID</label>
-                  <div
-                    className="input-group-split"
-                    style={{
-                      display: "flex",
-                      border: "1px solid #d1d5db",
-                      borderRadius: "0.5rem",
-                      overflow: "hidden",
-                      height: "42px",
-                    }}
-                  >
-                    <div
-                      className="input-group-prefix"
-                      style={{
-                        padding: "0.5rem 0.75rem",
-                        backgroundColor: "#f9fafb",
-                        display: "flex",
-                        alignItems: "center",
-                        fontWeight: "500",
-                        color: "#6b7280",
-                        borderRight: "1px solid #d1d5db",
-                      }}
-                    >
-                      {institutionPrefix}-
-                    </div>
+                  {isEditing ? (
                     <input
-                      className="input-group-field"
-                      placeholder="Enter employee ID"
+                      className="auth-input"
+                      placeholder="Employee ID"
                       value={formData.username}
                       onChange={(e) =>
-                        setFormData({ ...formData, username: e.target.value })
+                        setFormData((prev) => ({
+                          ...prev,
+                          username: e.target.value,
+                        }))
                       }
-                      disabled={isEditing || isLoading}
+                      disabled
+                      style={{ backgroundColor: "#f3f4f6" }}
                       required
-                      style={{
-                        flex: 1,
-                        border: "none",
-                        padding: "0.5rem 0.75rem",
-                        fontSize: "0.875rem",
-                        outline: "none",
-                      }}
                     />
-                  </div>
+                  ) : (
+                    <div
+                      className="input-group-split"
+                      style={{
+                        display: "flex",
+                        border: "1px solid #d1d5db",
+                        borderRadius: "0.5rem",
+                        overflow: "hidden",
+                        height: "44px",
+                        width: "100%",
+                      }}
+                    >
+                      <div
+                        className="input-group-prefix"
+                        style={{
+                          padding: "0.5rem 0.75rem",
+                          backgroundColor: "#f9fafb",
+                          display: "flex",
+                          alignItems: "center",
+                          fontWeight: "500",
+                          color: "#6b7280",
+                          borderRight: "1px solid #d1d5db",
+                          height: "100%",
+                        }}
+                      >
+                        {institutionPrefix}-
+                      </div>
+                      <input
+                        className="auth-input"
+                        placeholder="Enter employee ID"
+                        value={formData.username}
+                        onChange={(e) =>
+                          setFormData({ ...formData, username: e.target.value })
+                        }
+                        disabled={isLoading}
+                        required
+                        style={{
+                          flex: 1,
+                          border: "none",
+                          borderRadius: 0,
+                          padding: "0.5rem 0.75rem",
+                          fontSize: "0.95rem",
+                          outline: "none",
+                          height: "100%",
+                          boxShadow: "none",
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {/* Full Name */}
