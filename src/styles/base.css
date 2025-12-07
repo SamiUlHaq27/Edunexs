@@ -1,0 +1,48 @@
+/* Base and reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-family-base), system-ui, -apple-system, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--color-surface-raised);
+  color: var(--color-text-primary);
+}
+
+.app {
+  max-width: 800px;
+  margin: var(--spacing-12) auto;
+  padding: var(--spacing-3);
+  background: var(--color-surface-base);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elevation-2);
+}
+
+h1 {
+  /* margin: 0 0 var(--spacing-1) 0; */
+  font-family: var(--font-family-heading);
+  font-size: var(--font-size-2xl);
+  line-height: var(--line-height-2xl);
+}
+
+p {
+  margin: 0;
+}
+
+/* Links */
+.link {
+  color: var(--color-secondary-500);
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+  color: var(--color-secondary-400);
+}
