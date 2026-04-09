@@ -31,7 +31,7 @@ export default function Login(): React.JSX.Element {
       case UserRole.INSTITUTION_OWNER:
         return "/owner/dashboard";
       case UserRole.INSTITUTION_ADMIN:
-        return "/owner/dashboard";
+        return "/institute-admin/dashboard";
       case UserRole.TEACHER:
         return "/teacher/dashboard";
       case UserRole.STUDENT:
@@ -57,11 +57,20 @@ export default function Login(): React.JSX.Element {
 
       // Check if institution owner needs to create institution
       if (response.user.role === UserRole.INSTITUTION_OWNER) {
-        const institution = await institutionService.getMyInstitution();
+        try {
+          const institution = await institutionService.getMyInstitution();
 
-        if (!institution) {
-          // No institution found, redirect to create institution
+          if (!institution) {
+            // No institution found, redirect to create institution
+            navigate("/create-institution");
+            setIsLoading(false);
+            return;
+          }
+        } catch (institutionError) {
+          // Institution check failed, silently redirect to create institution
+          // This handles cases where the API returns any error (404, 500, etc.)
           navigate("/create-institution");
+          setIsLoading(false);
           return;
         }
       }
