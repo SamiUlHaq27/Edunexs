@@ -19,6 +19,7 @@ export enum OtpType {
 export interface User {
   id: number;
   username: string;
+  email?: string;
   name: string;
   profilePicture?: {
     dbFileId: number;
@@ -136,9 +137,24 @@ export interface UpdateInstitutionAdminDto {
   profilePictureFileId?: string;
 }
 
+export interface UpdateInstitutionAdminProfileDto {
+  password?: string;
+  email?: string;
+  otp?: string;
+}
+
 // List Filters DTO
 export interface ListFiltersDto {
   page?: number;
+  size?: number;
+  filters?: {
+    name?: string;
+    email?: string;
+    isActive?: boolean;
+    code?: string;
+    title?: string;
+  };
+  // Backward-compatible optional legacy keys
   limit?: number;
   search?: string;
   status?: "active" | "inactive";

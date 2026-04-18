@@ -16,7 +16,9 @@ import { Institution } from "../../types";
 export default function InstitutionSettings(): React.JSX.Element {
   const [institution, setInstitution] = useState<Institution | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [formData, setFormData] = useState<Institution | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -228,19 +230,42 @@ export default function InstitutionSettings(): React.JSX.Element {
   const handleSave = async () => {
     if (!formData) return;
 
+    setIsSaving(true);
+    setError(null);
+
     let nextLogoUrl = formData.logoUrl;
     if (logoFile) {
       try {
         await institutionService.uploadLogo(logoFile);
         nextLogoUrl = logoPreview || formData.logoUrl;
       } catch (err) {
-        // If upload fails, keep existing logo
+        setError("Logo upload failed. Keeping existing logo.");
       }
     }
 
-    setInstitution({ ...formData, logoUrl: nextLogoUrl });
-    setLogoFile(null);
-    setIsEditOpen(false);
+    try {
+      const updated = await institutionService.updateInstitution({
+        name: formData.name,
+        city: formData.city,
+        country: formData.country,
+        address: formData.address,
+      });
+
+      const updatedInstitution = { ...updated, logoUrl: nextLogoUrl };
+      setInstitution(updatedInstitution);
+      setFormData(updatedInstitution);
+      setLogoFile(null);
+      setIsEditOpen(false);
+      setSuccessMessage("Institution details updated successfully.");
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to update institution details.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const triggerLogoSelect = () => {
@@ -264,6 +289,21 @@ export default function InstitutionSettings(): React.JSX.Element {
       >
         Institution Details
       </h2>
+      {successMessage && (
+        <div
+          style={{
+            padding: "0.75rem 1rem",
+            marginBottom: "1rem",
+            backgroundColor: "#efe",
+            border: "1px solid #cfc",
+            borderRadius: "0.5rem",
+            color: "#166534",
+            fontSize: "0.875rem",
+          }}
+        >
+          {successMessage}
+        </div>
+      )}
       {renderCard()}
 
       <div className="inst-bottom-grid">
@@ -437,12 +477,17 @@ export default function InstitutionSettings(): React.JSX.Element {
               <button
                 className="btn"
                 onClick={() => setIsEditOpen(false)}
+                disabled={isSaving}
                 style={{ background: "white", border: "1px solid #d1d5db" }}
               >
                 Cancel
               </button>
-              <button className="btn btn-primary" onClick={handleSave}>
-                Save Changes
+              <button
+                className="btn btn-primary"
+                onClick={handleSave}
+                disabled={isSaving}
+              >
+                {isSaving ? "Saving..." : "Save Changes"}
               </button>
             </div>
           </div>

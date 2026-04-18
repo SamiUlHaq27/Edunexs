@@ -155,6 +155,13 @@ class AuthService {
   }
 
   /**
+   * Update stored user data
+   */
+  setUser(user: User): void {
+    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+  }
+
+  /**
    * Check if user is authenticated
    */
   isAuthenticated(): boolean {

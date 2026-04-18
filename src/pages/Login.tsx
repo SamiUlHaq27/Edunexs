@@ -17,8 +17,10 @@ export default function Login(): React.JSX.Element {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loginMode, setLoginMode] = useState<"email" | "username">("email");
 
   // Loading & Error States
   const [isLoading, setIsLoading] = useState(false);
@@ -50,8 +52,27 @@ export default function Login(): React.JSX.Element {
     setError(null);
 
     try {
+      // Validate that either email or username is provided
+      if (loginMode === "email" && !email.trim()) {
+        setError("Please enter your email address");
+        setIsLoading(false);
+        return;
+      }
+
+      if (loginMode === "username" && !username.trim()) {
+        setError("Please enter your username");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!password.trim()) {
+        setError("Please enter your password");
+        setIsLoading(false);
+        return;
+      }
+
       const response = await authService.login({
-        email,
+        ...(loginMode === "email" ? { email } : { username }),
         password,
       });
 
@@ -135,24 +156,106 @@ export default function Login(): React.JSX.Element {
           )}
 
           <form onSubmit={onSubmit} className="auth-form">
-            <label className="auth-label" htmlFor="email">
-              Email
-            </label>
-            <div className="input-with-icon">
-              <span className="input-icon" aria-hidden>
-                <FontAwesomeIcon icon={faEnvelope} />
-              </span>
-              <input
-                id="email"
-                type="email"
-                className="auth-input"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+            {/* Login Mode Toggle */}
+            <div
+              style={{
+                display: "flex",
+                gap: "0.5rem",
+                marginBottom: "1.5rem",
+                borderBottom: "1px solid var(--color-border-muted)",
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setLoginMode("email")}
+                style={{
+                  flex: 1,
+                  padding: "0.75rem",
+                  border: "none",
+                  background: "none",
+                  cursor: "pointer",
+                  fontSize: "0.875rem",
+                  fontWeight: loginMode === "email" ? "600" : "500",
+                  color: loginMode === "email" ? "#1e3a8a" : "#6b7280",
+                  borderBottom:
+                    loginMode === "email"
+                      ? "2px solid #1e3a8a"
+                      : "2px solid transparent",
+                  marginBottom: "-1px",
+                }}
                 disabled={isLoading}
-                required
-              />
+              >
+                Email
+              </button>
+              <button
+                type="button"
+                onClick={() => setLoginMode("username")}
+                style={{
+                  flex: 1,
+                  padding: "0.75rem",
+                  border: "none",
+                  background: "none",
+                  cursor: "pointer",
+                  fontSize: "0.875rem",
+                  fontWeight: loginMode === "username" ? "600" : "500",
+                  color: loginMode === "username" ? "#1e3a8a" : "#6b7280",
+                  borderBottom:
+                    loginMode === "username"
+                      ? "2px solid #1e3a8a"
+                      : "2px solid transparent",
+                  marginBottom: "-1px",
+                }}
+                disabled={isLoading}
+              >
+                Username
+              </button>
             </div>
+
+            {/* Email Input */}
+            {loginMode === "email" && (
+              <>
+                <label className="auth-label" htmlFor="email">
+                  Email
+                </label>
+                <div className="input-with-icon">
+                  <span className="input-icon" aria-hidden>
+                    <FontAwesomeIcon icon={faEnvelope} />
+                  </span>
+                  <input
+                    id="email"
+                    type="email"
+                    className="auth-input"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Username Input */}
+            {loginMode === "username" && (
+              <>
+                <label className="auth-label" htmlFor="username">
+                  Username
+                </label>
+                <div className="input-with-icon">
+                  <span className="input-icon" aria-hidden>
+                    <FontAwesomeIcon icon={faEnvelope} />
+                  </span>
+                  <input
+                    id="username"
+                    type="text"
+                    className="auth-input"
+                    placeholder="institution_username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
+              </>
+            )}
 
             <label className="auth-label" htmlFor="password">
               Password
@@ -169,7 +272,6 @@ export default function Login(): React.JSX.Element {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
-                required
               />
               <button
                 type="button"

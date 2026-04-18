@@ -10,7 +10,7 @@ class InstitutionService {
   async getMyInstitution(): Promise<Institution | null> {
     try {
       const response = await apiClient.get<Institution>(
-        `${this.BASE_PATH}/my-institution`
+        `${this.BASE_PATH}/my-institution`,
       );
       return response.data;
     } catch (error) {
@@ -31,6 +31,24 @@ class InstitutionService {
   }): Promise<Institution> {
     try {
       const response = await apiClient.post<Institution>(this.BASE_PATH, data);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Update current owner's institution details
+   */
+  async updateInstitution(data: {
+    prefix?: string;
+    name?: string;
+    city?: string;
+    country?: string;
+    address?: string;
+  }): Promise<Institution> {
+    try {
+      const response = await apiClient.put<Institution>(this.BASE_PATH, data);
       return response.data;
     } catch (error) {
       throw error;
@@ -69,7 +87,7 @@ class InstitutionService {
     try {
       const response = await apiClient.post(
         `${this.BASE_PATH}/admin/all`,
-        filters
+        filters,
       );
       return response.data;
     } catch (error) {

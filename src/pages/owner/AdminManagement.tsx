@@ -44,13 +44,14 @@ export default function AdminManagement() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [profilePhotoFile, setProfilePhotoFile] = useState<File | null>(null);
   const [profilePhotoPreview, setProfilePhotoPreview] = useState<string>(
-    "/dummy/institution-admin-dummy-profile-picture.jpg"
+    "/dummy/institution-admin-dummy-profile-picture.jpg",
   );
   const [isSendingOtp, setIsSendingOtp] = useState(false);
 
@@ -75,7 +76,9 @@ export default function AdminManagement() {
           setInstitutionPrefix(institution.prefix);
         }
       } catch (err) {
-        console.error("Failed to load institution:", err);
+        setError(
+          "Unable to load institution context. Some fields may be unavailable.",
+        );
       }
       fetchAdmins();
     };
@@ -120,7 +123,21 @@ export default function AdminManagement() {
   const toggleMenu = (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
     setIsFilterOpen(false);
-    setOpenMenuId(openMenuId === id ? null : id);
+
+    if (openMenuId === id) {
+      setOpenMenuId(null);
+    } else {
+      // Calculate position relative to button
+      const button = e.currentTarget as HTMLButtonElement;
+      const rect = button.getBoundingClientRect();
+
+      setMenuPosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.right + window.scrollX - 140, // Align right edge with button
+      });
+
+      setOpenMenuId(id);
+    }
   };
 
   const toggleFilter = (e: React.MouseEvent) => {
@@ -143,7 +160,7 @@ export default function AdminManagement() {
       // Set profile picture from admin data if available
       setProfilePhotoPreview(
         admin.profilePicture?.publicUrl ||
-          `/dummy/institution-admin-dummy-profile-picture.jpg`
+          `/dummy/institution-admin-dummy-profile-picture.jpg`,
       );
       setProfilePhotoFile(null);
       setIsEditing(true);
@@ -158,7 +175,7 @@ export default function AdminManagement() {
         otp: "",
       });
       setProfilePhotoPreview(
-        `/dummy/institution-admin-dummy-profile-picture.jpg`
+        `/dummy/institution-admin-dummy-profile-picture.jpg`,
       );
       setProfilePhotoFile(null);
       setIsEditing(false);
@@ -180,7 +197,7 @@ export default function AdminManagement() {
     });
     setProfilePhotoFile(null);
     setProfilePhotoPreview(
-      "/dummy/institution-admin-dummy-profile-picture.jpg"
+      "/dummy/institution-admin-dummy-profile-picture.jpg",
     );
   };
 
@@ -237,7 +254,7 @@ export default function AdminManagement() {
         try {
           profilePictureFileId = await fileService.uploadFile(
             profilePhotoFile,
-            `admin_${formData.username}_${Date.now()}`
+            `admin_${formData.username}_${Date.now()}`,
           );
         } catch (uploadErr) {
           setError("Failed to upload profile picture");
@@ -300,7 +317,7 @@ export default function AdminManagement() {
       }, 1500);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to save administrator"
+        err instanceof Error ? err.message : "Failed to save administrator",
       );
     } finally {
       setIsLoading(false);
@@ -323,7 +340,7 @@ export default function AdminManagement() {
       }, 1500);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to delete administrator"
+        err instanceof Error ? err.message : "Failed to delete administrator",
       );
     } finally {
       setIsLoading(false);
@@ -339,7 +356,7 @@ export default function AdminManagement() {
       setSuccessMessage(
         `Administrator ${
           !currentStatus ? "activated" : "deactivated"
-        } successfully!`
+        } successfully!`,
       );
       setTimeout(() => {
         setSuccessMessage(null);
@@ -539,47 +556,6 @@ export default function AdminManagement() {
                           >
                             <FontAwesomeIcon icon={faEllipsisH} />
                           </button>
-
-                          {/* Action Dropdown */}
-                          {openMenuId === admin.id && (
-                            <div className="action-menu-dropdown">
-                              <button
-                                className="dropdown-item"
-                                onClick={() => handleOpenModal(admin)}
-                                disabled={isLoading}
-                              >
-                                <FontAwesomeIcon
-                                  icon={faEdit}
-                                  style={{ color: "#6b7280", width: "16px" }}
-                                />{" "}
-                                Edit
-                              </button>
-                              <button
-                                className="dropdown-item"
-                                onClick={() =>
-                                  toggleStatus(admin.id, admin.isActive)
-                                }
-                                disabled={isLoading}
-                              >
-                                <FontAwesomeIcon
-                                  icon={faPowerOff}
-                                  style={{ color: "#6b7280", width: "16px" }}
-                                />
-                                {admin.isActive ? "Deactivate" : "Activate"}
-                              </button>
-                              <button
-                                className="dropdown-item danger"
-                                onClick={() => handleDelete(admin.id)}
-                                disabled={isLoading}
-                              >
-                                <FontAwesomeIcon
-                                  icon={faTrash}
-                                  style={{ width: "16px" }}
-                                />{" "}
-                                Delete
-                              </button>
-                            </div>
-                          )}
                         </div>
                       </td>
                     </tr>
@@ -600,6 +576,66 @@ export default function AdminManagement() {
                 )}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Action Menu Dropdown - Rendered outside table for proper layering */}
+        {openMenuId !== null && (
+          <div
+            className="action-menu-dropdown"
+            style={{
+              position: "fixed",
+              top: `${menuPosition.top}px`,
+              left: `${menuPosition.left}px`,
+              zIndex: 1000,
+            }}
+          >
+            {(() => {
+              const admin = admins.find((a) => a.id === openMenuId);
+              return admin ? (
+                <>
+                  <button
+                    className="dropdown-item"
+                    onClick={() => {
+                      handleOpenModal(admin);
+                      setOpenMenuId(null);
+                    }}
+                    disabled={isLoading}
+                  >
+                    <FontAwesomeIcon
+                      icon={faEdit}
+                      style={{ color: "#6b7280", width: "16px" }}
+                    />{" "}
+                    Edit
+                  </button>
+                  <button
+                    className="dropdown-item"
+                    onClick={() => {
+                      toggleStatus(admin.id, admin.isActive);
+                      setOpenMenuId(null);
+                    }}
+                    disabled={isLoading}
+                  >
+                    <FontAwesomeIcon
+                      icon={faPowerOff}
+                      style={{ color: "#6b7280", width: "16px" }}
+                    />
+                    {admin.isActive ? "Deactivate" : "Activate"}
+                  </button>
+                  <button
+                    className="dropdown-item danger"
+                    onClick={() => {
+                      handleDelete(admin.id);
+                      setOpenMenuId(null);
+                    }}
+                    disabled={isLoading}
+                  >
+                    <FontAwesomeIcon icon={faTrash} style={{ width: "16px" }} />{" "}
+                    Delete
+                  </button>
+                </>
+              ) : null;
+            })()}
           </div>
         )}
       </div>

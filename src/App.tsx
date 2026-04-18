@@ -15,6 +15,7 @@ import SystemAdminInstitutions from "./pages/system-admin/SystemAdminInstitution
 // Institution Admin Pages
 import InstitutionAdminLayout from "./pages/institute-admin/InstitutionAdminLayout";
 import InstitutionAdminDashboard from "./pages/institute-admin/InstitutionAdminDashboard";
+import InstitutionAdminSettings from "./pages/institute-admin/InstitutionAdminSettings";
 
 // Owner Pages
 import OwnerLayout from "./pages/owner/OwnerLayout";
@@ -107,6 +108,7 @@ export default function App(): React.JSX.Element {
         >
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<InstitutionAdminDashboard />} />
+          <Route path="settings" element={<InstitutionAdminSettings />} />
         </Route>
 
         {/* Owner Portal Routes */}

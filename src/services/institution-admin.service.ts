@@ -2,6 +2,7 @@ import apiClient from "../config/api.config";
 import {
   CreateInstitutionAdminDto,
   UpdateInstitutionAdminDto,
+  UpdateInstitutionAdminProfileDto,
   ListFiltersDto,
 } from "../types";
 
@@ -42,6 +43,16 @@ interface UpdateAdminResponse {
   admin?: InstitutionAdmin;
 }
 
+interface UpdateOwnProfileResponse {
+  id: number;
+  email?: string;
+  username: string;
+  name: string;
+  role: string;
+  isActive: boolean;
+  updatedAt: string;
+}
+
 interface DeleteAdminResponse {
   success: boolean;
   message: string;
@@ -57,7 +68,7 @@ class InstitutionAdminService {
     try {
       const response = await apiClient.post<PaginatedAdminsResponse>(
         `${this.BASE_PATH}/all`,
-        filters || { page: 1, size: 10, filters: {} }
+        filters || { page: 1, size: 10, filters: {} },
       );
       return response.data;
     } catch (error) {
@@ -69,12 +80,12 @@ class InstitutionAdminService {
    * Create a new institution admin
    */
   async createAdmin(
-    data: CreateInstitutionAdminDto
+    data: CreateInstitutionAdminDto,
   ): Promise<CreateAdminResponse> {
     try {
       const response = await apiClient.post<CreateAdminResponse>(
         `${this.BASE_PATH}`,
-        data
+        data,
       );
       return response.data;
     } catch (error) {
@@ -87,7 +98,7 @@ class InstitutionAdminService {
    */
   async updateAdmin(
     adminId: number,
-    data: Partial<UpdateInstitutionAdminDto>
+    data: Partial<UpdateInstitutionAdminDto>,
   ): Promise<UpdateAdminResponse> {
     try {
       const payload = {
@@ -96,7 +107,7 @@ class InstitutionAdminService {
       };
       const response = await apiClient.put<UpdateAdminResponse>(
         `${this.BASE_PATH}`,
-        payload
+        payload,
       );
       return response.data;
     } catch (error) {
@@ -113,7 +124,7 @@ class InstitutionAdminService {
         `${this.BASE_PATH}`,
         {
           data: { institutionAdminId: adminId },
-        }
+        },
       );
       return response.data;
     } catch (error) {
@@ -126,10 +137,50 @@ class InstitutionAdminService {
    */
   async toggleStatus(
     adminId: number,
-    isActive: boolean
+    isActive: boolean,
   ): Promise<UpdateAdminResponse> {
     try {
       return await this.updateAdmin(adminId, { isActive });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Update own institution-admin profile (recovery email, password, picture)
+   */
+  async updateMyProfile(
+    data: UpdateInstitutionAdminProfileDto,
+    profilePicture?: File,
+  ): Promise<UpdateOwnProfileResponse> {
+    try {
+      const hasFile = !!profilePicture;
+      let payload: FormData | UpdateInstitutionAdminProfileDto;
+
+      if (hasFile) {
+        const formData = new FormData();
+
+        if (data.email) formData.append("email", data.email);
+        if (data.otp) formData.append("otp", data.otp);
+        if (data.password) formData.append("password", data.password);
+        formData.append("profilePicture", profilePicture as Blob);
+
+        payload = formData;
+      } else {
+        payload = data;
+      }
+
+      const response = await apiClient.put<UpdateOwnProfileResponse>(
+        `${this.BASE_PATH}/profile/me`,
+        payload,
+        hasFile
+          ? {
+              headers: { "Content-Type": "multipart/form-data" },
+            }
+          : undefined,
+      );
+
+      return response.data;
     } catch (error) {
       throw error;
     }

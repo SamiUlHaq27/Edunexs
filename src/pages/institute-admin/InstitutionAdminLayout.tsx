@@ -2,12 +2,11 @@ import React, { useState } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faBook,
+  faGauge,
   faCog,
   faSignOutAlt,
   faBars,
   faTimes,
-  faUsers,
 } from "@fortawesome/free-solid-svg-icons";
 import { authService } from "../../services/auth.service";
 
@@ -23,9 +22,11 @@ export default function InstitutionAdminLayout(): React.JSX.Element {
   const user = authService.getUser();
 
   const menuItems = [
-    { label: "Dashboard", path: "/institute-admin/dashboard", icon: faBook },
-    { label: "Courses", path: "/institute-admin/courses", icon: faBook },
-    { label: "Students", path: "/institute-admin/students", icon: faUsers },
+    {
+      label: "Dashboard",
+      path: "/institute-admin/dashboard",
+      icon: faGauge,
+    },
     { label: "Settings", path: "/institute-admin/settings", icon: faCog },
   ];
 
