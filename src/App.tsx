@@ -1,5 +1,6 @@
 import React from "react";
 import { Routes, Route, Link, Navigate } from "react-router-dom";
+import ErrorBoundary from "./components/ErrorBoundary";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -10,6 +11,11 @@ import CreateInstitution from "./pages/CreateInstitution";
 import SystemAdminLayout from "./pages/system-admin/SystemAdminLayout";
 import SystemAdminDashboard from "./pages/system-admin/SystemAdminDashboard";
 import SystemAdminInstitutions from "./pages/system-admin/SystemAdminInstitutions";
+
+// Institution Admin Pages
+import InstitutionAdminLayout from "./pages/institute-admin/InstitutionAdminLayout";
+import InstitutionAdminDashboard from "./pages/institute-admin/InstitutionAdminDashboard";
+import InstitutionAdminSettings from "./pages/institute-admin/InstitutionAdminSettings";
 
 // Owner Pages
 import OwnerLayout from "./pages/owner/OwnerLayout";
@@ -43,11 +49,15 @@ import ParentFees from "./pages/parent/ParentFees";
 
 import Loader from "./components/Loader";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { authService } from "./services/auth.service";
 
 export default function App(): React.JSX.Element {
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
+    // Initialize session on app startup
+    authService.initializeSession();
+
     // Simulate initial loading
     const timer = setTimeout(() => setLoading(false), 2000);
     return () => clearTimeout(timer);
@@ -56,123 +66,123 @@ export default function App(): React.JSX.Element {
   if (loading) return <Loader />;
 
   return (
-    <Routes>
-      <Route
-        path="/"
-        element={
-          <div className="app">
-            <h1>Welcome to Edunexs</h1>
-            <p style={{ marginTop: "0.5rem" }}>
-              Explore the UI: <Link to="/login">Login</Link> •{" "}
-              <Link to="/signup">Signup</Link> •{" "}
-              <Link to="/system-admin/dashboard">System Admin</Link> •{" "}
-              <Link to="/owner/dashboard">Owner Portal</Link> •{" "}
-              <Link to="/teacher/dashboard">Teacher Portal</Link> •{" "}
-              <Link to="/student/dashboard">Student Portal</Link> •{" "}
-              <Link to="/parent/dashboard">Parent Portal</Link> •{" "}
-              <Link to="/create-institution">Create Institution</Link> •{" "}
-              <Link to="/forgot-password">Forgot Password</Link> •{" "}
-              <Link to="/verify-email">Verify Email</Link>
-            </p>
-          </div>
-        }
-      />
+    <ErrorBoundary>
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
 
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Signup />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/verify-email" element={<VerifyEmail />} />
-      <Route
-        path="/create-institution"
-        element={
-          <ProtectedRoute>
-            <CreateInstitution />
-          </ProtectedRoute>
-        }
-      />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route
+          path="/create-institution"
+          element={
+            <ProtectedRoute>
+              <CreateInstitution />
+            </ProtectedRoute>
+          }
+        />
 
-      {/* System Admin Routes */}
-      <Route
-        path="/system-admin"
-        element={
-          <ProtectedRoute>
-            <SystemAdminLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<SystemAdminDashboard />} />
-        <Route path="institutions" element={<SystemAdminInstitutions />} />
-      </Route>
+        {/* System Admin Routes */}
+        <Route
+          path="/system-admin"
+          element={
+            <ProtectedRoute>
+              <SystemAdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<SystemAdminDashboard />} />
+          <Route path="institutions" element={<SystemAdminInstitutions />} />
+        </Route>
 
-      {/* Owner Portal Routes */}
-      <Route
-        path="/owner"
-        element={
-          <ProtectedRoute>
-            <OwnerLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<OwnerDashboard />} />
-        <Route path="institution" element={<InstitutionSettings />} />
-        <Route path="admins" element={<AdminManagement />} />
-        <Route path="teachers" element={<TeacherManagement />} />
-        <Route path="students" element={<StudentManagement />} />
-        <Route path="courses" element={<CourseManagement />} />
-        <Route path="classes" element={<ClassManagement />} />
-      </Route>
+        {/* Institution Admin Routes */}
+        <Route
+          path="/institute-admin"
+          element={
+            <ProtectedRoute>
+              <InstitutionAdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<InstitutionAdminDashboard />} />
+          <Route path="settings" element={<InstitutionAdminSettings />} />
+        </Route>
 
-      {/* Teacher Portal Routes */}
-      <Route
-        path="/teacher"
-        element={
-          <ProtectedRoute>
-            <TeacherLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<TeacherDashboard />} />
-        <Route path="attendance" element={<TeacherAttendance />} />
-        <Route path="assignments" element={<TeacherAssignments />} />
-        <Route path="quizzes" element={<TeacherQuizzes />} />
-        <Route path="grades" element={<TeacherGrades />} />
-      </Route>
+        {/* Owner Portal Routes */}
+        <Route
+          path="/owner"
+          element={
+            <ProtectedRoute>
+              <OwnerLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<OwnerDashboard />} />
+          <Route path="institution" element={<InstitutionSettings />} />
+          <Route path="admins" element={<AdminManagement />} />
+          <Route path="teachers" element={<TeacherManagement />} />
+          <Route path="students" element={<StudentManagement />} />
+          <Route path="courses" element={<CourseManagement />} />
+          <Route path="classes" element={<ClassManagement />} />
+        </Route>
 
-      {/* Student Portal Routes */}
-      <Route
-        path="/student"
-        element={
-          <ProtectedRoute>
-            <StudentLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<StudentCourses />} />
-        <Route path="courses" element={<StudentCourses />} />
-        <Route path="attempt-quiz" element={<StudentQuizAttempt />} />
-        <Route path="submit-assignment" element={<StudentAssignmentSubmit />} />
-      </Route>
+        {/* Teacher Portal Routes */}
+        <Route
+          path="/teacher"
+          element={
+            <ProtectedRoute>
+              <TeacherLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<TeacherDashboard />} />
+          <Route path="attendance" element={<TeacherAttendance />} />
+          <Route path="assignments" element={<TeacherAssignments />} />
+          <Route path="quizzes" element={<TeacherQuizzes />} />
+          <Route path="grades" element={<TeacherGrades />} />
+        </Route>
 
-      {/* Parent Portal Routes */}
-      <Route
-        path="/parent"
-        element={
-          <ProtectedRoute>
-            <ParentLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<ParentDashboard />} />
-        <Route path="courses" element={<ParentCourses />} />
-        <Route path="fees" element={<ParentFees />} />
-      </Route>
+        {/* Student Portal Routes */}
+        <Route
+          path="/student"
+          element={
+            <ProtectedRoute>
+              <StudentLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<StudentCourses />} />
+          <Route path="courses" element={<StudentCourses />} />
+          <Route path="attempt-quiz" element={<StudentQuizAttempt />} />
+          <Route
+            path="submit-assignment"
+            element={<StudentAssignmentSubmit />}
+          />
+        </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        {/* Parent Portal Routes */}
+        <Route
+          path="/parent"
+          element={
+            <ProtectedRoute>
+              <ParentLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<ParentDashboard />} />
+          <Route path="courses" element={<ParentCourses />} />
+          <Route path="fees" element={<ParentFees />} />
+        </Route>
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </ErrorBoundary>
   );
 }
