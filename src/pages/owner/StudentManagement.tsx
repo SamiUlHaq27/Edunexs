@@ -51,6 +51,9 @@ export default function StudentManagement() {
   const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [profilePhotoPreview, setProfilePhotoPreview] = useState<string>(
+    "/dummy/teacher-dummy-profile-picture.png",
+  );
 
   // Form States
   const [studentForm, setStudentForm] = useState({
@@ -100,8 +103,12 @@ export default function StudentManagement() {
         recoveryEmail: student.recoveryEmail || "", grade: student.grade,
         password: "", avatar: student.avatar || null
       });
+      setProfilePhotoPreview(
+        student.avatar || "/dummy/teacher-dummy-profile-picture.png",
+      );
     } else {
       setStudentForm({ id: 0, prefix: "STD-", postfix: "", name: "", email: "", recoveryEmail: "", grade: "", password: "", avatar: null });
+      setProfilePhotoPreview("/dummy/teacher-dummy-profile-picture.png");
     }
     setIsStudentModalOpen(true);
     setOpenMenuId(null);
@@ -136,9 +143,19 @@ export default function StudentManagement() {
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setStudentForm({ ...studentForm, avatar: URL.createObjectURL(e.target.files[0]) });
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      return;
     }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const previewUrl = event.target?.result as string;
+      setProfilePhotoPreview(previewUrl);
+      setStudentForm((prev) => ({ ...prev, avatar: previewUrl }));
+    };
+    reader.readAsDataURL(file);
   };
 
   // --- Handlers: Groups ---
@@ -411,16 +428,17 @@ export default function StudentManagement() {
               <button onClick={() => setIsStudentModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><FontAwesomeIcon icon={faTimes} size="lg" color="#6b7280" /></button>
             </div>
             <form onSubmit={handleSaveStudent}>
-              <div className="owner-modal-body modal-form-grid">
-                
-                {/* Photo Upload */}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <img src={studentForm.avatar || "https://i.pravatar.cc/150?img=12"} alt="Preview" style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #e5e7eb' }} />
+              <div style={{ display: 'flex', justifyContent: 'center', padding: '1.5rem 1.5rem 1rem', borderBottom: '1px solid #e5e7eb' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+                  <img src={profilePhotoPreview} alt="Preview" style={{ width: '120px', height: '120px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #e5e7eb' }} />
                   <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="image/*" onChange={handleFileChange} />
-                  <button type="button" className="btn btn-upload" onClick={() => fileInputRef.current?.click()} style={{ marginTop: '0.5rem', padding: '0.3rem 0.6rem', fontSize: '0.8rem', backgroundColor: '#f3f4f6', color: '#374151' }}>
-                    <FontAwesomeIcon icon={faCamera} /> Upload Picture
+                  <button type="button" className="btn" onClick={() => fileInputRef.current?.click()} style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', backgroundColor: '#f3f4f6', border: '1px solid #d1d5db', color: '#374151' }}>
+                    <FontAwesomeIcon icon={faCamera} /> Upload Photo
                   </button>
                 </div>
+              </div>
+
+              <div className="owner-modal-body modal-form-grid">
 
                 <div className="password-row">
                   <div>

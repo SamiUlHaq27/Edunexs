@@ -55,6 +55,9 @@ export default function TeacherManagement() {
   const [profilePictureFile, setProfilePictureFile] = useState<File | null>(
     null,
   );
+  const [profilePicturePreview, setProfilePicturePreview] = useState<string>(
+    "/dummy/teacher-dummy-profile-picture.png",
+  );
 
   // Form State
   const [formData, setFormData] = useState({
@@ -220,6 +223,10 @@ export default function TeacherManagement() {
         password: "",
         profilePictureFileId: teacher.profilePictureFileId,
       });
+      setProfilePicturePreview(
+        teacher.profilePicture?.publicUrl ||
+          "/dummy/teacher-dummy-profile-picture.png",
+      );
       setEditingTeacherId(teacher.id);
     } else {
       // Create Mode
@@ -229,6 +236,7 @@ export default function TeacherManagement() {
         password: "",
         profilePictureFileId: undefined,
       });
+      setProfilePicturePreview("/dummy/teacher-dummy-profile-picture.png");
       setEditingTeacherId(null);
     }
     setProfilePictureFile(null);
@@ -245,6 +253,7 @@ export default function TeacherManagement() {
       profilePictureFileId: undefined,
     });
     setProfilePictureFile(null);
+    setProfilePicturePreview("/dummy/teacher-dummy-profile-picture.png");
     setEditingTeacherId(null);
     setFormErrors({});
   };
@@ -252,9 +261,19 @@ export default function TeacherManagement() {
   const handleUploadClick = () => fileInputRef.current?.click();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setProfilePictureFile(e.target.files[0]);
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setError("Please select a valid image file");
+      return;
     }
+
+    setProfilePictureFile(file);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setProfilePicturePreview(event.target?.result as string);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -740,6 +759,57 @@ export default function TeacherManagement() {
             </div>
 
             <form onSubmit={handleSave}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  padding: "1.5rem 1.5rem 1rem",
+                  borderBottom: "1px solid #e5e7eb",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: "1rem",
+                  }}
+                >
+                  <img
+                    src={profilePicturePreview}
+                    alt="Profile preview"
+                    style={{
+                      width: "120px",
+                      height: "120px",
+                      borderRadius: "50%",
+                      border: "3px solid #e5e7eb",
+                      objectFit: "cover",
+                    }}
+                  />
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    style={{ display: "none" }}
+                    accept="image/*"
+                    onChange={handleFileChange}
+                  />
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={handleUploadClick}
+                    style={{
+                      backgroundColor: "#f3f4f6",
+                      border: "1px solid #d1d5db",
+                      color: "#374151",
+                      padding: "0.5rem 1rem",
+                      fontSize: "0.875rem",
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faCamera} /> Upload Photo
+                  </button>
+                </div>
+              </div>
+
               <div className="owner-modal-body modal-form-grid">
                 {/* Full Name */}
                 <div>
@@ -853,42 +923,6 @@ export default function TeacherManagement() {
                   )}
                 </div>
 
-                {/* Profile Picture Upload */}
-                <div style={{ gridColumn: "1 / -1" }}>
-                  <label className="auth-label">Profile Picture</label>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    style={{ display: "none" }}
-                    accept="image/*"
-                    onChange={handleFileChange}
-                  />
-                  <button
-                    type="button"
-                    className="btn"
-                    onClick={handleUploadClick}
-                    style={{
-                      backgroundColor: "#f3f4f6",
-                      color: "#374151",
-                      padding: "0.6rem 1rem",
-                      fontSize: "0.9rem",
-                    }}
-                  >
-                    <FontAwesomeIcon icon={faCamera} />{" "}
-                    {profilePictureFile ? "Change" : "Upload"} Photo
-                  </button>
-                  {profilePictureFile && (
-                    <div
-                      style={{
-                        marginTop: "0.5rem",
-                        fontSize: "0.85rem",
-                        color: "#10b981",
-                      }}
-                    >
-                      ✓ {profilePictureFile.name}
-                    </div>
-                  )}
-                </div>
               </div>
 
               <div className="owner-modal-footer">
