@@ -36,7 +36,7 @@ export default function Login(): React.JSX.Element {
       case UserRole.INSTITUTION_OWNER:
         return "/owner/dashboard";
       case UserRole.INSTITUTION_ADMIN:
-        return "/institute-admin/dashboard";
+        return "/owner/dashboard";
       case UserRole.TEACHER:
         return "/teacher/dashboard";
       case UserRole.STUDENT:

@@ -19,9 +19,15 @@ import "../../styles/dashboard.css";
 import "../../styles/owner.css";
 import { institutionService } from "../../services/institution.service";
 import { authService } from "../../services/auth.service";
-import { Institution } from "../../types";
+import { Institution, UserRole } from "../../types";
 
-export default function OwnerLayout(): React.JSX.Element {
+interface OwnerLayoutProps {
+  hideInstitutionTab?: boolean;
+}
+
+export default function OwnerLayout({
+  hideInstitutionTab = false,
+}: OwnerLayoutProps = {}): React.JSX.Element {
   const [isMinimized, setIsMinimized] = useState(false);
   const [instProfile, setInstProfile] = useState<{
     name: string;
@@ -37,6 +43,11 @@ export default function OwnerLayout(): React.JSX.Element {
     role?: string;
     avatar?: string;
   } | null>(null);
+
+  // Detect if current user is INSTITUTION_ADMIN to hide Institution tab
+  const user = authService.getUser();
+  const isInstitutionAdmin = user?.role === UserRole.INSTITUTION_ADMIN;
+  const shouldHideInstitutionTab = hideInstitutionTab || isInstitutionAdmin;
 
   useEffect(() => {
     let mounted = true;
@@ -113,15 +124,19 @@ export default function OwnerLayout(): React.JSX.Element {
             <span className="nav-text">Dashboard</span>
           </NavLink>
 
-          <NavLink to="/owner/institution" className="nav-item">
-            <FontAwesomeIcon icon={faUniversity} className="nav-icon" />
-            <span className="nav-text">Institution</span>
-          </NavLink>
+          {!shouldHideInstitutionTab && (
+            <NavLink to="/owner/institution" className="nav-item">
+              <FontAwesomeIcon icon={faUniversity} className="nav-icon" />
+              <span className="nav-text">Institution</span>
+            </NavLink>
+          )}
 
-          <NavLink to="/owner/admins" className="nav-item">
-            <FontAwesomeIcon icon={faUserShield} className="nav-icon" />
-            <span className="nav-text">Inst. Admin</span>
-          </NavLink>
+          {!shouldHideInstitutionTab && (
+            <NavLink to="/owner/admins" className="nav-item">
+              <FontAwesomeIcon icon={faUserShield} className="nav-icon" />
+              <span className="nav-text">Inst. Admin</span>
+            </NavLink>
+          )}
           <NavLink to="/owner/teachers" className="nav-item">
             <FontAwesomeIcon icon={faChalkboardTeacher} className="nav-icon" />
             <span className="nav-text">Teachers</span>

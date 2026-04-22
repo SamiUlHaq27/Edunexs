@@ -12,12 +12,7 @@ import SystemAdminLayout from "./pages/system-admin/SystemAdminLayout";
 import SystemAdminDashboard from "./pages/system-admin/SystemAdminDashboard";
 import SystemAdminInstitutions from "./pages/system-admin/SystemAdminInstitutions";
 
-// Institution Admin Pages
-import InstitutionAdminLayout from "./pages/institute-admin/InstitutionAdminLayout";
-import InstitutionAdminDashboard from "./pages/institute-admin/InstitutionAdminDashboard";
-import InstitutionAdminSettings from "./pages/institute-admin/InstitutionAdminSettings";
-
-// Owner Pages
+// Owner Pages (also used for Institution Admin)
 import OwnerLayout from "./pages/owner/OwnerLayout";
 import OwnerDashboard from "./pages/owner/OwnerDashboard";
 import InstitutionSettings from "./pages/owner/InstitutionSettings";
@@ -97,21 +92,13 @@ export default function App(): React.JSX.Element {
           <Route path="institutions" element={<SystemAdminInstitutions />} />
         </Route>
 
-        {/* Institution Admin Routes */}
+        {/* Institution Admin Routes → Redirected to Owner Layout */}
         <Route
-          path="/institute-admin"
-          element={
-            <ProtectedRoute>
-              <InstitutionAdminLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard" element={<InstitutionAdminDashboard />} />
-          <Route path="settings" element={<InstitutionAdminSettings />} />
-        </Route>
+          path="/institute-admin/*"
+          element={<Navigate to="/owner" replace />}
+        />
 
-        {/* Owner Portal Routes */}
+        {/* Owner Portal Routes (also used for Institution Admin) */}
         <Route
           path="/owner"
           element={
