@@ -550,7 +550,7 @@ export default function TeacherManagement() {
                       <img
                         src={
                           teacher.profilePicture?.publicUrl ||
-                          "https://via.placeholder.com/36"
+                          "/dummy/teacher-dummy-profile-picture.png"
                         }
                         alt={teacher.name}
                         style={{
