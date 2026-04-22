@@ -64,9 +64,7 @@ export default function TeacherManagement() {
   });
 
   // Form Validation State
-  const [formErrors, setFormErrors] = useState<
-    Record<string, string>
-  >({});
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // Validation Rules
   const validateForm = () => {
@@ -149,7 +147,9 @@ export default function TeacherManagement() {
       setTeachers(response.data || []);
     } catch (err: any) {
       const errorMessage =
-        err?.response?.data?.message || err?.message || "Failed to load teachers";
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to load teachers";
       setError(errorMessage);
       console.error("Error loading teachers:", err);
     }
@@ -789,7 +789,9 @@ export default function TeacherManagement() {
                       required={!editingTeacherId}
                       style={{
                         paddingLeft: "1rem",
-                        borderColor: formErrors.password ? "#ef4444" : undefined,
+                        borderColor: formErrors.password
+                          ? "#ef4444"
+                          : undefined,
                         borderWidth: formErrors.password ? "1px" : undefined,
                       }}
                     />
@@ -869,7 +871,8 @@ export default function TeacherManagement() {
                   style={{
                     backgroundColor: "#1e3a8a",
                     opacity: isSaving || !isFormValid() ? 0.6 : 1,
-                    cursor: isSaving || !isFormValid() ? "not-allowed" : "pointer",
+                    cursor:
+                      isSaving || !isFormValid() ? "not-allowed" : "pointer",
                   }}
                   disabled={isSaving || !isFormValid()}
                 >
