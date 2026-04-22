@@ -48,6 +48,7 @@ export default function TeacherManagement() {
   >("All");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [editingTeacherId, setEditingTeacherId] = useState<number | null>(null);
@@ -189,7 +190,19 @@ export default function TeacherManagement() {
   const toggleMenu = (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
     setIsFilterOpen(false);
-    setOpenMenuId(openMenuId === id ? null : id);
+
+    if (openMenuId === id) {
+      setOpenMenuId(null);
+    } else {
+      const button = e.currentTarget as HTMLButtonElement;
+      const rect = button.getBoundingClientRect();
+
+      setMenuPosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.right + window.scrollX - 140,
+      });
+      setOpenMenuId(id);
+    }
   };
 
   const toggleFilter = (e: React.MouseEvent) => {
@@ -594,41 +607,6 @@ export default function TeacherManagement() {
                         >
                           <FontAwesomeIcon icon={faEllipsisH} />
                         </button>
-
-                        {openMenuId === teacher.id && (
-                          <div className="action-menu-dropdown">
-                            <button
-                              className="dropdown-item"
-                              onClick={() => handleOpenModal(teacher)}
-                            >
-                              <FontAwesomeIcon
-                                icon={faEdit}
-                                style={{ color: "#6b7280", width: "16px" }}
-                              />{" "}
-                              Edit
-                            </button>
-                            <button
-                              className="dropdown-item"
-                              onClick={() => handleToggleStatus(teacher)}
-                            >
-                              <FontAwesomeIcon
-                                icon={faPowerOff}
-                                style={{ color: "#6b7280", width: "16px" }}
-                              />
-                              {teacher.isActive ? "Deactivate" : "Reactivate"}
-                            </button>
-                            <button
-                              className="dropdown-item danger"
-                              onClick={() => handleDelete(teacher.id)}
-                            >
-                              <FontAwesomeIcon
-                                icon={faTrash}
-                                style={{ width: "16px" }}
-                              />{" "}
-                              Remove
-                            </button>
-                          </div>
-                        )}
                       </div>
                     </td>
                   </tr>
@@ -655,6 +633,63 @@ export default function TeacherManagement() {
             </tbody>
           </table>
         </div>
+
+        {/* Action Menu Dropdown - Rendered outside table for proper layering */}
+        {openMenuId !== null && (
+          <div
+            className="action-menu-dropdown"
+            style={{
+              position: "fixed",
+              top: `${menuPosition.top}px`,
+              left: `${menuPosition.left}px`,
+              zIndex: 1000,
+            }}
+          >
+            {(() => {
+              const teacher = teachers.find((t) => t.id === openMenuId);
+              return teacher ? (
+                <>
+                  <button
+                    className="dropdown-item"
+                    onClick={() => {
+                      handleOpenModal(teacher);
+                      setOpenMenuId(null);
+                    }}
+                  >
+                    <FontAwesomeIcon
+                      icon={faEdit}
+                      style={{ color: "#6b7280", width: "16px" }}
+                    />{" "}
+                    Edit
+                  </button>
+                  <button
+                    className="dropdown-item"
+                    onClick={() => {
+                      handleToggleStatus(teacher);
+                      setOpenMenuId(null);
+                    }}
+                  >
+                    <FontAwesomeIcon
+                      icon={faPowerOff}
+                      style={{ color: "#6b7280", width: "16px" }}
+                    />
+                    {teacher.isActive ? "Deactivate" : "Reactivate"}
+                  </button>
+                  <button
+                    className="dropdown-item danger"
+                    onClick={() => {
+                      handleDelete(teacher.id);
+                      setOpenMenuId(null);
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faTrash} style={{ width: "16px" }} />{" "}
+                    Remove
+                  </button>
+                </>
+              ) : null;
+            })()}
+          </div>
+        )}
 
         {/* Footer Pagination */}
         <div
