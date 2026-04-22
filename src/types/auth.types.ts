@@ -53,6 +53,7 @@ export interface SignupDto {
 export interface LoginDto {
   email?: string;
   username?: string;
+  institutionPrefix?: string;
   password: string;
 }
 

@@ -7,6 +7,8 @@ import {
   faLock,
   faEye,
   faEyeSlash,
+  faBuilding,
+  faIdBadge,
 } from "@fortawesome/free-solid-svg-icons";
 import AuthSidebar from "../components/AuthSidebar";
 import { authService } from "../services/auth.service";
@@ -17,7 +19,8 @@ export default function Login(): React.JSX.Element {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
+  const [institutionPrefix, setInstitutionPrefix] = useState("");
+  const [usernameInput, setUsernameInput] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loginMode, setLoginMode] = useState<"email" | "username">("email");
@@ -59,10 +62,17 @@ export default function Login(): React.JSX.Element {
         return;
       }
 
-      if (loginMode === "username" && !username.trim()) {
-        setError("Please enter your username");
-        setIsLoading(false);
-        return;
+      if (loginMode === "username") {
+        if (!institutionPrefix.trim()) {
+          setError("Please enter your institution prefix");
+          setIsLoading(false);
+          return;
+        }
+        if (!usernameInput.trim()) {
+          setError("Please enter your username");
+          setIsLoading(false);
+          return;
+        }
       }
 
       if (!password.trim()) {
@@ -72,7 +82,9 @@ export default function Login(): React.JSX.Element {
       }
 
       const response = await authService.login({
-        ...(loginMode === "email" ? { email } : { username }),
+        ...(loginMode === "email"
+          ? { email }
+          : { username: usernameInput, institutionPrefix }),
         password,
       });
 
@@ -234,25 +246,54 @@ export default function Login(): React.JSX.Element {
               </>
             )}
 
-            {/* Username Input */}
+            {/* Username Input - Split into Prefix and Username */}
             {loginMode === "username" && (
               <>
-                <label className="auth-label" htmlFor="username">
-                  Username
-                </label>
-                <div className="input-with-icon">
-                  <span className="input-icon" aria-hidden>
-                    <FontAwesomeIcon icon={faEnvelope} />
-                  </span>
-                  <input
-                    id="username"
-                    type="text"
-                    className="auth-input"
-                    placeholder="institution_username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    disabled={isLoading}
-                  />
+                <div style={{ display: "flex", gap: "0.75rem" }}>
+                  {/* Institution Prefix Input */}
+                  <div style={{ flex: 0.5 }}>
+                    <label className="auth-label" htmlFor="prefix">
+                      Institution Prefix
+                    </label>
+                    <div className="input-with-icon">
+                      <span className="input-icon" aria-hidden>
+                        <FontAwesomeIcon icon={faBuilding} />
+                      </span>
+                      <input
+                        id="prefix"
+                        type="text"
+                        className="auth-input"
+                        placeholder="ABC"
+                        value={institutionPrefix}
+                        onChange={(e) =>
+                          setInstitutionPrefix(e.target.value.toUpperCase())
+                        }
+                        disabled={isLoading}
+                        maxLength={10}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Username Input */}
+                  <div style={{ flex: 1 }}>
+                    <label className="auth-label" htmlFor="username">
+                      Username
+                    </label>
+                    <div className="input-with-icon">
+                      <span className="input-icon" aria-hidden>
+                        <FontAwesomeIcon icon={faIdBadge} />
+                      </span>
+                      <input
+                        id="username"
+                        type="text"
+                        className="auth-input"
+                        placeholder="username"
+                        value={usernameInput}
+                        onChange={(e) => setUsernameInput(e.target.value)}
+                        disabled={isLoading}
+                      />
+                    </div>
+                  </div>
                 </div>
               </>
             )}
