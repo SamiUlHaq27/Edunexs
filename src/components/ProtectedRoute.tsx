@@ -27,7 +27,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       const dashboardMap: Record<UserRole, string> = {
         [UserRole.SYSTEM_ADMIN]: "/system-admin/dashboard",
         [UserRole.INSTITUTION_OWNER]: "/owner/dashboard",
-        [UserRole.INSTITUTION_ADMIN]: "/institute-admin/dashboard",
+        [UserRole.INSTITUTION_ADMIN]: "/owner/dashboard",
         [UserRole.TEACHER]: "/teacher/dashboard",
         [UserRole.STUDENT]: "/student/dashboard",
         [UserRole.PARENT]: "/parent/dashboard",
