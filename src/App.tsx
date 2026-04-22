@@ -21,6 +21,7 @@ import TeacherManagement from "./pages/owner/TeacherManagement";
 import StudentManagement from "./pages/owner/StudentManagement";
 import CourseManagement from "./pages/owner/CourseManagement";
 import ClassManagement from "./pages/owner/ClassManagement";
+import FeeManagement from "./pages/owner/FeeManagement";
 
 // Teacher Pages
 import TeacherLayout from "./pages/teacher/TeacherLayout";
@@ -29,6 +30,7 @@ import TeacherAttendance from "./pages/teacher/TeacherAttendance";
 import TeacherAssignments from "./pages/teacher/TeacherAssignments";
 import TeacherQuizzes from "./pages/teacher/TeacherQuizzes";
 import TeacherGrades from "./pages/teacher/TeacherGrades";
+import TeacherCourses from "./pages/teacher/TeacherCourses";
 
 // Student Pages
 import StudentLayout from "./pages/student/StudentLayout";
@@ -115,6 +117,7 @@ export default function App(): React.JSX.Element {
           <Route path="students" element={<StudentManagement />} />
           <Route path="courses" element={<CourseManagement />} />
           <Route path="classes" element={<ClassManagement />} />
+          <Route path="fees" element={<FeeManagement />} />
         </Route>
 
         {/* Teacher Portal Routes */}
@@ -132,6 +135,7 @@ export default function App(): React.JSX.Element {
           <Route path="assignments" element={<TeacherAssignments />} />
           <Route path="quizzes" element={<TeacherQuizzes />} />
           <Route path="grades" element={<TeacherGrades />} />
+          <Route path="courses/:courseId" element={<TeacherCourses />} />
         </Route>
 
         {/* Student Portal Routes */}
@@ -146,6 +150,8 @@ export default function App(): React.JSX.Element {
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<StudentCourses />} />
           <Route path="courses" element={<StudentCourses />} />
+          {/* FIX: Path add kiya taaki sidebar se Fees click karne par StudentCourses load ho aur logout na ho */}
+          <Route path="fees" element={<StudentCourses />} />
           <Route path="attempt-quiz" element={<StudentQuizAttempt />} />
           <Route
             path="submit-assignment"

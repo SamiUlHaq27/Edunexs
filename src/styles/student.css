@@ -1,74 +1,282 @@
-@import './tokens.css';
+/* --- NEW STUDENT COURSE PAGE LAYOUT --- */
 
-/* Student Specific Layouts */
-.student-header-card {
-  background: linear-gradient(135deg, var(--color-primary-500) 0%, var(--color-secondary-500) 100%);
-  color: white;
-  padding: var(--spacing-4);
-  border-radius: var(--radius-xl);
-  margin-bottom: var(--spacing-4);
-  box-shadow: var(--elevation-3);
+.student-course-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-/* Quiz Attempt Interface */
-.quiz-progress {
+/* 1. Hero Banner */
+.student-hero-banner {
+  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+  border-radius: 16px;
+  padding: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
+  box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.3);
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.hero-content {
+  flex: 1;
+  min-width: 300px;
+}
+
+.hero-title {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+.hero-subtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.badge {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge-outline {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.hero-progress-box {
+  background: white;
+  padding: 1.25rem;
+  border-radius: 12px;
+  width: 250px;
+  color: #111827;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.progress-track {
+  width: 100%;
   height: 8px;
-  background: var(--color-surface-elevated-2);
-  border-radius: var(--radius-full);
-  margin-bottom: var(--spacing-4);
+  background: #e5e7eb;
+  border-radius: 999px;
   overflow: hidden;
 }
 
-.quiz-progress-bar {
+.progress-fill {
   height: 100%;
-  background: var(--color-success);
-  transition: width 0.3s ease;
+  background: #3b82f6;
+  border-radius: 999px;
+  transition: width 1s ease-in-out;
 }
 
-.quiz-option {
+/* 2. Two Column Grid */
+.student-two-col-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 900px) {
+  .student-two-col-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Main Content Column */
+.course-tabs {
   display: flex;
-  align-items: center;
-  padding: var(--spacing-3);
-  border: 1px solid var(--color-border-default);
-  border-radius: var(--radius-md);
-  margin-bottom: var(--spacing-2);
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  background: white;
+  padding: 0.5rem;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.course-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-weight: 600;
+  color: #6b7280;
   cursor: pointer;
   transition: all 0.2s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.quiz-option:hover {
-  background: var(--color-surface-elevated-1);
+.course-tab:hover {
+  background: #f3f4f6;
+  color: #111827;
 }
 
-.quiz-option.selected {
-  border-color: var(--color-primary-500);
-  background: var(--color-primary-50);
+.course-tab.active {
+  background: #eff6ff;
+  color: #2563eb;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
 }
 
-/* Assignment Submission */
-.upload-zone {
-  border: 2px dashed var(--color-border-default);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-6);
-  text-align: center;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  transition: border-color 0.2s;
+.tab-content-container {
+  padding: 1.5rem;
+  min-height: 400px;
 }
 
-.upload-zone:hover {
-  border-color: var(--color-primary-500);
-  background: var(--color-surface-raised);
+/* Task Cards inside Main Tab */
+.task-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.submission-status {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: var(--radius-full);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-bold);
-  text-transform: uppercase;
+.task-card {
+  display: flex;
+  align-items: center;
+  padding: 1.25rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  gap: 1rem;
 }
 
-.status-pending { background: #fef3c7; color: #d97706; }
-.status-submitted { background: #d1fae5; color: #059669; }
+.task-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+  border-color: #d1d5db;
+}
+
+.task-card.completed {
+  background: #f9fafb;
+  opacity: 0.8;
+}
+
+.task-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.bg-yellow { background: #fef3c7; color: #d97706; }
+.bg-green { background: #d1fae5; color: #059669; }
+.bg-purple { background: #ede9fe; color: #7c3aed; }
+
+.task-details {
+  flex: 1;
+}
+
+.task-details h4 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.05rem;
+  color: #111827;
+}
+
+.due-date {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.text-danger { color: #dc2626; }
+.text-success { color: #059669; }
+
+.btn-sm {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+}
+
+.btn.disabled {
+  background: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+  border: none;
+}
+
+/* Sidebar Column */
+.sidebar-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.quick-stat-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border: none;
+}
+
+.bg-gradient-blue {
+  background: linear-gradient(to right, #2563eb, #60a5fa);
+}
+
+/* Timeline */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  position: relative;
+  padding-left: 0.5rem;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 11px;
+  top: 5px;
+  bottom: 5px;
+  width: 2px;
+  background: #e5e7eb;
+}
+
+.timeline-item {
+  position: relative;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.timeline-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 3px solid white;
+  box-shadow: 0 0 0 1px #e5e7eb;
+  position: relative;
+  z-index: 1;
+  margin-top: 2px;
+}
+
+.bg-danger { background: #ef4444; }
+.bg-warning { background: #f59e0b; }
+.bg-primary { background: #3b82f6; }
+
+.timeline-content h5 {
+  margin: 0 0 0.2rem 0;
+  font-size: 0.85rem;
+  color: #111827;
+}
+
+.timeline-content p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #6b7280;
+}

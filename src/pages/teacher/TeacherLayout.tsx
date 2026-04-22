@@ -1,64 +1,77 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Outlet, NavLink } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faChalkboardUser, faClipboardUser, faBookOpen, 
-  faFileSignature, faStar, faSignOutAlt, faBars, faUserCircle
+  faChalkboardUser, faBookOpen, faSignOutAlt, faBars, faUserCircle, faChevronDown, faChevronUp
 } from "@fortawesome/free-solid-svg-icons";
 import { ASSETS } from "../../config/assets";
 import "../../styles/dashboard.css";
 import "../../styles/teacher.css";
 
-export default function TeacherLayout(): React.JSX.Element {
+export default function TeacherLayout() {
   const [isMinimized, setIsMinimized] = useState(false);
-  const [instProfile, setInstProfile] = useState({ name: "My Institution", logo: ASSETS.logo });
+  const [showCourses, setShowCourses] = useState(false);
 
-  useEffect(() => {
-    const saved = localStorage.getItem("institution_profile");
-    if (saved) {
-      setInstProfile(JSON.parse(saved));
-    }
-  }, []);
+  const teacherCourses = [
+    { id: "cs101", name: "Computer Science" },
+    { id: "math202", name: "Mathematics" },
+    { id: "eng301", name: "English" },
+  ];
 
   return (
     <div className={`dashboard-layout ${isMinimized ? "sidebar-minimized" : ""}`}>
       <aside className="dashboard-sidebar">
         <div className="sidebar-header">
-          <img 
-            src={instProfile.logo} 
-            alt="Logo" 
-            className="sidebar-logo" 
-            style={{ borderRadius: '50%', objectFit: 'cover', background: '#fff' }}
-          />
+          <img src={ASSETS.logo} alt="Logo" className="sidebar-logo" style={{ background: '#fff', borderRadius: '50%' }} />
         </div>
+        
         <div className="sidebar-title-div">
           <button onClick={() => setIsMinimized(!isMinimized)} className="toggle-btn">
-             <FontAwesomeIcon icon={faBars} />
+            <FontAwesomeIcon icon={faBars} />
           </button>
           <h1 className="dashboard-sidebar-title">Teacher Portal</h1>
         </div>
+
         <nav className="sidebar-nav">
           <NavLink to="/teacher/dashboard" className="nav-item">
             <FontAwesomeIcon icon={faChalkboardUser} className="nav-icon" />
             <span className="nav-text">Dashboard</span>
           </NavLink>
-          <NavLink to="/teacher/attendance" className="nav-item">
-            <FontAwesomeIcon icon={faClipboardUser} className="nav-icon" />
-            <span className="nav-text">Attendance</span>
-          </NavLink>
-          <NavLink to="/teacher/assignments" className="nav-item">
+
+          <div className="nav-item" onClick={() => setShowCourses(!showCourses)} style={{ cursor: 'pointer' }}>
             <FontAwesomeIcon icon={faBookOpen} className="nav-icon" />
-            <span className="nav-text">Assignments</span>
-          </NavLink>
-          <NavLink to="/teacher/quizzes" className="nav-item">
-            <FontAwesomeIcon icon={faFileSignature} className="nav-icon" />
-            <span className="nav-text">Quizzes</span>
-          </NavLink>
-          <NavLink to="/teacher/grades" className="nav-item">
-            <FontAwesomeIcon icon={faStar} className="nav-icon" />
-            <span className="nav-text">Gradebook</span>
-          </NavLink>
+            <span className="nav-text" style={{ flex: 1 }}>My Courses</span>
+            {!isMinimized && <FontAwesomeIcon icon={showCourses ? faChevronUp : faChevronDown} style={{ fontSize: '0.8rem', opacity: 0.7 }} />}
+          </div>
+
+          {/* Submenu: Background box removed, Dot added before names */}
+          {showCourses && !isMinimized && (
+            <div className="sidebar-submenu" style={{ 
+              paddingLeft: '2.8rem', 
+              marginTop: '5px'
+            }}>
+              {teacherCourses.map(course => (
+                <NavLink 
+                  key={course.id} 
+                  to={`/teacher/courses/${course.id}`} 
+                  className="nav-item sub-item"
+                  style={{ 
+                    fontSize: '0.85rem', 
+                    padding: '6px 0',
+                    background: 'none', // Box remove karne ke liye
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px'
+                  }}
+                >
+                  <span style={{ color: 'var(--primary-color)', fontWeight: 'bold' }}>•</span>
+                  <span className="nav-text">{course.name}</span>
+                </NavLink>
+              ))}
+            </div>
+          )}
         </nav>
+
         <div className="sidebar-footer">
           <NavLink to="/logout" className="nav-item">
             <FontAwesomeIcon icon={faSignOutAlt} className="nav-icon" />
@@ -66,18 +79,19 @@ export default function TeacherLayout(): React.JSX.Element {
           </NavLink>
         </div>
       </aside>
+
       <main className="dashboard-main">
         <header className="main-header">
           <div className="header-greeting">
-            <h2>{instProfile.name}</h2>
-            <p>Teacher Panel</p>
+            <h2>Edunexs</h2>
+            <p>Welcome, Professor</p>
           </div>
           <div className="header-profile">
-             <div className="user-info">
-               <span className="user-name">Mr. Teacher</span>
-               <span className="user-role">Mathematics</span>
-             </div>
-             <FontAwesomeIcon icon={faUserCircle} className="user-avatar" />
+            <div className="user-info">
+              <span className="user-name">Haider Ali</span>
+              <span className="user-role">Senior Teacher</span>
+            </div>
+            <FontAwesomeIcon icon={faUserCircle} className="user-avatar" />
           </div>
         </header>
         <div className="dashboard-content">

@@ -12,7 +12,7 @@ import {
   faSignOutAlt,
   faBars,
   faBell,
-  faFileAlt,
+  faFileInvoiceDollar // <-- Added this icon for Fee Management
 } from "@fortawesome/free-solid-svg-icons";
 import { ASSETS } from "../../config/assets";
 import "../../styles/dashboard.css";
@@ -154,10 +154,11 @@ export default function OwnerLayout({
             <FontAwesomeIcon icon={faChalkboard} className="nav-icon" />
             <span className="nav-text">Classes</span>
           </NavLink>
-
-          <NavLink to="/owner/reports" className="nav-item">
-            <FontAwesomeIcon icon={faFileAlt} className="nav-icon" />
-            <span className="nav-text">Reports</span>
+          
+          {/* Replaced Reports with Fee Management */}
+          <NavLink to="/owner/fees" className="nav-item">
+            <FontAwesomeIcon icon={faFileInvoiceDollar} className="nav-icon" />
+            <span className="nav-text">Fee Management</span>
           </NavLink>
         </nav>
 

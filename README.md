@@ -3,7 +3,7 @@ This is my final year project.
 
 ## Frontend (Vite + React)
 
-This repository now contains a minimal Vite + React app scaffold at the project root.
+This repository now contains a minimal Vite + React app scaffold at the project roots.
 
 Quick commands:
 

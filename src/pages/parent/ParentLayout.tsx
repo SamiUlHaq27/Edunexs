@@ -21,7 +21,8 @@ export default function ParentLayout(): React.JSX.Element {
 
   return (
     <div className={`dashboard-layout ${isMinimized ? "sidebar-minimized" : ""}`}>
-      <aside className="dashboard-sidebar" style={{ background: 'linear-gradient(159deg, #312e81 0%, #4338ca 100%)' }}>
+      {/* Sidebar - Student portal jaisa color aur padding */}
+      <aside className="dashboard-sidebar" style={{ paddingTop: '1rem' }}>
         <div className="sidebar-header">
            <img 
             src={instProfile.logo} 
@@ -36,6 +37,7 @@ export default function ParentLayout(): React.JSX.Element {
           </button>
           <h1 className="dashboard-sidebar-title">Parent Portal</h1>
         </div>
+        
         <nav className="sidebar-nav">
           <NavLink to="/parent/dashboard" className="nav-item">
             <FontAwesomeIcon icon={faHome} className="nav-icon" />
@@ -50,6 +52,7 @@ export default function ParentLayout(): React.JSX.Element {
             <span className="nav-text">Fees</span>
           </NavLink>
         </nav>
+
         <div className="sidebar-footer">
           <NavLink to="/logout" className="nav-item">
              <FontAwesomeIcon icon={faSignOutAlt} className="nav-icon" />
@@ -57,6 +60,7 @@ export default function ParentLayout(): React.JSX.Element {
           </NavLink>
         </div>
       </aside>
+
       <main className="dashboard-main">
         <header className="main-header">
           <div className="header-greeting">

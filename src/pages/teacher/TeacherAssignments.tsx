@@ -1,99 +1,127 @@
 import React, { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlus, faDownload, faEye, faArrowLeft } from "@fortawesome/free-solid-svg-icons";
+import { 
+  faFileAlt, faPlus, faArrowLeft, faEye, faCloudUploadAlt, faSave, faAlignLeft 
+} from "@fortawesome/free-solid-svg-icons";
 
 export default function TeacherAssignments() {
-  const [view, setView] = useState<"list" | "create" | "grade">("list");
-  
-  // Mock Data
-  const assignments = [
-    { id: 1, title: "Algebra Basics", due: "2024-12-01", submitted: 15, total: 20 },
-    { id: 2, title: "Geometry Project", due: "2024-12-10", submitted: 5, total: 20 }
-  ];
+  const [currentAction, setCurrentAction] = useState<"list" | "create" | "grade">("list");
+  const [file, setFile] = useState<File | null>(null);
+  const [selectedSubmission, setSelectedSubmission] = useState<any>(null);
 
   const submissions = [
-    { id: 101, student: "Ali Khan", file: "homework.pdf", grade: "", status: "Submitted" },
-    { id: 102, student: "John Doe", file: "geo_project.docx", grade: "85", status: "Graded" },
+    { id: 1, student: "Ali Hashmi", rollNo: "BCS-786", file: "db_diagram.pdf", date: "2 hours ago", status: "Pending" },
+    { id: 2, student: "Zain Ahmed", rollNo: "BCS-787", file: "assignment_1.docx", date: "Yesterday", status: "Graded" }
   ];
 
-  if (view === "create") {
-    return (
-      <div className="card settings-container">
-        <button className="btn" onClick={() => setView("list")} style={{ marginBottom: '1rem' }}>
-          <FontAwesomeIcon icon={faArrowLeft} /> Back
-        </button>
-        <h3 className="card-title">Create Assignment</h3>
-        <form className="auth-form">
-          <label className="auth-label">Title</label>
-          <input className="auth-input" placeholder="e.g. Chapter 1 Review" />
-          <div style={{ height: '1rem' }} />
-          <label className="auth-label">Description</label>
-          <textarea className="auth-input" style={{ minHeight: '100px', fontFamily: 'inherit' }}></textarea>
-          <div style={{ height: '1rem' }} />
-          <label className="auth-label">Due Date</label>
-          <input type="date" className="auth-input" />
-          <div style={{ height: '1rem' }} />
-          <label className="auth-label">Total Marks</label>
-          <input type="number" className="auth-input" placeholder="100" />
-          <div style={{ height: '1.5rem' }} />
-          <button className="btn btn-primary">Publish Assignment</button>
-        </form>
-      </div>
-    );
-  }
-
-  if (view === "grade") {
+  // --- CREATE VIEW ---
+  if (currentAction === "create") {
     return (
       <div>
-        <div className="toolbar">
-           <h3>Grading: Algebra Basics</h3>
-           <button className="btn" onClick={() => setView("list")}><FontAwesomeIcon icon={faArrowLeft} /> Back</button>
+        <button className="btn" onClick={() => setCurrentAction("list")} style={{ marginBottom: '1rem' }}>
+          <FontAwesomeIcon icon={faArrowLeft} /> Back to List
+        </button>
+        
+        <h3 className="card-title" style={{ marginBottom: '1.5rem' }}>Publish New Assignment</h3>
+        
+        <div className="modal-form-grid" style={{ marginBottom: '1.5rem' }}>
+          <div style={{ marginBottom: '1rem' }}>
+            <label className="auth-label">Assignment Title</label>
+            <input className="auth-input" placeholder="e.g. Final Research Project" />
+          </div>
+
+          {/* Naya Description Box yahan add kiya hai */}
+          <div style={{ marginBottom: '1rem' }}>
+            <label className="auth-label">Assignment Description / Instructions</label>
+            <textarea 
+              className="auth-input" 
+              placeholder="Write detailed instructions here for students..." 
+              rows={5} 
+              style={{ padding: '12px', lineHeight: '1.5', resize: 'vertical' }}
+            />
+          </div>
+          
+          <div className="password-row" style={{ marginTop: '0.5rem' }}>
+            <div>
+              <label className="auth-label">Total Marks</label>
+              <input className="auth-input" type="number" placeholder="100" />
+            </div>
+            <div>
+              <label className="auth-label">Due Date</label>
+              <input className="auth-input" type="date" />
+            </div>
+          </div>
         </div>
-        <div className="table-container">
-          <table className="data-table">
-            <thead><tr><th>Student</th><th>Submission</th><th>Status</th><th>Grade</th><th>Actions</th></tr></thead>
-            <tbody>
-              {submissions.map(sub => (
-                <tr key={sub.id}>
-                  <td>{sub.student}</td>
-                  <td><a href="#" className="link"><FontAwesomeIcon icon={faDownload} /> {sub.file}</a></td>
-                  <td><span className={`status-badge ${sub.status === 'Graded' ? 'status-active' : 'status-warning'}`}>{sub.status}</span></td>
-                  <td>
-                    <input className="auth-input" style={{ width: '60px', padding: '4px' }} defaultValue={sub.grade} placeholder="-" />
-                  </td>
-                  <td><button className="btn btn-primary" style={{ padding: '4px 12px' }}>Save</button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+
+        <h4 style={{ marginBottom: '1rem' }}>Upload Reference Material</h4>
+        <div className="upload-zone">
+          <input type="file" id="file-upload" style={{ display: 'none' }} onChange={(e) => setFile(e.target.files?.[0] || null)} />
+          <label htmlFor="file-upload" style={{ cursor: 'pointer', display: 'block' }}>
+            <FontAwesomeIcon icon={faCloudUploadAlt} size="3x" style={{ marginBottom: '1rem', color: '#9ca3af' }} />
+            <p style={{ fontWeight: 'bold' }}>{file ? file.name : "Click to upload reference file"}</p>
+            <p style={{ fontSize: '0.8rem' }}>PDF, DOCX, or Images</p>
+          </label>
+        </div>
+
+        <div style={{ marginTop: '2rem', textAlign: 'right' }}>
+          <button className="btn btn-primary" onClick={() => { alert("Assignment Created!"); setCurrentAction("list"); }}>
+            Create & Post Assignment
+          </button>
         </div>
       </div>
     );
   }
 
+  // --- GRADE VIEW ---
+  if (currentAction === "grade" && selectedSubmission) {
+    return (
+      <div>
+        <button className="btn" onClick={() => setCurrentAction("list")} style={{ marginBottom: '1rem' }}>
+          <FontAwesomeIcon icon={faArrowLeft} /> Back to Submissions
+        </button>
+        <div className="student-header-card" style={{ background: '#f8fafc', color: '#1e293b', border: '1px solid #e2e8f0', marginBottom: '2rem' }}>
+          <h3 style={{ margin: 0 }}>Grading: {selectedSubmission.student}</h3>
+          <p style={{ margin: '5px 0 0 0' }}>Submitted File: <span style={{ color: '#0066ff', textDecoration: 'underline', cursor: 'pointer' }}>{selectedSubmission.file}</span></p>
+        </div>
+        <div className="modal-form-grid">
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label className="auth-label">Obtained Marks</label>
+            <input type="number" className="auth-input" placeholder="Enter marks..." />
+          </div>
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label className="auth-label">Feedback / Remarks</label>
+            <textarea className="auth-input" placeholder="Write your feedback..." rows={4} style={{ padding: '12px' }} />
+          </div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <button className="btn btn-primary" onClick={() => { alert("Grade Saved!"); setCurrentAction("list"); }}>
+            <FontAwesomeIcon icon={faSave} /> Save Grades & Remarks
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // --- LIST VIEW ---
   return (
     <div>
-      <div className="toolbar">
-        <h3>Assignments</h3>
-        <button className="btn btn-primary" onClick={() => setView("create")}>
-           <FontAwesomeIcon icon={faPlus} /> Create New
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+        <h4 className="card-title">Assignment Submissions</h4>
+        <button className="btn btn-primary" onClick={() => setCurrentAction("create")}>
+          <FontAwesomeIcon icon={faPlus} /> Create New
         </button>
       </div>
-      <div className="card-grid">
-        {assignments.map(a => (
-          <div key={a.id} className="stat-card">
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-               <h4 style={{ margin: 0 }}>{a.title}</h4>
-               <span style={{ fontSize: '0.8rem', color: '#666' }}>Due: {a.due}</span>
+      <div className="activity-list">
+        {submissions.map((sub) => (
+          <div key={sub.id} className="activity-item" style={{ alignItems: 'center' }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 'bold' }}>{sub.student} <span style={{ fontSize: '0.8rem', color: '#888' }}>({sub.rollNo})</span></div>
+              <div style={{ fontSize: '0.85rem', color: '#0066ff' }}>
+                <FontAwesomeIcon icon={faFileAlt} /> {sub.file} • {sub.date}
+              </div>
             </div>
-            <p style={{ margin: '1rem 0', color: '#4b5563' }}>
-               {a.submitted} / {a.total} Submissions
-            </p>
-            <div style={{ width: '100%', background: '#e5e7eb', height: '6px', borderRadius: '3px', marginBottom: '1rem' }}>
-               <div style={{ width: `${(a.submitted/a.total)*100}%`, background: '#0066ff', height: '100%', borderRadius: '3px' }}></div>
-            </div>
-            <button className="btn btn-primary" style={{ width: '100%' }} onClick={() => setView("grade")}>
-               <FontAwesomeIcon icon={faEye} /> View & Grade
+            <button className="btn btn-primary" onClick={() => { setSelectedSubmission(sub); setCurrentAction("grade"); }}>
+              <FontAwesomeIcon icon={faEye} /> View & Grade
             </button>
           </div>
         ))}
