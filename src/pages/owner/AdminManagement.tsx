@@ -514,6 +514,7 @@ export default function AdminManagement() {
             <table className="admin-table">
               <thead>
                 <tr>
+                  <th className="col-profile">Profile</th>
                   <th className="col-name">Name</th>
                   <th className="col-email">Email</th>
                   <th className="col-status">Status</th>
@@ -524,6 +525,21 @@ export default function AdminManagement() {
                 {filteredAdmins.length > 0 ? (
                   filteredAdmins.map((admin) => (
                     <tr key={admin.id}>
+                      <td className="col-profile">
+                        <img
+                          src={
+                            admin.profilePicture?.publicUrl ||
+                            "/dummy/institution-admin-dummy-profile-picture.jpg"
+                          }
+                          alt={admin.name}
+                          style={{
+                            width: "40px",
+                            height: "40px",
+                            borderRadius: "50%",
+                            objectFit: "cover",
+                          }}
+                        />
+                      </td>
                       <td className="col-name">
                         <div style={{ fontWeight: "500" }}>{admin.name}</div>
                         <div style={{ fontSize: "0.75rem", color: "#9ca3af" }}>
@@ -563,7 +579,7 @@ export default function AdminManagement() {
                 ) : (
                   <tr>
                     <td
-                      colSpan={4}
+                      colSpan={5}
                       style={{
                         textAlign: "center",
                         padding: "2rem",
@@ -749,70 +765,17 @@ export default function AdminManagement() {
                 {/* Employee ID */}
                 <div>
                   <label className="auth-label">Employee ID</label>
-                  {isEditing ? (
-                    <input
-                      className="auth-input"
-                      placeholder="Employee ID"
-                      value={formData.username}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          username: e.target.value,
-                        }))
-                      }
-                      disabled
-                      style={{ backgroundColor: "#f3f4f6" }}
-                      required
-                    />
-                  ) : (
-                    <div
-                      className="input-group-split"
-                      style={{
-                        display: "flex",
-                        border: "1px solid #d1d5db",
-                        borderRadius: "0.5rem",
-                        overflow: "hidden",
-                        height: "44px",
-                        width: "100%",
-                      }}
-                    >
-                      <div
-                        className="input-group-prefix"
-                        style={{
-                          padding: "0.5rem 0.75rem",
-                          backgroundColor: "#f9fafb",
-                          display: "flex",
-                          alignItems: "center",
-                          fontWeight: "500",
-                          color: "#6b7280",
-                          borderRight: "1px solid #d1d5db",
-                          height: "100%",
-                        }}
-                      >
-                        {institutionPrefix}-
-                      </div>
-                      <input
-                        className="auth-input"
-                        placeholder="Enter employee ID"
-                        value={formData.username}
-                        onChange={(e) =>
-                          setFormData({ ...formData, username: e.target.value })
-                        }
-                        disabled={isLoading}
-                        required
-                        style={{
-                          flex: 1,
-                          border: "none",
-                          borderRadius: 0,
-                          padding: "0.5rem 0.75rem",
-                          fontSize: "0.95rem",
-                          outline: "none",
-                          height: "100%",
-                          boxShadow: "none",
-                        }}
-                      />
-                    </div>
-                  )}
+                  <input
+                    className="auth-input"
+                    placeholder="Enter employee ID"
+                    value={formData.username}
+                    onChange={(e) =>
+                      setFormData({ ...formData, username: e.target.value })
+                    }
+                    disabled={isLoading || isEditing}
+                    style={isEditing ? { backgroundColor: "#f3f4f6" } : undefined}
+                    required
+                  />
                 </div>
 
                 {/* Full Name */}

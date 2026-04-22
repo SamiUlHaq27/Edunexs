@@ -1,50 +1,50 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { 
-  faSearch, faFilter, faEllipsisH, faEdit, faTrash, 
-  faPowerOff, faCamera, faEye, faEyeSlash, faTimes, 
-  faUserGraduate, faUsers, faPlus, faAddressBook, faLayerGroup, faCheck
+import {
+  faSearch,
+  faFilter,
+  faEllipsisH,
+  faEdit,
+  faTrash,
+  faPowerOff,
+  faCamera,
+  faEye,
+  faEyeSlash,
+  faTimes,
+  faUserGraduate,
+  faUsers,
+  faPlus,
+  faAddressBook,
+  faLayerGroup,
+  faCheck,
+  faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
+import {
+  studentService,
+  studentGroupService,
+  Student as ApiStudent,
+  StudentGroup as ApiStudentGroup,
+} from "../../services";
 import "../../styles/owner.css";
-
-// --- Interfaces ---
-interface Student {
-  id: number;
-  name: string;
-  email: string;
-  recoveryEmail?: string;
-  rollNo: string;
-  grade: string;
-  status: "Active" | "Inactive";
-  avatar?: string;
-}
-
-interface Group {
-  id: number;
-  name: string;
-  studentIds: number[];
-}
 
 export default function StudentManagement() {
   const [activeTab, setActiveTab] = useState<"students" | "groups">("students");
-
-  // --- Mock Data ---
-  const [students, setStudents] = useState<Student[]>([
-    { id: 1, name: "Ahmad Raza", email: "ahmad@student.com", recoveryEmail: "parent1@gmail.com", rollNo: "STD-001", grade: "10th Grade", status: "Active", avatar: "https://i.pravatar.cc/150?img=12" },
-    { id: 2, name: "Sara Ahmed", email: "sara@student.com", rollNo: "STD-002", grade: "10th Grade", status: "Active", avatar: "https://i.pravatar.cc/150?img=5" },
-    { id: 3, name: "Ali Khan", email: "ali@student.com", recoveryEmail: "alikhan_guardian@yahoo.com", rollNo: "STD-003", grade: "9th Grade", status: "Inactive", avatar: "https://i.pravatar.cc/150?img=14" }
-  ]);
-
-  const [groups, setGroups] = useState<Group[]>([
-    { id: 1, name: "Science Batch A", studentIds: [1, 2] },
-    { id: 2, name: "Arts Batch B", studentIds: [3] }
-  ]);
+  const [students, setStudents] = useState<ApiStudent[]>([]);
+  const [groups, setGroups] = useState<ApiStudentGroup[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   // --- UI State ---
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<"All" | "Active" | "Inactive">("All");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const [studentMenuPosition, setStudentMenuPosition] = useState({
+    top: 0,
+    left: 0,
+  });
 
   // --- Modal States ---
   const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
@@ -54,34 +54,72 @@ export default function StudentManagement() {
   const [profilePhotoPreview, setProfilePhotoPreview] = useState<string>(
     "/dummy/teacher-dummy-profile-picture.png",
   );
+  const [profilePhotoFile, setProfilePhotoFile] = useState<File | null>(null);
 
   // Form States
   const [studentForm, setStudentForm] = useState({
-    id: 0, prefix: "STD-", postfix: "", name: "", email: "", recoveryEmail: "",
-    grade: "", password: "", avatar: null as string | null
+    id: 0,
+    studentProfileId: 0,
+    rollNo: "",
+    name: "",
+    recoveryEmail: "",
+    grade: "",
+    password: "",
   });
 
-  const [groupForm, setGroupForm] = useState<Group>({
-    id: 0, name: "", studentIds: []
+  const [groupForm, setGroupForm] = useState({
+    id: 0,
+    name: "",
+    studentProfileIds: [] as number[],
   });
 
-  // --- Helpers ---
+  const loadData = async () => {
+    try {
+      setIsLoading(true);
+      setError("");
+      const [studentsResponse, groupsResponse] = await Promise.all([
+        studentService.getStudents({ page: 1, size: 100, filters: {} }),
+        studentGroupService.getStudentGroups({ page: 1, size: 100, filters: {} }),
+      ]);
+      setStudents(studentsResponse.data || []);
+      setGroups(groupsResponse.data || []);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || err?.message || "Failed to load data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     const handleClickOutside = () => { setOpenMenuId(null); setIsFilterOpen(false); };
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
-  const filteredStudents = students.filter(student => {
-    const matchesSearch = student.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          student.rollNo.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter = filterStatus === "All" || student.status === filterStatus;
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  useEffect(() => {
+    if (!successMessage) return;
+    const timer = setTimeout(() => setSuccessMessage(""), 2500);
+    return () => clearTimeout(timer);
+  }, [successMessage]);
+
+  const filteredStudents = students.filter((student) => {
+    const matchesSearch =
+      student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      student.rollNo.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesFilter =
+      filterStatus === "All" ||
+      (filterStatus === "Active" && student.isActive) ||
+      (filterStatus === "Inactive" && !student.isActive);
     return matchesSearch && matchesFilter;
   });
 
   // Get group name for a student
   const getStudentGroup = (studentId: number) => {
-    const group = groups.find(g => g.studentIds.includes(studentId));
+    const group = groups.find((g) => g.studentIds.includes(studentId));
     return group ? group.name : "Unassigned";
   };
 
@@ -91,54 +129,116 @@ export default function StudentManagement() {
     setIsFilterOpen(!isFilterOpen);
   };
 
-  // --- Handlers: Students ---
-  const handleOpenStudentModal = (student?: Student) => {
-    if (student) {
-      const parts = student.rollNo.split('-');
-      const prefix = parts.length > 1 ? parts.slice(0, -1).join('-') + '-' : "STD-";
-      const postfix = parts.length > 1 ? parts[parts.length - 1] : student.rollNo;
+  const toggleStudentMenu = (id: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (openMenuId === id) {
+      setOpenMenuId(null);
+      return;
+    }
 
+    const button = e.currentTarget as HTMLButtonElement;
+    const rect = button.getBoundingClientRect();
+    setStudentMenuPosition({
+      top: rect.bottom + window.scrollY,
+      left: rect.right + window.scrollX - 140,
+    });
+    setOpenMenuId(id);
+  };
+
+  // --- Handlers: Students ---
+  const handleOpenStudentModal = (student?: ApiStudent) => {
+    if (student) {
       setStudentForm({
-        id: student.id, prefix, postfix, name: student.name, email: student.email,
-        recoveryEmail: student.recoveryEmail || "", grade: student.grade,
-        password: "", avatar: student.avatar || null
+        id: student.id,
+        studentProfileId: student.studentProfileId,
+        rollNo: student.rollNo,
+        name: student.name,
+        recoveryEmail: student.recoveryEmail || "",
+        grade: student.grade,
+        password: "",
       });
       setProfilePhotoPreview(
-        student.avatar || "/dummy/teacher-dummy-profile-picture.png",
+        student.profilePicture?.publicUrl || "/dummy/teacher-dummy-profile-picture.png",
       );
     } else {
-      setStudentForm({ id: 0, prefix: "STD-", postfix: "", name: "", email: "", recoveryEmail: "", grade: "", password: "", avatar: null });
+      setStudentForm({
+        id: 0,
+        studentProfileId: 0,
+        rollNo: "",
+        name: "",
+        recoveryEmail: "",
+        grade: "",
+        password: "",
+      });
       setProfilePhotoPreview("/dummy/teacher-dummy-profile-picture.png");
     }
+    setProfilePhotoFile(null);
     setIsStudentModalOpen(true);
     setOpenMenuId(null);
   };
 
-  const handleSaveStudent = (e: React.FormEvent) => {
+  const handleSaveStudent = async (e: React.FormEvent) => {
     e.preventDefault();
-    const rollNo = studentForm.prefix + studentForm.postfix;
-
-    if (studentForm.id !== 0) {
-      setStudents(students.map(s => s.id === studentForm.id ? {
-        ...s, name: studentForm.name, email: studentForm.email, recoveryEmail: studentForm.recoveryEmail,
-        rollNo, grade: studentForm.grade, avatar: studentForm.avatar || s.avatar
-      } : s));
-    } else {
-      setStudents([...students, {
-        id: Date.now(), name: studentForm.name, email: studentForm.email, recoveryEmail: studentForm.recoveryEmail,
-        rollNo, grade: studentForm.grade, status: "Active", avatar: studentForm.avatar || "https://i.pravatar.cc/150?img=12"
-      }]);
+    setError("");
+    const rollNo = studentForm.rollNo.trim();
+    try {
+      setIsSaving(true);
+      if (studentForm.id !== 0) {
+        await studentService.updateStudent({
+          studentId: studentForm.id,
+          name: studentForm.name,
+          rollNo,
+          grade: studentForm.grade,
+          recoveryEmail: studentForm.recoveryEmail || undefined,
+          ...(studentForm.password && { password: studentForm.password }),
+          ...(profilePhotoFile && { profilePicture: profilePhotoFile }),
+        });
+        setSuccessMessage("Student updated successfully!");
+      } else {
+        await studentService.createStudent({
+          name: studentForm.name,
+          rollNo,
+          grade: studentForm.grade,
+          password: studentForm.password,
+          recoveryEmail: studentForm.recoveryEmail || undefined,
+          ...(profilePhotoFile && { profilePicture: profilePhotoFile }),
+        });
+        setSuccessMessage("Student created successfully!");
+      }
+      await loadData();
+      setIsStudentModalOpen(false);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || err?.message || "Failed to save student");
+    } finally {
+      setIsSaving(false);
     }
-    setIsStudentModalOpen(false);
   };
 
-  const handleDeleteStudent = (id: number) => {
-    if (window.confirm("Remove this student?")) setStudents(students.filter(s => s.id !== id));
+  const handleDeleteStudent = async (id: number) => {
+    if (!window.confirm("Remove this student?")) return;
+    try {
+      setError("");
+      await studentService.deleteStudent(id);
+      setSuccessMessage("Student removed successfully!");
+      await loadData();
+    } catch (err: any) {
+      setError(err?.response?.data?.message || err?.message || "Failed to remove student");
+    }
     setOpenMenuId(null);
   };
 
-  const toggleStudentStatus = (id: number) => {
-    setStudents(students.map(s => s.id === id ? { ...s, status: s.status === "Active" ? "Inactive" : "Active" } : s));
+  const toggleStudentStatus = async (student: ApiStudent) => {
+    try {
+      setError("");
+      await studentService.updateStudent({
+        studentId: student.id,
+        isActive: !student.isActive,
+      });
+      setSuccessMessage(`Student ${student.isActive ? "deactivated" : "activated"} successfully!`);
+      await loadData();
+    } catch (err: any) {
+      setError(err?.response?.data?.message || err?.message || "Failed to update student status");
+    }
     setOpenMenuId(null);
   };
 
@@ -146,57 +246,135 @@ export default function StudentManagement() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) {
+      setError("Please select a valid image file");
       return;
     }
+    setProfilePhotoFile(file);
 
     const reader = new FileReader();
     reader.onload = (event) => {
       const previewUrl = event.target?.result as string;
       setProfilePhotoPreview(previewUrl);
-      setStudentForm((prev) => ({ ...prev, avatar: previewUrl }));
     };
     reader.readAsDataURL(file);
   };
 
   // --- Handlers: Groups ---
-  const handleOpenGroupModal = (group?: Group) => {
+  const handleOpenGroupModal = (group?: ApiStudentGroup) => {
     if (group) {
-      setGroupForm({ ...group });
+      setGroupForm({
+        id: group.id,
+        name: group.name,
+        studentProfileIds: group.studentProfileIds || [],
+      });
     } else {
-      setGroupForm({ id: 0, name: "", studentIds: [] });
+      setGroupForm({ id: 0, name: "", studentProfileIds: [] });
     }
     setIsGroupModalOpen(true);
     setOpenMenuId(null);
   };
 
-  const handleSaveGroup = (e: React.FormEvent) => {
+  const handleSaveGroup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (groupForm.id !== 0) {
-      setGroups(groups.map(g => g.id === groupForm.id ? groupForm : g));
-    } else {
-      setGroups([...groups, { ...groupForm, id: Date.now() }]);
+    try {
+      setError("");
+      setIsSaving(true);
+      if (groupForm.id !== 0) {
+        await studentGroupService.updateStudentGroup({
+          groupId: groupForm.id,
+          name: groupForm.name,
+          studentProfileIds: groupForm.studentProfileIds,
+        });
+        setSuccessMessage("Group updated successfully!");
+      } else {
+        await studentGroupService.createStudentGroup({
+          name: groupForm.name,
+          studentProfileIds: groupForm.studentProfileIds,
+        });
+        setSuccessMessage("Group created successfully!");
+      }
+      await loadData();
+      setIsGroupModalOpen(false);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || err?.message || "Failed to save group");
+    } finally {
+      setIsSaving(false);
     }
-    setIsGroupModalOpen(false);
   };
 
-  const handleDeleteGroup = (id: number) => {
-    if (window.confirm("Delete this group? Students will remain in the directory.")) {
-      setGroups(groups.filter(g => g.id !== id));
+  const handleDeleteGroup = async (id: number) => {
+    if (!window.confirm("Delete this group? Students will remain in the directory.")) {
+      return;
+    }
+    try {
+      setError("");
+      await studentGroupService.deleteStudentGroup(id);
+      setSuccessMessage("Group deleted successfully!");
+      await loadData();
+    } catch (err: any) {
+      setError(err?.response?.data?.message || err?.message || "Failed to delete group");
     }
     setOpenMenuId(null);
   };
 
-  const toggleGroupStudent = (studentId: number) => {
-    setGroupForm(prev => ({
-      ...prev, 
-      studentIds: prev.studentIds.includes(studentId) 
-        ? prev.studentIds.filter(id => id !== studentId) 
-        : [...prev.studentIds, studentId]
+  const toggleGroupStudent = (studentProfileId: number) => {
+    setGroupForm((prev) => ({
+      ...prev,
+      studentProfileIds: prev.studentProfileIds.includes(studentProfileId)
+        ? prev.studentProfileIds.filter((id) => id !== studentProfileId)
+        : [...prev.studentProfileIds, studentProfileId],
     }));
   };
 
   return (
     <div className="admin-page-container">
+      {successMessage && (
+        <div
+          style={{
+            padding: "0.75rem 1rem",
+            marginBottom: "1rem",
+            backgroundColor: "#efe",
+            border: "1px solid #cfc",
+            borderRadius: "0.5rem",
+            color: "#383",
+            fontSize: "0.875rem",
+          }}
+        >
+          {successMessage}
+        </div>
+      )}
+      {error && (
+        <div
+          style={{
+            padding: "0.75rem 1rem",
+            marginBottom: "1rem",
+            backgroundColor: "#fee",
+            border: "1px solid #fcc",
+            borderRadius: "0.5rem",
+            color: "#c33",
+            fontSize: "0.875rem",
+          }}
+        >
+          {error}
+        </div>
+      )}
+
+      {isLoading && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: "1rem",
+            marginBottom: "1rem",
+            color: "#6b7280",
+            gap: "0.5rem",
+          }}
+        >
+          <FontAwesomeIcon icon={faSpinner} spin />
+          Loading students and groups...
+        </div>
+      )}
       
       {/* --- Page Header & Action Buttons --- */}
       <div style={{ marginBottom: '2rem' }}>
@@ -302,7 +480,7 @@ export default function StudentManagement() {
                   filteredStudents.map(student => (
                     <tr key={student.id}>
                       <td className="col-profile">
-                        <img src={student.avatar} alt="Profile" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} />
+                        <img src={student.profilePicture?.publicUrl || "/dummy/teacher-dummy-profile-picture.png"} alt="Profile" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} />
                       </td>
                       <td className="col-name">
                           <div style={{ fontWeight: '600', color: '#111827' }}>{student.name}</div>
@@ -313,24 +491,21 @@ export default function StudentManagement() {
                           <div style={{ fontSize: '0.75rem', color: '#8b5cf6', fontWeight: 'bold' }}>{getStudentGroup(student.id)}</div>
                       </td>
                       <td>
-                          <div style={{ color: '#4b5563', fontSize: '0.85rem' }}>{student.email}</div>
-                          {student.recoveryEmail && <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>Rec: {student.recoveryEmail}</div>}
+                          <div style={{ color: '#4b5563', fontSize: '0.85rem' }}>{student.recoveryEmail || "-"}</div>
+                          {student.recoveryEmail && <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>Recovery Email</div>}
                       </td>
                       <td className="col-status">
-                        <span className={`status-pill ${student.status === 'Active' ? 'status-active' : 'status-inactive'}`}>{student.status}</span>
+                        <span className={`status-pill ${student.isActive ? 'status-active' : 'status-inactive'}`}>{student.isActive ? "Active" : "Inactive"}</span>
                       </td>
                       <td className="col-actions">
                         <div className="action-btn-wrapper">
-                          <button className="btn action-btn" style={{ background: 'transparent', padding: '0.4rem', color: '#6b7280' }} onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === student.id ? null : student.id); }}>
+                          <button
+                            className="btn action-btn"
+                            style={{ background: 'transparent', padding: '0.4rem', color: '#6b7280' }}
+                            onClick={(e) => toggleStudentMenu(student.id, e)}
+                          >
                             <FontAwesomeIcon icon={faEllipsisH} />
                           </button>
-                          {openMenuId === student.id && (
-                            <div className="action-menu-dropdown">
-                              <button className="dropdown-item" onClick={() => handleOpenStudentModal(student)}><FontAwesomeIcon icon={faEdit} fixedWidth /> Edit Details</button>
-                              <button className="dropdown-item" onClick={() => toggleStudentStatus(student.id)}><FontAwesomeIcon icon={faPowerOff} fixedWidth /> {student.status === 'Active' ? 'Deactivate' : 'Activate'}</button>
-                              <button className="dropdown-item danger" onClick={() => handleDeleteStudent(student.id)}><FontAwesomeIcon icon={faTrash} fixedWidth /> Remove</button>
-                            </div>
-                          )}
                         </div>
                       </td>
                     </tr>
@@ -346,6 +521,55 @@ export default function StudentManagement() {
               </tbody>
             </table>
           </div>
+
+          {openMenuId !== null && (
+            <div
+              className="action-menu-dropdown"
+              style={{
+                position: "fixed",
+                top: `${studentMenuPosition.top}px`,
+                left: `${studentMenuPosition.left}px`,
+                zIndex: 1000,
+              }}
+            >
+              {(() => {
+                const selectedStudent = students.find((s) => s.id === openMenuId);
+                if (!selectedStudent) return null;
+                return (
+                  <>
+                    <button
+                      className="dropdown-item"
+                      onClick={() => {
+                        handleOpenStudentModal(selectedStudent);
+                        setOpenMenuId(null);
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faEdit} fixedWidth /> Edit Details
+                    </button>
+                    <button
+                      className="dropdown-item"
+                      onClick={() => {
+                        toggleStudentStatus(selectedStudent);
+                        setOpenMenuId(null);
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faPowerOff} fixedWidth />{" "}
+                      {selectedStudent.isActive ? "Deactivate" : "Activate"}
+                    </button>
+                    <button
+                      className="dropdown-item danger"
+                      onClick={() => {
+                        handleDeleteStudent(selectedStudent.id);
+                        setOpenMenuId(null);
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faTrash} fixedWidth /> Remove
+                    </button>
+                  </>
+                );
+              })()}
+            </div>
+          )}
 
           {/* Pagination Footer */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', color: '#6b7280', fontSize: '0.85rem' }}>
@@ -374,7 +598,7 @@ export default function StudentManagement() {
                    <div>
                      <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 'bold', color: '#111827' }}>{group.name}</h3>
                      <p style={{ margin: '0.35rem 0 0 0', fontSize: '0.85rem', color: '#6b7280', fontWeight: '500' }}>
-                       <FontAwesomeIcon icon={faUsers} style={{ marginRight: '0.25rem' }}/> {group.studentIds.length} Students Enrolled
+                       <FontAwesomeIcon icon={faUsers} style={{ marginRight: '0.25rem' }}/> {group.studentIds?.length || 0} Students Enrolled
                      </p>
                    </div>
                    <div className="action-btn-wrapper">
@@ -432,7 +656,7 @@ export default function StudentManagement() {
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
                   <img src={profilePhotoPreview} alt="Preview" style={{ width: '120px', height: '120px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #e5e7eb' }} />
                   <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="image/*" onChange={handleFileChange} />
-                  <button type="button" className="btn" onClick={() => fileInputRef.current?.click()} style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', backgroundColor: '#f3f4f6', border: '1px solid #d1d5db', color: '#374151' }}>
+                  <button type="button" className="btn" onClick={() => fileInputRef.current?.click()} disabled={isSaving} style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', backgroundColor: '#f3f4f6', border: '1px solid #d1d5db', color: '#374151' }}>
                     <FontAwesomeIcon icon={faCamera} /> Upload Photo
                   </button>
                 </div>
@@ -447,20 +671,21 @@ export default function StudentManagement() {
                   </div>
                   <div>
                     <label className="auth-label">Roll Number</label>
-                    <div className="input-group-split">
-                      <div className="input-group-prefix">{studentForm.prefix}</div>
-                      <input className="input-group-field" required value={studentForm.postfix} onChange={e => setStudentForm({...studentForm, postfix: e.target.value})} placeholder="001" />
-                    </div>
+                    <input
+                      className="auth-input"
+                      required
+                      value={studentForm.rollNo}
+                      onChange={(e) =>
+                        setStudentForm({ ...studentForm, rollNo: e.target.value })
+                      }
+                      placeholder="e.g. STD-001"
+                    />
                   </div>
                 </div>
 
                 <div className="password-row">
                   <div>
                     <label className="auth-label">Primary Email</label>
-                    <input type="email" className="auth-input" required value={studentForm.email} onChange={e => setStudentForm({...studentForm, email: e.target.value})} placeholder="student@school.com" />
-                  </div>
-                  <div>
-                    <label className="auth-label">Recovery Email (Optional)</label>
                     <input type="email" className="auth-input" value={studentForm.recoveryEmail} onChange={e => setStudentForm({...studentForm, recoveryEmail: e.target.value})} placeholder="parent@gmail.com" />
                   </div>
                 </div>
@@ -484,7 +709,7 @@ export default function StudentManagement() {
               </div>
               <div className="owner-modal-footer">
                 <button type="button" className="btn" onClick={() => setIsStudentModalOpen(false)} style={{ background: 'white', border: '1px solid #d1d5db' }}>Cancel</button>
-                <button type="submit" className="btn btn-primary" style={{ backgroundColor: '#1e3a8a' }}>{studentForm.id === 0 ? "Register Student" : "Save Changes"}</button>
+                <button type="submit" className="btn btn-primary" disabled={isSaving} style={{ backgroundColor: '#1e3a8a' }}>{isSaving ? "Saving..." : studentForm.id === 0 ? "Register Student" : "Save Changes"}</button>
               </div>
             </form>
           </div>
@@ -511,13 +736,13 @@ export default function StudentManagement() {
                 {/* Add/Remove Students from Group */}
                 <div style={{ background: 'white', padding: '1rem', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
                     <label className="auth-label" style={{ display: 'block', marginBottom: '0.5rem' }}>
-                      Select Students for Group ({groupForm.studentIds.length} Selected)
+                      Select Students for Group ({groupForm.studentProfileIds.length} Selected)
                     </label>
                     <div style={{ maxHeight: '250px', overflowY: 'auto', border: '1px solid #e5e7eb', borderRadius: '8px' }}>
                       {students.map(student => (
                         <label key={student.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.6rem 1rem', borderBottom: '1px solid #f3f4f6', cursor: 'pointer', margin: 0, transition: 'background 0.2s' }} className="hover:bg-gray-50">
-                          <input type="checkbox" checked={groupForm.studentIds.includes(student.id)} onChange={() => toggleGroupStudent(student.id)} />
-                          <img src={student.avatar} alt="Pfp" style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} />
+                          <input type="checkbox" checked={groupForm.studentProfileIds.includes(student.studentProfileId)} onChange={() => toggleGroupStudent(student.studentProfileId)} />
+                          <img src={student.profilePicture?.publicUrl || "/dummy/teacher-dummy-profile-picture.png"} alt="Pfp" style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} />
                           <div style={{ flex: 1 }}>
                             <div style={{ fontSize: '0.85rem', fontWeight: '600', color: '#111827' }}>{student.name}</div>
                             <div style={{ fontSize: '0.75rem', color: '#6b7280', fontFamily: 'monospace' }}>{student.rollNo}</div>
@@ -530,7 +755,7 @@ export default function StudentManagement() {
               </div>
               <div className="owner-modal-footer">
                 <button type="button" className="btn" onClick={() => setIsGroupModalOpen(false)} style={{ background: 'white', border: '1px solid #d1d5db' }}>Cancel</button>
-                <button type="submit" className="btn btn-primary" style={{ backgroundColor: '#1e3a8a' }}>{groupForm.id === 0 ? "Create Group" : "Save Group"}</button>
+                <button type="submit" className="btn btn-primary" disabled={isSaving} style={{ backgroundColor: '#1e3a8a' }}>{isSaving ? "Saving..." : groupForm.id === 0 ? "Create Group" : "Save Group"}</button>
               </div>
             </form>
           </div>
