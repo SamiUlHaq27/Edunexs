@@ -6,3 +6,7 @@ export * from "./fee.service";
 export * from "./teacher.service";
 export * from "./student.service";
 export * from "./student-group.service";
+export * from "./teacher-assignment.service";
+export * from "./teacher-quiz.service";
+export * from "./teacher-attendance.service";
+export * from "./teacher-dashboard.service";

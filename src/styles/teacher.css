@@ -1,4 +1,4 @@
-@import './tokens.css';
+@import "./tokens.css";
 
 /* Teacher Specific Layouts */
 .teacher-toolbar {
@@ -65,4 +65,67 @@
 .grade-input:focus {
   border-color: var(--color-primary-500);
   outline: none;
+}
+
+/* Keep teacher header avatar size aligned with system admin header footprint */
+.main-header .header-profile img.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+.student-courses {
+  display: flex;
+  flex-direction: column;
+}
+
+.student-header-card {
+  border-radius: 16px;
+  padding: 1.5rem;
+  color: #ffffff;
+  border: 1px solid transparent;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
+}
+
+.student-header-card h2,
+.student-header-card h3,
+.student-header-card p {
+  margin: 0;
+}
+
+.student-header-card h2,
+.student-header-card h3 {
+  line-height: 1.2;
+}
+
+.student-header-card p {
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .student-header-card {
+    padding: 1.1rem;
+  }
+}
+
+.teacher-institution-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.teacher-institution-logo {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--color-border-muted);
+  flex-shrink: 0;
+}
+
+.teacher-institution-copy h2,
+.teacher-institution-copy p {
+  margin: 0;
 }

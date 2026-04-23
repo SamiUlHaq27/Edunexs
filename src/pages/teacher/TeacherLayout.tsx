@@ -1,32 +1,76 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Outlet, NavLink } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faChalkboardUser, faBookOpen, faSignOutAlt, faBars, faUserCircle, faChevronDown, faChevronUp
+  faChalkboardUser,
+  faBookOpen,
+  faSignOutAlt,
+  faBars,
+  faUserCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { ASSETS } from "../../config/assets";
+import { authService, institutionService } from "../../services";
+import type { Institution } from "../../types";
 import "../../styles/dashboard.css";
 import "../../styles/teacher.css";
 
 export default function TeacherLayout() {
   const [isMinimized, setIsMinimized] = useState(false);
-  const [showCourses, setShowCourses] = useState(false);
+  const [institutionInfo, setInstitutionInfo] = useState<{
+    name: string;
+    prefix?: string;
+    logo: string;
+  }>({
+    name: "Edunexs",
+    prefix: undefined,
+    logo: "/dummy/institution-dummy-logo-picture.png",
+  });
 
-  const teacherCourses = [
-    { id: "cs101", name: "Computer Science" },
-    { id: "math202", name: "Mathematics" },
-    { id: "eng301", name: "English" },
-  ];
+  const user = authService.getUser();
+
+  useEffect(() => {
+    const loadInstitutionInfo = async () => {
+      try {
+        const institution: Institution | null =
+          await institutionService.getMyInstitution();
+
+        if (institution) {
+          setInstitutionInfo({
+            name: institution.name,
+            prefix: institution.prefix,
+            logo:
+              institution.logoUrl ||
+              institution.logo?.publicUrl ||
+              "/dummy/institution-dummy-logo-picture.png",
+          });
+        }
+      } catch {
+        // Keep default institution info if request is unavailable.
+      }
+    };
+
+    void loadInstitutionInfo();
+  }, []);
 
   return (
-    <div className={`dashboard-layout ${isMinimized ? "sidebar-minimized" : ""}`}>
+    <div
+      className={`dashboard-layout ${isMinimized ? "sidebar-minimized" : ""}`}
+    >
       <aside className="dashboard-sidebar">
         <div className="sidebar-header">
-          <img src={ASSETS.logo} alt="Logo" className="sidebar-logo" style={{ background: '#fff', borderRadius: '50%' }} />
+          <img
+            src={ASSETS.logo}
+            alt="Logo"
+            className="sidebar-logo"
+            style={{ background: "#fff", borderRadius: "50%" }}
+          />
         </div>
-        
+
         <div className="sidebar-title-div">
-          <button onClick={() => setIsMinimized(!isMinimized)} className="toggle-btn">
+          <button
+            onClick={() => setIsMinimized(!isMinimized)}
+            className="toggle-btn"
+          >
             <FontAwesomeIcon icon={faBars} />
           </button>
           <h1 className="dashboard-sidebar-title">Teacher Portal</h1>
@@ -38,38 +82,10 @@ export default function TeacherLayout() {
             <span className="nav-text">Dashboard</span>
           </NavLink>
 
-          <div className="nav-item" onClick={() => setShowCourses(!showCourses)} style={{ cursor: 'pointer' }}>
+          <NavLink to="/teacher/courses" className="nav-item">
             <FontAwesomeIcon icon={faBookOpen} className="nav-icon" />
-            <span className="nav-text" style={{ flex: 1 }}>My Courses</span>
-            {!isMinimized && <FontAwesomeIcon icon={showCourses ? faChevronUp : faChevronDown} style={{ fontSize: '0.8rem', opacity: 0.7 }} />}
-          </div>
-
-          {/* Submenu: Background box removed, Dot added before names */}
-          {showCourses && !isMinimized && (
-            <div className="sidebar-submenu" style={{ 
-              paddingLeft: '2.8rem', 
-              marginTop: '5px'
-            }}>
-              {teacherCourses.map(course => (
-                <NavLink 
-                  key={course.id} 
-                  to={`/teacher/courses/${course.id}`} 
-                  className="nav-item sub-item"
-                  style={{ 
-                    fontSize: '0.85rem', 
-                    padding: '6px 0',
-                    background: 'none', // Box remove karne ke liye
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px'
-                  }}
-                >
-                  <span style={{ color: 'var(--primary-color)', fontWeight: 'bold' }}>•</span>
-                  <span className="nav-text">{course.name}</span>
-                </NavLink>
-              ))}
-            </div>
-          )}
+            <span className="nav-text">My Courses</span>
+          </NavLink>
         </nav>
 
         <div className="sidebar-footer">
@@ -82,16 +98,31 @@ export default function TeacherLayout() {
 
       <main className="dashboard-main">
         <header className="main-header">
-          <div className="header-greeting">
-            <h2>Edunexs</h2>
-            <p>Welcome, Professor</p>
+          <div className="header-greeting teacher-institution-brand">
+            <img
+              src={institutionInfo.logo}
+              alt="Institution Logo"
+              className="teacher-institution-logo"
+            />
+            <div className="teacher-institution-copy">
+              <h2>{institutionInfo.name}</h2>
+              <p>Welcome, {user?.name || "Professor"}</p>
+            </div>
           </div>
           <div className="header-profile">
             <div className="user-info">
-              <span className="user-name">Haider Ali</span>
-              <span className="user-role">Senior Teacher</span>
+              <span className="user-name">{user?.name || "Teacher"}</span>
+              <span className="user-role">{user?.role || "teacher"}</span>
             </div>
-            <FontAwesomeIcon icon={faUserCircle} className="user-avatar" />
+            {user?.profilePicture?.publicUrl ? (
+              <img
+                src={user.profilePicture.publicUrl}
+                alt="Teacher"
+                className="user-avatar"
+              />
+            ) : (
+              <FontAwesomeIcon icon={faUserCircle} className="user-avatar" />
+            )}
           </div>
         </header>
         <div className="dashboard-content">
