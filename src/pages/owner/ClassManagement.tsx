@@ -87,6 +87,7 @@ export default function ClassManagement(): React.JSX.Element {
   const [filterStatus, setFilterStatus] = useState<StatusFilter>("All");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
 
   const [isSectionModalOpen, setIsSectionModalOpen] = useState(false);
   const [editingSectionId, setEditingSectionId] = useState<number | null>(null);
@@ -587,6 +588,26 @@ export default function ClassManagement(): React.JSX.Element {
     });
   };
 
+  const toggleSectionMenu = (sectionId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsFilterOpen(false);
+
+    if (openMenuId === sectionId) {
+      setOpenMenuId(null);
+      return;
+    }
+
+    const rect = (e.currentTarget as HTMLButtonElement).getBoundingClientRect();
+    const menuWidth = 180;
+    const menuHeight = 132;
+    const left = Math.max(8, Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - 8));
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const top = spaceBelow >= menuHeight ? rect.bottom + 8 : Math.max(8, rect.top - menuHeight - 8);
+
+    setMenuPosition({ top, left });
+    setOpenMenuId(sectionId);
+  };
+
   if (isLoading) {
     return (
       <div className="admin-page-container">
@@ -707,16 +728,20 @@ export default function ClassManagement(): React.JSX.Element {
                   <div className="action-btn-wrapper">
                     <button
                       className="btn action-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsFilterOpen(false);
-                        setOpenMenuId(openMenuId === section.id ? null : section.id);
-                      }}
+                      onClick={(e) => toggleSectionMenu(section.id, e)}
                     >
                       <FontAwesomeIcon icon={faEllipsisH} />
                     </button>
                     {openMenuId === section.id && (
-                      <div className="action-menu-dropdown" style={{ right: 0, left: "auto" }}>
+                      <div
+                        className="action-menu-dropdown"
+                        style={{
+                          position: "fixed",
+                          top: `${menuPosition.top}px`,
+                          left: `${menuPosition.left}px`,
+                          zIndex: 1000,
+                        }}
+                      >
                         <button className="dropdown-item" onClick={() => handleOpenSectionModal(section)}>
                           <FontAwesomeIcon icon={faEdit} fixedWidth /> Edit Class
                         </button>

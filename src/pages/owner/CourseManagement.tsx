@@ -49,6 +49,7 @@ export default function CourseManagement(): React.JSX.Element {
   const [filterStatus, setFilterStatus] = useState<CourseFilter>("All");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCourseId, setEditingCourseId] = useState<number | null>(null);
@@ -263,6 +264,26 @@ export default function CourseManagement(): React.JSX.Element {
     } finally {
       setOpenMenuId(null);
     }
+  };
+
+  const toggleCourseMenu = (courseId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsFilterOpen(false);
+
+    if (openMenuId === courseId) {
+      setOpenMenuId(null);
+      return;
+    }
+
+    const rect = (e.currentTarget as HTMLButtonElement).getBoundingClientRect();
+    const menuWidth = 170;
+    const menuHeight = 92;
+    const left = Math.max(8, Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - 8));
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const top = spaceBelow >= menuHeight ? rect.bottom + 8 : Math.max(8, rect.top - menuHeight - 8);
+
+    setMenuPosition({ top, left });
+    setOpenMenuId(courseId);
   };
 
   const filteredCourses = courses.filter((course) => {
@@ -528,13 +549,7 @@ export default function CourseManagement(): React.JSX.Element {
                 <div className="action-btn-wrapper">
                   <button
                     className="btn action-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsFilterOpen(false);
-                      setOpenMenuId(
-                        openMenuId === course.id ? null : course.id,
-                      );
-                    }}
+                    onClick={(e) => toggleCourseMenu(course.id, e)}
                   >
                     <FontAwesomeIcon icon={faEllipsisH} />
                   </button>
@@ -542,7 +557,12 @@ export default function CourseManagement(): React.JSX.Element {
                   {openMenuId === course.id && (
                     <div
                       className="action-menu-dropdown"
-                      style={{ right: 0, left: "auto" }}
+                      style={{
+                        position: "fixed",
+                        top: `${menuPosition.top}px`,
+                        left: `${menuPosition.left}px`,
+                        zIndex: 1000,
+                      }}
                     >
                       <button
                         className="dropdown-item"
