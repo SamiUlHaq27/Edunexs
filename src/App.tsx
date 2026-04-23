@@ -135,6 +135,7 @@ export default function App(): React.JSX.Element {
           <Route path="assignments" element={<TeacherAssignments />} />
           <Route path="quizzes" element={<TeacherQuizzes />} />
           <Route path="grades" element={<TeacherGrades />} />
+          <Route path="courses" element={<TeacherCourses />} />
           <Route path="courses/:courseId" element={<TeacherCourses />} />
         </Route>
 
