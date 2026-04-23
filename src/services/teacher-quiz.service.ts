@@ -9,22 +9,34 @@ export interface QuizQuestion {
 
 export interface TeacherQuiz {
   id: number;
-  offeringId: number;
+  offering?: {
+    id?: number;
+    sectionName?: string;
+    courseName?: string;
+  };
   title: string;
   startsAt: string;
   endsAt: string;
   maxAttempts: number;
-  questions: QuizQuestion[];
+  totalQuestions?: number;
+  totalSubmissions?: number;
   isActive: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface QuizAttempt {
-  id: number;
-  quizId: number;
+  attemptId: number;
   studentProfileId: number;
-  score?: number;
+  studentName?: string;
+  rollNo?: string;
+  totalQuestionsSnapshot?: number;
+  bestGrade?: {
+    score: number;
+    maxGrade: number;
+    percentage: number;
+    updatedAt?: string;
+  } | null;
   submittedAt?: string;
 }
 
@@ -64,6 +76,22 @@ export interface ListQuizAttemptsDto {
 
 interface PaginatedResponse<T> {
   data: T[];
+  total: number;
+  page: number;
+  size: number;
+  totalPages: number;
+}
+
+interface QuizAttemptListResponse {
+  quiz?: {
+    id: number;
+    title: string;
+    startsAt: string;
+    endsAt: string;
+    maxAttempts: number;
+    maxGrade: number;
+  };
+  data: QuizAttempt[];
   total: number;
   page: number;
   size: number;
@@ -113,9 +141,9 @@ class TeacherQuizService {
 
   async listAttempts(
     filters: ListQuizAttemptsDto,
-  ): Promise<PaginatedResponse<QuizAttempt>> {
+  ): Promise<QuizAttemptListResponse> {
     try {
-      const response = await apiClient.post<PaginatedResponse<QuizAttempt>>(
+      const response = await apiClient.post<QuizAttemptListResponse>(
         `${this.BASE_PATH}/submissions`,
         filters,
       );

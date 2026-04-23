@@ -1,173 +1,963 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faSearch,
-  faPlus,
-  faFileExport,
-  faKeyboard,
-  faMicrochip,
-  faBookOpen,
-  faCheckDouble,
-  faUserPlus,
-  faTimes
+  faTriangleExclamation,
+  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
+import { teacherGradebookService } from "../../services";
 
-const TeacherLayout = ({ children }: { children: React.ReactNode }) => (
-  <div style={{ padding: '2rem', background: '#f8fafc', minHeight: '100vh', fontFamily: 'sans-serif' }}>
-    <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-      {children}
-    </div>
-  </div>
-);
+interface TeacherGradesProps {
+  offeringId?: number;
+}
 
-export default function TeacherGradebook() {
-  const [showAddForm, setShowAddForm] = useState(false);
+interface GradebookRow {
+  studentProfileId: number;
+  studentId?: number | null;
+  studentName: string;
+  rollNo: string;
+  percentage: number | null;
+  gradeCount: number;
+  gradedCount?: number;
+  pendingCount?: number;
+  assignmentCount: number;
+  quizCount: number;
+  customCount: number;
+}
+
+interface GradeEntry {
+  gradeId: number | null;
+  gradeType: "assignment" | "quiz" | "custom";
+  assessmentId: number | null;
+  title: string;
+  score: number | null;
+  maxGrade: number | null;
+  percentage: number | null;
+  feedback: string | null;
+  gradedAt?: string | null;
+  editable: boolean;
+  isGraded: boolean;
+}
+
+export default function TeacherGradebook({ offeringId }: TeacherGradesProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  
-  // New Student State for Manual Entry
-  const [newStudent, setNewStudent] = useState({
-    name: "", rollNo: "", assignment: 0, quiz: 0, exam: 0
-  });
+  const [rows, setRows] = useState<GradebookRow[]>([]);
+  const [selectedRow, setSelectedRow] = useState<GradebookRow | null>(null);
+  const [selectedGrades, setSelectedGrades] = useState<GradeEntry[]>([]);
+  const [editingGradeKey, setEditingGradeKey] = useState<string | null>(null);
+  const [scoreDraft, setScoreDraft] = useState("");
+  const [feedbackDraft, setFeedbackDraft] = useState("");
+  const [isCustomDialogOpen, setIsCustomDialogOpen] = useState(false);
+  const [customGradeTitle, setCustomGradeTitle] = useState("");
+  const [customGradeMaxMarks, setCustomGradeMaxMarks] = useState("100");
+  const [customGradeEntries, setCustomGradeEntries] = useState<
+    Array<{
+      studentProfileId: number;
+      studentName: string;
+      rollNo: string;
+      score: string;
+    }>
+  >([]);
 
-  const [students, setStudents] = useState([
-    { id: 1, name: "Haider Ali Hashmi", rollNo: "BCS-786", avatar: "https://i.pravatar.cc/150?img=11", assignment: 18, quiz: 9, exam: 65 },
-    { id: 2, name: "Zain Ahmed", rollNo: "BCS-787", avatar: "https://i.pravatar.cc/150?img=12", assignment: 15, quiz: 7, exam: 55 },
-  ]);
+  const canUseApi = useMemo(() => Number.isFinite(offeringId), [offeringId]);
+  const getGradeKey = (grade: GradeEntry) =>
+    grade.gradeId !== null
+      ? `grade:${grade.gradeId}`
+      : `pending:${grade.gradeType}:${grade.assessmentId ?? "na"}:${grade.title}`;
 
-  const handleUpdate = (id: number, field: string, val: string) => {
-    const value = parseInt(val) || 0;
-    setStudents(students.map(s => s.id === id ? { ...s, [field]: value } : s));
+  const closeStudentDialog = () => {
+    setSelectedRow(null);
+    setSelectedGrades([]);
+    setEditingGradeKey(null);
+    setScoreDraft("");
+    setFeedbackDraft("");
   };
 
-  const addNewRecord = () => {
-    if(!newStudent.name || !newStudent.rollNo) return alert("Please fill basic info");
-    
-    const record = {
-      ...newStudent,
-      id: Date.now(),
-      avatar: `https://i.pravatar.cc/150?u=${Date.now()}`
+  const openCustomGradeDialog = () => {
+    setCustomGradeTitle("");
+    setCustomGradeMaxMarks("100");
+    setCustomGradeEntries(
+      rows.map((student) => ({
+        studentProfileId: student.studentProfileId,
+        studentName: student.studentName,
+        rollNo: student.rollNo,
+        score: "0",
+      })),
+    );
+    setIsCustomDialogOpen(true);
+  };
+
+  const closeCustomGradeDialog = () => {
+    setIsCustomDialogOpen(false);
+    setCustomGradeTitle("");
+    setCustomGradeMaxMarks("100");
+    setCustomGradeEntries([]);
+  };
+
+  const saveCustomGrades = async () => {
+    if (!offeringId) return;
+
+    const maxGrade = Number(customGradeMaxMarks);
+    if (
+      !customGradeTitle.trim() ||
+      !Number.isFinite(maxGrade) ||
+      maxGrade <= 0
+    ) {
+      setErrorMessage("Enter a custom grade title and valid total marks.");
+      return;
+    }
+
+    if (!customGradeEntries.length) {
+      setErrorMessage("Load students before creating a custom grade.");
+      return;
+    }
+
+    const grades = customGradeEntries.map((entry) => ({
+      studentProfileId: entry.studentProfileId,
+      score: Number(entry.score),
+    }));
+
+    if (
+      grades.some((entry) => !Number.isFinite(entry.score) || entry.score < 0)
+    ) {
+      setErrorMessage("Enter valid scores for all students before saving.");
+      return;
+    }
+
+    if (grades.some((entry) => entry.score > maxGrade)) {
+      setErrorMessage("A score cannot exceed the total marks.");
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      setErrorMessage(null);
+
+      await teacherGradebookService.createCustomGrades({
+        offeringId,
+        title: customGradeTitle.trim(),
+        maxGrade,
+        grades,
+      });
+
+      closeCustomGradeDialog();
+      const refreshed = await teacherGradebookService.getGradebook(offeringId);
+      setRows(refreshed.data || []);
+      if (selectedRow) {
+        const refreshedSelected =
+          refreshed.data.find(
+            (row) => row.studentProfileId === selectedRow.studentProfileId,
+          ) || selectedRow;
+        await loadStudentGrades(refreshedSelected);
+      }
+    } catch (error) {
+      console.error("Failed to create custom grades", error);
+      setErrorMessage("Could not create custom grades.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  useEffect(() => {
+    const loadGradebook = async () => {
+      if (!offeringId) {
+        setRows([]);
+        closeStudentDialog();
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        setErrorMessage(null);
+
+        const response = await teacherGradebookService.getGradebook(offeringId);
+        setRows(response.data || []);
+        closeStudentDialog();
+      } catch (error) {
+        console.error("Failed to load gradebook", error);
+        setErrorMessage("Could not load gradebook data.");
+        setRows([]);
+      } finally {
+        setIsLoading(false);
+      }
     };
-    setStudents([record, ...students]);
-    setNewStudent({ name: "", rollNo: "", assignment: 0, quiz: 0, exam: 0 });
-    setShowAddForm(false);
+
+    void loadGradebook();
+  }, [offeringId]);
+
+  const filteredRows = rows.filter(
+    (row) =>
+      row.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      row.rollNo.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
+
+  const loadStudentGrades = async (row: GradebookRow) => {
+    if (!offeringId) return;
+
+    try {
+      setSelectedRow(row);
+      setIsDetailLoading(true);
+      setErrorMessage(null);
+
+      const response = await teacherGradebookService.getStudentGrades(
+        offeringId,
+        row.studentProfileId,
+      );
+
+      const grades = response.data || [];
+      setSelectedGrades(grades);
+      setEditingGradeKey(null);
+      setScoreDraft("");
+      setFeedbackDraft("");
+    } catch (error) {
+      console.error("Failed to load student grades", error);
+      setErrorMessage("Could not load student grades.");
+      setSelectedGrades([]);
+      setEditingGradeKey(null);
+    } finally {
+      setIsDetailLoading(false);
+    }
   };
+
+  const startInlineEdit = (grade: GradeEntry) => {
+    setEditingGradeKey(getGradeKey(grade));
+    setScoreDraft(
+      grade.score === null || Number.isNaN(grade.score) ? "" : String(grade.score),
+    );
+    setFeedbackDraft(grade.feedback ?? "");
+  };
+
+  const cancelInlineEdit = () => {
+    setEditingGradeKey(null);
+    setScoreDraft("");
+    setFeedbackDraft("");
+  };
+
+  const saveGrade = async (grade: GradeEntry) => {
+    if (!offeringId || !selectedRow) return;
+
+    const score = Number(scoreDraft);
+    if (!Number.isFinite(score) || score < 0) {
+      setErrorMessage("Enter a valid score before saving.");
+      return;
+    }
+    if (grade.maxGrade !== null && score > grade.maxGrade) {
+      setErrorMessage("Score cannot exceed max marks.");
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      setErrorMessage(null);
+
+      if (grade.gradeType === "custom") {
+        if (grade.gradeId !== null) {
+          await teacherGradebookService.updateGrade({
+            gradeId: grade.gradeId,
+            score,
+            feedback: feedbackDraft.trim() || undefined,
+          });
+        } else {
+          await teacherGradebookService.createCustomGrade({
+            offeringId,
+            studentProfileId: selectedRow.studentProfileId,
+            score,
+            feedback: feedbackDraft.trim() || undefined,
+          });
+        }
+      } else {
+        if (grade.gradeId === null) {
+          setErrorMessage("This assessment has no grade yet.");
+          return;
+        }
+        await teacherGradebookService.updateGrade({
+          gradeId: grade.gradeId,
+          score,
+          feedback: feedbackDraft.trim() || undefined,
+        });
+      }
+
+      await loadStudentGrades(selectedRow);
+      const refreshed = await teacherGradebookService.getGradebook(offeringId);
+      setRows(refreshed.data || []);
+      cancelInlineEdit();
+    } catch (error) {
+      console.error("Failed to save grade", error);
+      setErrorMessage("Could not save grade changes.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const percentageLabel = (value: number | null) => {
+    if (value === null) return "-";
+    return `${value.toFixed(2)}%`;
+  };
+
+  const gradeLabel = (total: number | null) => {
+    if (total === null) return "-";
+    if (total >= 90) return "A+";
+    if (total >= 80) return "A";
+    if (total >= 70) return "B";
+    if (total >= 60) return "C";
+    return "D";
+  };
+
+  if (!canUseApi) {
+    return (
+      <div className="card settings-container" style={{ padding: "1.2rem" }}>
+        <p style={{ marginTop: 0 }}>Select a course to view gradebook.</p>
+        <Link
+          to="/teacher/courses"
+          style={{ color: "#1d4ed8", fontWeight: 700 }}
+        >
+          Open My Courses
+        </Link>
+      </div>
+    );
+  }
 
   return (
-    <TeacherLayout>
-      <style>{`
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-        .add-form-container { animation: slideDown 0.3s ease-out; background: white; padding: 1.5rem; border-radius: 20px; border: 2px dashed #cbd5e1; margin-bottom: 2rem; }
-        .score-card { background: white; padding: 1.2rem; borderRadius: 20px; border: 1px solid #f1f5f9; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s; }
-        .score-input { width: 50px; padding: 8px; border: 1px solid #e2e8f0; border-radius: 10px; text-align: center; font-weight: 700; background: #f8fafc; outline: none; }
-        .manual-input { padding: 10px; border: 1px solid #e2e8f0; border-radius: 10px; outline: none; width: 100%; }
-        .btn-add { background: #3b82f6; color: white; border: none; padding: 10px 20px; borderRadius: 10px; cursor: pointer; fontWeight: bold; }
-      `}</style>
+    <div>
+      {errorMessage && (
+        <div
+          style={{
+            background: "#fef2f2",
+            color: "#b91c1c",
+            border: "1px solid #fecaca",
+            borderRadius: "10px",
+            padding: "0.7rem 0.9rem",
+            marginBottom: "1rem",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+          }}
+        >
+          <FontAwesomeIcon icon={faTriangleExclamation} />
+          {errorMessage}
+        </div>
+      )}
 
-      <div className="gradebook-container">
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-          <div>
-            <h2 style={{ fontSize: '1.75rem', fontWeight: '800', color: '#0f172a', margin: 0 }}>Gradebook</h2>
-            <p style={{ color: '#64748b', marginTop: '4px' }}>Marks Management • Fall 2026</p>
-          </div>
-          <button 
-            onClick={() => setShowAddForm(!showAddForm)}
-            style={{ background: showAddForm ? '#f43f5e' : '#0f172a', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer' }}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "1rem",
+          gap: "1rem",
+          flexWrap: "wrap",
+        }}
+      >
+        <div>
+          <h2
+            style={{
+              fontSize: "1.4rem",
+              fontWeight: 800,
+              color: "#0f172a",
+              margin: 0,
+            }}
           >
-            <FontAwesomeIcon icon={showAddForm ? faTimes : faUserPlus} style={{ marginRight: '8px' }} /> 
-            {showAddForm ? "Cancel" : "Manual Entry"}
-          </button>
+            Gradebook
+          </h2>
+          <p style={{ color: "#64748b", marginTop: "4px" }}>
+            Click a student to open grades and edit score or feedback.
+          </p>
         </div>
 
-        {/* --- MANUAL ENTRY FORM --- */}
-        {showAddForm && (
-          <div className="add-form-container">
-            <h3 style={{ margin: '0 0 1.5rem 0', fontSize: '1.1rem' }}>Add New Student Record</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 80px 80px 80px 120px', gap: '10px', alignItems: 'end' }}>
-              <div>
-                <label style={{ fontSize: '0.7rem', fontWeight: 'bold', color: '#64748b' }}>NAME</label>
-                <input className="manual-input" placeholder="Full Name" value={newStudent.name} onChange={(e) => setNewStudent({...newStudent, name: e.target.value})} />
-              </div>
-              <div>
-                <label style={{ fontSize: '0.7rem', fontWeight: 'bold', color: '#64748b' }}>ROLL NO</label>
-                <input className="manual-input" placeholder="BCS-000" value={newStudent.rollNo} onChange={(e) => setNewStudent({...newStudent, rollNo: e.target.value})} />
-              </div>
-              <div>
-                <label style={{ fontSize: '0.7rem', fontWeight: 'bold', color: '#64748b' }}>ASGN</label>
-                <input type="number" className="manual-input" value={newStudent.assignment} onChange={(e) => setNewStudent({...newStudent, assignment: parseInt(e.target.value) || 0})} />
-              </div>
-              <div>
-                <label style={{ fontSize: '0.7rem', fontWeight: 'bold', color: '#64748b' }}>QUIZ</label>
-                <input type="number" className="manual-input" value={newStudent.quiz} onChange={(e) => setNewStudent({...newStudent, quiz: parseInt(e.target.value) || 0})} />
-              </div>
-              <div>
-                <label style={{ fontSize: '0.7rem', fontWeight: 'bold', color: '#64748b' }}>EXAM</label>
-                <input type="number" className="manual-input" value={newStudent.exam} onChange={(e) => setNewStudent({...newStudent, exam: parseInt(e.target.value) || 0})} />
-              </div>
-              <button className="btn-add" onClick={addNewRecord}>Save Record</button>
-            </div>
-          </div>
-        )}
+        <button
+          onClick={() => void openCustomGradeDialog()}
+          style={{
+            background: "#0f172a",
+            border: "1px solid #0f172a",
+            borderRadius: "12px",
+            fontWeight: "bold",
+            color: "white",
+            cursor: "pointer",
+            padding: "10px 14px",
+          }}
+        >
+          Create Custom Grade
+        </button>
+      </div>
 
-        {/* Search & Export */}
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
-          <div style={{ position: 'relative' }}>
-            <FontAwesomeIcon icon={faSearch} style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
-            <input 
-              type="text" 
-              placeholder="Search student marks..." 
-              style={{ width: '100%', padding: '12px 12px 12px 45px', borderRadius: '12px', border: '1px solid #e2e8f0', outline: 'none' }} 
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <button style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px', fontWeight: 'bold', color: '#64748b', cursor: 'pointer' }}>
-            <FontAwesomeIcon icon={faFileExport} style={{ marginRight: '8px' }} /> Export Report
-          </button>
-        </div>
+      <div style={{ position: "relative", marginBottom: "1rem" }}>
+        <FontAwesomeIcon
+          icon={faSearch}
+          style={{
+            position: "absolute",
+            left: "15px",
+            top: "50%",
+            transform: "translateY(-50%)",
+            color: "#94a3b8",
+          }}
+        />
+        <input
+          type="text"
+          placeholder="Search student names or roll numbers..."
+          style={{
+            width: "100%",
+            padding: "12px 12px 12px 45px",
+            borderRadius: "12px",
+            border: "1px solid #e2e8f0",
+            outline: "none",
+          }}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
 
-        {/* Student Cards List */}
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          {students.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase())).map(student => {
-            const total = student.assignment + student.quiz + student.exam;
-            return (
-              <div key={student.id} className="score-card">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1 }}>
-                  <img src={student.avatar} style={{ width: '45px', height: '45px', borderRadius: '12px', objectFit: 'cover' }} alt="avatar" />
-                  <div>
-                    <h4 style={{ margin: 0, fontWeight: '800', color: '#1e293b', fontSize: '0.95rem' }}>{student.name}</h4>
-                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748b' }}>{student.rollNo}</p>
-                  </div>
-                </div>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "minmax(0, 1fr)",
+          gap: "1rem",
+          alignItems: "start",
+        }}
+      >
+        <div
+          className="card"
+          style={{ borderRadius: "12px", overflow: "hidden" }}
+        >
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead style={{ background: "#f8fafc" }}>
+              <tr>
+                <th style={{ textAlign: "left", padding: "10px" }}>Student</th>
+                <th style={{ textAlign: "left", padding: "10px" }}>Roll No</th>
+                <th style={{ textAlign: "left", padding: "10px" }}>Marks %</th>
+                <th style={{ textAlign: "left", padding: "10px" }}>Graded</th>
+                <th style={{ textAlign: "left", padding: "10px" }}>Pending</th>
+                <th style={{ textAlign: "left", padding: "10px" }}>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading && (
+                <tr>
+                  <td colSpan={6} style={{ padding: "12px" }}>
+                    Loading gradebook...
+                  </td>
+                </tr>
+              )}
 
-                <div style={{ display: 'flex', gap: '1.2rem', alignItems: 'center', flex: 2, justifyContent: 'center' }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 'bold' }}>ASGN</div>
-                    <input type="number" value={student.assignment} onChange={(e) => handleUpdate(student.id, 'assignment', e.target.value)} className="score-input" />
-                  </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 'bold' }}>QUIZ</div>
-                    <input type="number" value={student.quiz} onChange={(e) => handleUpdate(student.id, 'quiz', e.target.value)} className="score-input" />
-                  </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: 'bold' }}>EXAM</div>
-                    <input type="number" value={student.exam} onChange={(e) => handleUpdate(student.id, 'exam', e.target.value)} className="score-input" />
-                  </div>
-                </div>
+              {!isLoading &&
+                filteredRows.map((student) => {
+                  return (
+                    <tr
+                      key={student.studentProfileId}
+                      onClick={() => void loadStudentGrades(student)}
+                      style={{
+                        cursor: "pointer",
+                      }}
+                    >
+                      <td
+                        style={{
+                          padding: "10px",
+                          borderTop: "1px solid #f1f5f9",
+                        }}
+                      >
+                        {student.studentName}
+                      </td>
+                      <td
+                        style={{
+                          padding: "10px",
+                          borderTop: "1px solid #f1f5f9",
+                        }}
+                      >
+                        {student.rollNo}
+                      </td>
+                      <td
+                        style={{
+                          padding: "10px",
+                          borderTop: "1px solid #f1f5f9",
+                          fontWeight: 800,
+                        }}
+                      >
+                        {percentageLabel(student.percentage)}
+                      </td>
+                      <td
+                        style={{
+                          padding: "10px",
+                          borderTop: "1px solid #f1f5f9",
+                        }}
+                      >
+                        {student.gradedCount ?? student.gradeCount}
+                      </td>
+                      <td
+                        style={{
+                          padding: "10px",
+                          borderTop: "1px solid #f1f5f9",
+                        }}
+                      >
+                        {student.pendingCount ?? "-"}
+                      </td>
+                      <td
+                        style={{
+                          padding: "10px",
+                          borderTop: "1px solid #f1f5f9",
+                        }}
+                      >
+                        <span style={{ color: "#2563eb", fontWeight: 700 }}>
+                          View
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1, justifyContent: 'flex-end' }}>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '0.6rem', fontWeight: 'bold', color: '#94a3b8' }}>TOTAL</div>
-                    <div style={{ fontSize: '1.1rem', fontWeight: '900', color: '#3b82f6' }}>{total}</div>
-                  </div>
-                  <div style={{ width: '35px', height: '35px', borderRadius: '10px', background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', fontSize: '0.8rem', color: '#1e293b' }}>
-                    {total >= 90 ? 'A+' : total >= 80 ? 'A' : total >= 70 ? 'B' : 'C'}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+              {!isLoading && !filteredRows.length && (
+                <tr>
+                  <td colSpan={6} style={{ padding: "12px" }}>
+                    No grade records found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
-    </TeacherLayout>
+
+      {isCustomDialogOpen && (
+        <div
+          className="teacher-modal-overlay"
+          onClick={closeCustomGradeDialog}
+          role="presentation"
+        >
+          <div
+            className="teacher-modal"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="custom-grade-dialog-title"
+            style={{ width: "min(920px, 94vw)" }}
+          >
+            <div className="teacher-modal-header">
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: "1rem",
+                  alignItems: "start",
+                }}
+              >
+                <div>
+                  <h3
+                    id="custom-grade-dialog-title"
+                    style={{ margin: 0, color: "#0f172a" }}
+                  >
+                    Create Custom Grade
+                  </h3>
+                  <p style={{ margin: "4px 0 0", color: "#64748b" }}>
+                    Enter the shared title, total marks, then set each
+                    student&apos;s score.
+                  </p>
+                </div>
+
+                <button
+                  onClick={closeCustomGradeDialog}
+                  style={{
+                    border: "none",
+                    background: "#f8fafc",
+                    borderRadius: "999px",
+                    padding: "0.5rem 0.7rem",
+                    cursor: "pointer",
+                    color: "#475569",
+                  }}
+                  aria-label="Close custom grade dialog"
+                >
+                  <FontAwesomeIcon icon={faXmark} />
+                </button>
+              </div>
+            </div>
+
+            <div className="teacher-modal-body">
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "minmax(0, 2fr) minmax(160px, 0.7fr)",
+                  gap: "0.9rem",
+                }}
+              >
+                <label style={{ display: "grid", gap: "0.35rem" }}>
+                  <span style={{ fontSize: "0.9rem", color: "#475569" }}>
+                    Grade Title
+                  </span>
+                  <input
+                    type="text"
+                    value={customGradeTitle}
+                    onChange={(e) => setCustomGradeTitle(e.target.value)}
+                    placeholder="e.g. Midterm Project"
+                    style={{
+                      width: "100%",
+                      padding: "0.7rem 0.8rem",
+                      borderRadius: "10px",
+                      border: "1px solid #cbd5e1",
+                    }}
+                  />
+                </label>
+
+                <label style={{ display: "grid", gap: "0.35rem" }}>
+                  <span style={{ fontSize: "0.9rem", color: "#475569" }}>
+                    Total Marks
+                  </span>
+                  <input
+                    type="number"
+                    min="1"
+                    step="0.01"
+                    value={customGradeMaxMarks}
+                    onChange={(e) => setCustomGradeMaxMarks(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "0.7rem 0.8rem",
+                      borderRadius: "10px",
+                      border: "1px solid #cbd5e1",
+                    }}
+                  />
+                </label>
+              </div>
+
+              <div style={{ display: "grid", gap: "0.75rem" }}>
+                {customGradeEntries.map((entry, index) => (
+                  <div
+                    key={entry.studentProfileId}
+                    style={{
+                      border: "1px solid #e2e8f0",
+                      borderRadius: "12px",
+                      padding: "0.85rem",
+                      background: "#fff",
+                      display: "grid",
+                      gridTemplateColumns: "minmax(0, 1fr) 160px",
+                      gap: "0.75rem",
+                      alignItems: "center",
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontWeight: 800, color: "#0f172a" }}>
+                        {entry.studentName}
+                      </div>
+                      <div
+                        style={{
+                          color: "#64748b",
+                          fontSize: "0.9rem",
+                          marginTop: "4px",
+                        }}
+                      >
+                        Roll No: {entry.rollNo}
+                      </div>
+                    </div>
+
+                    <label style={{ display: "grid", gap: "0.35rem" }}>
+                      <span style={{ fontSize: "0.9rem", color: "#475569" }}>
+                        Obtained Marks
+                      </span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={entry.score}
+                        onChange={(e) => {
+                          const nextScore = e.target.value;
+                          setCustomGradeEntries((current) =>
+                            current.map((item, itemIndex) =>
+                              itemIndex === index
+                                ? { ...item, score: nextScore }
+                                : item,
+                            ),
+                          );
+                        }}
+                        style={{
+                          width: "100%",
+                          padding: "0.7rem 0.8rem",
+                          borderRadius: "10px",
+                          border: "1px solid #cbd5e1",
+                        }}
+                      />
+                    </label>
+                  </div>
+                ))}
+
+                {!customGradeEntries.length && (
+                  <div style={{ color: "#64748b" }}>
+                    No students are available for custom grading.
+                  </div>
+                )}
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  gap: "0.5rem",
+                  flexWrap: "wrap",
+                  justifyContent: "flex-end",
+                }}
+              >
+                <button
+                  onClick={closeCustomGradeDialog}
+                  style={{
+                    border: "1px solid #cbd5e1",
+                    background: "white",
+                    color: "#334155",
+                    borderRadius: "10px",
+                    padding: "0.7rem 1rem",
+                    cursor: "pointer",
+                  }}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  onClick={() => void saveCustomGrades()}
+                  disabled={isSaving || !customGradeEntries.length}
+                  style={{
+                    border: "none",
+                    background: "#2563eb",
+                    color: "white",
+                    borderRadius: "10px",
+                    padding: "0.7rem 1rem",
+                    cursor: "pointer",
+                    fontWeight: 700,
+                  }}
+                >
+                  {isSaving ? "Saving..." : "Save Custom Grade"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedRow && (
+        <div
+          className="teacher-modal-overlay"
+          onClick={closeStudentDialog}
+          role="presentation"
+        >
+          <div
+            className="teacher-modal"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="student-grades-dialog-title"
+            style={{ width: "min(760px, 92vw)" }}
+          >
+            <div className="teacher-modal-header">
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: "1rem",
+                  alignItems: "start",
+                }}
+              >
+                <div>
+                  <h3
+                    id="student-grades-dialog-title"
+                    style={{ margin: 0, color: "#0f172a" }}
+                  >
+                    {selectedRow.studentName}
+                  </h3>
+                  <p style={{ margin: "4px 0 0", color: "#64748b" }}>
+                    Roll No: {selectedRow.rollNo}
+                  </p>
+                  <p style={{ margin: "4px 0 0", color: "#64748b" }}>
+                    Overall: {percentageLabel(selectedRow.percentage)} ·{" "}
+                    {gradeLabel(selectedRow.percentage)}
+                  </p>
+                </div>
+
+                <button
+                  onClick={closeStudentDialog}
+                  style={{
+                    border: "none",
+                    background: "#f8fafc",
+                    borderRadius: "999px",
+                    padding: "0.5rem 0.7rem",
+                    cursor: "pointer",
+                    color: "#475569",
+                  }}
+                  aria-label="Close student grade dialog"
+                >
+                  <FontAwesomeIcon icon={faXmark} />
+                </button>
+              </div>
+            </div>
+
+            <div className="teacher-modal-body">
+              {isDetailLoading && <div>Loading student grades...</div>}
+
+              {!isDetailLoading && (
+                <div style={{ display: "grid", gap: "0.75rem" }}>
+                  {selectedGrades.map((grade) => {
+                    const key = getGradeKey(grade);
+                    const isEditing = editingGradeKey === key;
+                    const canCreatePendingCustom =
+                      grade.gradeType === "custom" && grade.gradeId === null;
+                    const canEdit =
+                      grade.gradeId !== null || canCreatePendingCustom;
+
+                    return (
+                      <div
+                        key={key}
+                        style={{
+                          border: "1px solid #e2e8f0",
+                          borderRadius: "12px",
+                          padding: "0.9rem",
+                          background: "white",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            gap: "1rem",
+                            alignItems: "start",
+                          }}
+                        >
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontWeight: 800, color: "#0f172a" }}>
+                              {grade.title}
+                            </div>
+                            <div
+                              style={{
+                                color: "#64748b",
+                                fontSize: "0.92rem",
+                                marginTop: "4px",
+                              }}
+                            >
+                              {grade.gradeType.toUpperCase()} ·{" "}
+                              {grade.isGraded
+                                ? `Score ${grade.score}${
+                                    grade.maxGrade !== null
+                                      ? ` / ${grade.maxGrade}`
+                                      : ""
+                                  }`
+                                : "Pending"}
+                              {grade.percentage !== null
+                                ? ` · ${grade.percentage.toFixed(2)}%`
+                                : ""}
+                            </div>
+                            {!isEditing && grade.feedback && (
+                              <div style={{ marginTop: "0.5rem", color: "#334155" }}>
+                                {grade.feedback}
+                              </div>
+                            )}
+                          </div>
+
+                          <button
+                            onClick={() =>
+                              isEditing ? cancelInlineEdit() : startInlineEdit(grade)
+                            }
+                            disabled={!canEdit}
+                            style={{
+                              border: "1px solid #cbd5e1",
+                              background: isEditing ? "#dbeafe" : "white",
+                              color: canEdit ? "#1d4ed8" : "#94a3b8",
+                              borderRadius: "10px",
+                              padding: "0.55rem 0.8rem",
+                              cursor: canEdit ? "pointer" : "not-allowed",
+                              fontWeight: 700,
+                            }}
+                          >
+                            {isEditing ? "Cancel" : canEdit ? "Edit" : "Not Graded"}
+                          </button>
+                        </div>
+
+                        {isEditing && (
+                          <div
+                            style={{
+                              marginTop: "0.75rem",
+                              display: "grid",
+                              gap: "0.65rem",
+                            }}
+                          >
+                            <label style={{ display: "grid", gap: "0.3rem" }}>
+                              <span style={{ fontSize: "0.88rem", color: "#475569" }}>
+                                Score
+                              </span>
+                              <input
+                                type="number"
+                                min="0"
+                                max={grade.maxGrade ?? undefined}
+                                step="0.01"
+                                value={scoreDraft}
+                                onChange={(event) => setScoreDraft(event.target.value)}
+                                style={{
+                                  width: "100%",
+                                  padding: "0.65rem 0.8rem",
+                                  borderRadius: "10px",
+                                  border: "1px solid #cbd5e1",
+                                }}
+                              />
+                            </label>
+                            <label style={{ display: "grid", gap: "0.3rem" }}>
+                              <span style={{ fontSize: "0.88rem", color: "#475569" }}>
+                                Feedback
+                              </span>
+                              <textarea
+                                rows={2}
+                                value={feedbackDraft}
+                                onChange={(event) =>
+                                  setFeedbackDraft(event.target.value)
+                                }
+                                style={{
+                                  width: "100%",
+                                  padding: "0.65rem 0.8rem",
+                                  borderRadius: "10px",
+                                  border: "1px solid #cbd5e1",
+                                  resize: "vertical",
+                                }}
+                              />
+                            </label>
+                            <div style={{ display: "flex", gap: "0.5rem" }}>
+                              <button
+                                onClick={() => void saveGrade(grade)}
+                                disabled={isSaving}
+                                style={{
+                                  border: "none",
+                                  background: "#2563eb",
+                                  color: "white",
+                                  borderRadius: "10px",
+                                  padding: "0.65rem 0.9rem",
+                                  cursor: "pointer",
+                                  fontWeight: 700,
+                                }}
+                              >
+                                {isSaving ? "Saving..." : "Save"}
+                              </button>
+                              <button
+                                onClick={cancelInlineEdit}
+                                style={{
+                                  border: "1px solid #cbd5e1",
+                                  background: "white",
+                                  color: "#334155",
+                                  borderRadius: "10px",
+                                  padding: "0.65rem 0.9rem",
+                                  cursor: "pointer",
+                                }}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+
+                  {!selectedGrades.length && (
+                    <div style={{ color: "#64748b" }}>
+                      No grades found for this student.
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

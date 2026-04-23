@@ -35,7 +35,12 @@ export interface TeacherAttendanceReportDto {
 export interface TeacherAttendanceRecord {
   id: number;
   offeringId: number;
+  sectionName?: string;
+  courseCode?: string;
+  courseTitle?: string;
   studentProfileId: number;
+  studentName?: string;
+  rollNo?: string;
   attendanceDate: string;
   periodSlot: string;
   status: AttendanceStatus;
@@ -45,11 +50,25 @@ export interface TeacherAttendanceRecord {
 
 export interface TeacherAttendanceReport {
   offeringId: number;
-  totalClasses?: number;
-  totalStudents?: number;
-  presentCount?: number;
-  absentCount?: number;
-  attendancePercentage?: number;
+  totalStudents: number;
+  data: Array<{
+    studentProfileId: number;
+    studentId?: number;
+    studentName?: string;
+    rollNo?: string;
+    presentCount: number;
+    absentCount: number;
+    totalMarked: number;
+    attendancePercentage: number;
+  }>;
+}
+
+export interface MarkAttendanceResponse {
+  offeringId: number;
+  attendanceDate: string;
+  periodSlot: string;
+  totalMarked: number;
+  data: TeacherAttendanceRecord[];
 }
 
 interface PaginatedResponse<T> {
@@ -65,9 +84,9 @@ class TeacherAttendanceService {
 
   async markAttendance(
     data: MarkAttendanceDto,
-  ): Promise<TeacherAttendanceRecord[]> {
+  ): Promise<MarkAttendanceResponse> {
     try {
-      const response = await apiClient.post<TeacherAttendanceRecord[]>(
+      const response = await apiClient.post<MarkAttendanceResponse>(
         `${this.BASE_PATH}/mark`,
         data,
       );

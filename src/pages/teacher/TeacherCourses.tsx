@@ -450,10 +450,18 @@ export default function TeacherCourses() {
           boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
         }}
       >
-        {activeTab === "assignments" && <TeacherAssignments />}
-        {activeTab === "quizzes" && <TeacherQuizzes />}
-        {activeTab === "attendance" && <TeacherAttendance />}
-        {activeTab === "grades" && <TeacherGrades />}
+        {activeTab === "assignments" && (
+          <TeacherAssignments offeringId={selectedOffering?.id} />
+        )}
+        {activeTab === "quizzes" && (
+          <TeacherQuizzes offeringId={selectedOffering?.id} />
+        )}
+        {activeTab === "attendance" && (
+          <TeacherAttendance offeringId={selectedOffering?.id} />
+        )}
+        {activeTab === "grades" && (
+          <TeacherGrades offeringId={selectedOffering?.id} />
+        )}
       </div>
     </div>
   );

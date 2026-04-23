@@ -1,6 +1,6 @@
 import apiClient from "../config/api.config";
 
-export type AssessmentType = "assignment" | "quiz" | "exam";
+export type AssessmentType = "assignment" | "quiz";
 export type AssignmentSubmissionStatus = "submitted" | "graded";
 
 export interface TeacherAssignment {

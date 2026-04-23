@@ -10,3 +10,4 @@ export * from "./teacher-assignment.service";
 export * from "./teacher-quiz.service";
 export * from "./teacher-attendance.service";
 export * from "./teacher-dashboard.service";
+export * from "./teacher-gradebook.service";
