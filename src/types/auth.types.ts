@@ -27,6 +27,9 @@ export interface User {
     publicUrl: string;
   } | null;
   role: UserRole;
+  institutionId?: string;
+  studentProfileId?: number | null;
+  linkedStudentIds?: number[];
   isActive: boolean;
   createdAt: string;
   updatedAt?: string;

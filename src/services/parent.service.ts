@@ -64,8 +64,10 @@ interface LinkedStudentsResponse {
   parentId: number;
   linkedStudents: {
     studentProfileId: number;
+    studentId?: number;
     studentName: string;
     studentUsername: string;
+    rollNo?: string;
     linkedAt: string;
   }[];
 }
@@ -158,6 +160,13 @@ class ParentService {
   async getLinkedStudents(parentId: number): Promise<LinkedStudentsResponse> {
     const response = await apiClient.get<LinkedStudentsResponse>(
       `${this.BASE_PATH}/${parentId}/students`,
+    );
+    return response.data;
+  }
+
+  async getMyLinkedStudents(): Promise<LinkedStudentsResponse> {
+    const response = await apiClient.get<LinkedStudentsResponse>(
+      `${this.BASE_PATH}/me/students`,
     );
     return response.data;
   }

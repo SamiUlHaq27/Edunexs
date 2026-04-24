@@ -69,15 +69,40 @@ export interface SubmitStudentAssignmentResponse {
   message?: string;
 }
 
+export interface StudentSubmission {
+  submission: {
+    id: number;
+    submittedAt: string;
+    isLate: boolean;
+    status: "submitted" | "graded";
+    file?: {
+      dbFileId: number;
+      appwriteFileId: string;
+      fileName: string;
+      mimeType: string;
+      sizeOriginal: number;
+      publicUrl: string;
+    } | null;
+  } | null;
+  hasSubmission: boolean;
+}
+
 class StudentAssignmentService {
   private readonly BASE_PATH = "/v1/assignment/student";
 
   async listAssignments(
     filters: StudentAssignmentListFilters,
   ): Promise<PaginatedResponse<StudentAssignmentItem>> {
-    const response = await apiClient.post<PaginatedResponse<StudentAssignmentItem>>(
-      `${this.BASE_PATH}/all`,
-      filters,
+    const response = await apiClient.post<
+      PaginatedResponse<StudentAssignmentItem>
+    >(`${this.BASE_PATH}/all`, filters);
+    return response.data;
+  }
+
+  async getMySubmission(assignmentId: number): Promise<StudentSubmission> {
+    const response = await apiClient.post<StudentSubmission>(
+      `${this.BASE_PATH}/my-submission`,
+      { assignmentId },
     );
     return response.data;
   }
@@ -100,6 +125,14 @@ class StudentAssignmentService {
       },
     );
 
+    return response.data;
+  }
+
+  async removeSubmission(assignmentId: number): Promise<{ message: string }> {
+    const response = await apiClient.post<{ message: string }>(
+      `${this.BASE_PATH}/remove-submission`,
+      { assignmentId },
+    );
     return response.data;
   }
 }

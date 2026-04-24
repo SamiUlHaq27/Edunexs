@@ -69,6 +69,14 @@ class FeeService {
     return response.data;
   }
 
+  async getStudentFees(filters?: ListFiltersDto): Promise<ListFeesResponse> {
+    const response = await apiClient.post<ListFeesResponse>(
+      `${this.BASE_PATH}/student/all`,
+      filters || { page: 1, size: 50, filters: {} },
+    );
+    return response.data;
+  }
+
   async createFee(data: CreateFeeDto): Promise<CreateFeesResponse> {
     const response = await apiClient.post<CreateFeesResponse>(
       this.BASE_PATH,

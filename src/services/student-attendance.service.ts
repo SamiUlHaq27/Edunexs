@@ -4,6 +4,7 @@ export interface StudentAttendanceFilters {
   page: number;
   size: number;
   offeringId?: number;
+  studentProfileId?: number;
   fromDate?: string;
   toDate?: string;
   periodSlot?: string;

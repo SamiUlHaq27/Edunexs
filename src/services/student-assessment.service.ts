@@ -4,6 +4,7 @@ export interface StudentAssessmentReportFilters {
   page: number;
   size: number;
   offeringId?: number;
+  studentProfileId?: number;
   assessmentType?: "assignment" | "quiz" | "custom";
 }
 
@@ -38,10 +39,9 @@ class StudentAssessmentService {
   async getGradeReport(
     filters: StudentAssessmentReportFilters,
   ): Promise<PaginatedResponse<StudentAssessmentGradeItem>> {
-    const response = await apiClient.post<PaginatedResponse<StudentAssessmentGradeItem>>(
-      `${this.BASE_PATH}/report`,
-      filters,
-    );
+    const response = await apiClient.post<
+      PaginatedResponse<StudentAssessmentGradeItem>
+    >(`${this.BASE_PATH}/report`, filters);
     return response.data;
   }
 }

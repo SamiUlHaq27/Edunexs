@@ -131,7 +131,13 @@ export default function ParentManagement() {
       resetForm();
       await loadData();
     } catch (err: any) {
-      setError(err?.response?.data?.message || "Failed to save parent");
+      const rawMessage = err?.response?.data?.message;
+      const message = Array.isArray(rawMessage)
+        ? rawMessage.join(", ")
+        : typeof rawMessage === "string"
+          ? rawMessage
+          : err?.message || "Failed to save parent";
+      setError(message);
     } finally {
       setIsSaving(false);
     }
