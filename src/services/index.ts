@@ -5,6 +5,7 @@ export * from "./section.service";
 export * from "./fee.service";
 export * from "./teacher.service";
 export * from "./student.service";
+export * from "./parent.service";
 export * from "./student-group.service";
 export * from "./teacher-assignment.service";
 export * from "./teacher-quiz.service";

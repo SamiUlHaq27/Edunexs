@@ -19,6 +19,7 @@ import InstitutionSettings from "./pages/owner/InstitutionSettings";
 import AdminManagement from "./pages/owner/AdminManagement";
 import TeacherManagement from "./pages/owner/TeacherManagement";
 import StudentManagement from "./pages/owner/StudentManagement";
+import ParentManagement from "./pages/owner/ParentManagement";
 import CourseManagement from "./pages/owner/CourseManagement";
 import ClassManagement from "./pages/owner/ClassManagement";
 import FeeManagement from "./pages/owner/FeeManagement";
@@ -115,6 +116,7 @@ export default function App(): React.JSX.Element {
           <Route path="admins" element={<AdminManagement />} />
           <Route path="teachers" element={<TeacherManagement />} />
           <Route path="students" element={<StudentManagement />} />
+          <Route path="parents" element={<ParentManagement />} />
           <Route path="courses" element={<CourseManagement />} />
           <Route path="classes" element={<ClassManagement />} />
           <Route path="fees" element={<FeeManagement />} />
