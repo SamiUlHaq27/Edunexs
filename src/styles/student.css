@@ -6,6 +6,11 @@
   gap: 1.5rem;
 }
 
+.student-institution-copy h2,
+.student-institution-copy p {
+  margin: 0;
+}
+
 /* 1. Hero Banner */
 .student-hero-banner {
   background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);

@@ -2,36 +2,59 @@ import React, { useState, useEffect } from "react";
 import { Outlet, NavLink } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { 
-  faHome, faBookReader, faUserGraduate, faSignOutAlt, faBars,
-  faChevronDown, faChevronUp, faCircle, faMoneyBillWave
+  faHome, faBookReader, faUserCircle, faSignOutAlt, faBars,
+  faMoneyBillWave
 } from "@fortawesome/free-solid-svg-icons";
 import { ASSETS } from "../../config/assets";
+import { authService, institutionService } from "../../services";
+import type { Institution } from "../../types";
 import "../../styles/dashboard.css";
 import "../../styles/student.css";
+import "../../styles/teacher.css";
 
 export default function StudentLayout(): React.JSX.Element {
   const [isMinimized, setIsMinimized] = useState(false);
-  const [isCoursesExpanded, setIsCoursesExpanded] = useState(false);
-  const [instProfile, setInstProfile] = useState({ name: "My Institution", logo: ASSETS.logo });
+  const [institutionInfo, setInstitutionInfo] = useState<{
+    name: string;
+    prefix?: string;
+    logo: string;
+  }>({
+    name: "My Institution",
+    prefix: undefined,
+    logo: ASSETS.logo,
+  });
 
-  const myCoursesList = [
-    { id: 1, name: "Mathematics 101" },
-    { id: 2, name: "Physics Fundamentals" },
-    { id: 3, name: "Computer Science" }
-  ];
+  const user = authService.getUser();
 
   useEffect(() => {
-    const saved = localStorage.getItem("institution_profile");
-    if (saved) {
-      setInstProfile(JSON.parse(saved));
-    }
+    const loadInstitutionInfo = async () => {
+      try {
+        const institution: Institution | null =
+          await institutionService.getMyInstitution();
+
+        if (institution) {
+          setInstitutionInfo({
+            name: institution.name,
+            prefix: institution.prefix,
+            logo:
+              institution.logoUrl ||
+              institution.logo?.publicUrl ||
+              ASSETS.logo,
+          });
+        }
+      } catch {
+        // Keep default institution info if request is unavailable.
+      }
+    };
+
+    void loadInstitutionInfo();
   }, []);
 
   return (
     <div className={`dashboard-layout ${isMinimized ? "sidebar-minimized" : ""}`}>
       <aside className="dashboard-sidebar" style={{ paddingTop: '1rem' }}>
         <div className="sidebar-header">
-          <img src={instProfile.logo} alt="Logo" className="sidebar-logo" style={{ borderRadius: '50%', objectFit: 'cover', background: '#fff' }} />
+          <img src={institutionInfo.logo} alt="Logo" className="sidebar-logo" style={{ borderRadius: '50%', objectFit: 'cover', background: '#fff' }} />
         </div>
         <div className="sidebar-title-div">
           <button onClick={() => setIsMinimized(!isMinimized)} className="toggle-btn">
@@ -45,52 +68,11 @@ export default function StudentLayout(): React.JSX.Element {
             <FontAwesomeIcon icon={faHome} className="nav-icon" />
             <span className="nav-text">Overview</span>
           </NavLink>
-          
-          <div className="nav-group">
-            <div 
-              className="nav-item" 
-              onClick={() => setIsCoursesExpanded(!isCoursesExpanded)} 
-              style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                 <FontAwesomeIcon icon={faBookReader} className="nav-icon" />
-                 <span className="nav-text">My Courses</span>
-              </div>
-              {!isMinimized && (
-                 <FontAwesomeIcon icon={isCoursesExpanded ? faChevronUp : faChevronDown} style={{ fontSize: '0.8rem', opacity: 0.7, marginRight: '0.5rem' }} />
-              )}
-            </div>
 
-            {/* Sub-menu (Courses List) - Gap Reduced Here */}
-            {isCoursesExpanded && !isMinimized && (
-               <div className="sub-menu" style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem', marginTop: '0.2rem' }}>
-                 {myCoursesList.map(course => (
-                    <NavLink 
-                       key={course.id} 
-                       to="/student/dashboard"
-                       state={{ courseId: course.id }}
-                       className="nav-item sub-nav-item"
-                       style={({ isActive }) => ({ 
-                          // Padding-left 3.2rem se kam karke 2.5rem kar di hai
-                          padding: '0.5rem 1rem 0.5rem 2.5rem', 
-                          fontSize: '0.85rem', 
-                          minHeight: 'auto', 
-                          opacity: isActive ? 1 : 0.8,
-                          background: 'transparent',
-                          boxShadow: 'none',
-                          border: 'none',
-                          display: 'flex',
-                          alignItems: 'center'
-                       })}
-                    >
-                       {/* Icon margin-right 0.6rem se kam karke 0.4rem kar di hai */}
-                       <FontAwesomeIcon icon={faCircle} style={{ fontSize: '0.3rem', marginRight: '0.4rem' }} />
-                       <span className="nav-text">{course.name}</span>
-                    </NavLink>
-                 ))}
-               </div>
-            )}
-          </div>
+          <NavLink to="/student/courses" className="nav-item">
+            <FontAwesomeIcon icon={faBookReader} className="nav-icon" />
+            <span className="nav-text">My Courses</span>
+          </NavLink>
 
           <NavLink to="/student/fees" className="nav-item">
             <FontAwesomeIcon icon={faMoneyBillWave} className="nav-icon" />
@@ -108,16 +90,31 @@ export default function StudentLayout(): React.JSX.Element {
       
       <main className="dashboard-main">
         <header className="main-header">
-          <div className="header-greeting">
-             <h2>{instProfile.name}</h2>
-             <p>Welcome back, Student!</p>
+          <div className="header-greeting teacher-institution-brand">
+            <img
+              src={institutionInfo.logo}
+              alt="Institution Logo"
+              className="teacher-institution-logo"
+            />
+            <div className="teacher-institution-copy student-institution-copy">
+              <h2>{institutionInfo.name}</h2>
+              <p>Welcome, {user?.name || "Student"}</p>
+            </div>
           </div>
           <div className="header-profile">
             <div className="user-info">
-               <span className="user-name">Haider ali Hashmi</span>
-               <span className="user-role">Class 10-A</span>
+               <span className="user-name">{user?.name || "Student"}</span>
+               <span className="user-role">{user?.role || "student"}</span>
             </div>
-            <FontAwesomeIcon icon={faUserGraduate} className="user-avatar" />
+            {user?.profilePicture?.publicUrl ? (
+              <img
+                src={user.profilePicture.publicUrl}
+                alt="Student"
+                className="user-avatar"
+              />
+            ) : (
+              <FontAwesomeIcon icon={faUserCircle} className="user-avatar" />
+            )}
           </div>
         </header>
         <div className="dashboard-content">

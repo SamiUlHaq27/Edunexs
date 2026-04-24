@@ -11,3 +11,8 @@ export * from "./teacher-quiz.service";
 export * from "./teacher-attendance.service";
 export * from "./teacher-dashboard.service";
 export * from "./teacher-gradebook.service";
+export * from "./student-assignment.service";
+export * from "./student-quiz.service";
+export * from "./student-attendance.service";
+export * from "./student-assessment.service";
+export * from "./student-offering.service";
