@@ -12,6 +12,7 @@ import {
 import { ASSETS } from "../config/assets";
 import AuthSidebar from "../components/AuthSidebar";
 import { institutionService } from "../services/institution.service";
+import { authService } from "../services/auth.service";
 
 export default function CreateInstitution(): React.JSX.Element {
   const navigate = useNavigate();
@@ -24,7 +25,7 @@ export default function CreateInstitution(): React.JSX.Element {
     logo: null as File | null,
   });
   const [preview, setPreview] = useState<string | null>(
-    "/dummy/institution-dummy-logo-picture.png"
+    "/dummy/institution-dummy-logo-picture.png",
   );
 
   // Loading & Error States
@@ -73,15 +74,18 @@ export default function CreateInstitution(): React.JSX.Element {
         }
       }
 
-      // Step 3: Show success and redirect
-      setSuccessMessage(`Institution "${formData.name}" created successfully!`);
+      // Step 3: Show success, clear session, and redirect to login
+      setSuccessMessage(
+        `Institution "${formData.name}" has been created. Please sign in again.`,
+      );
 
       setTimeout(() => {
-        navigate("/owner/dashboard");
+        authService.logout();
+        navigate("/login", { replace: true });
       }, 1500);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to create institution"
+        err instanceof Error ? err.message : "Failed to create institution",
       );
     } finally {
       setIsLoading(false);
