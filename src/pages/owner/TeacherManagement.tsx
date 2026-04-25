@@ -19,6 +19,7 @@ import {
 import { teacherService, institutionService } from "../../services";
 import { ASSETS } from "../../config/assets";
 import "../../styles/owner.css";
+import "../../styles/forms.css";
 
 // Teacher type from service
 import type {
@@ -922,7 +923,6 @@ export default function TeacherManagement() {
                     </div>
                   )}
                 </div>
-
               </div>
 
               <div className="owner-modal-footer">

@@ -1,79 +1,323 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faClock, faArrowRight, faCheckCircle } from "@fortawesome/free-solid-svg-icons";
+import {
+  faClock,
+  faArrowRight,
+  faArrowLeft,
+} from "@fortawesome/free-solid-svg-icons";
+import { studentQuizService, type StudentQuizDetail } from "../../services";
+
+function getErrorMessage(error: unknown): string {
+  if (error && typeof error === "object" && "response" in error) {
+    const maybeResponse = error as {
+      response?: { data?: { message?: string | string[] } };
+    };
+
+    const message = maybeResponse.response?.data?.message;
+    if (Array.isArray(message)) {
+      return message[0] || "Something went wrong";
+    }
+    if (typeof message === "string") {
+      return message;
+    }
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "Something went wrong";
+}
+
+function formatCountdown(endsAt: string): string {
+  const end = new Date(endsAt).getTime();
+  const now = Date.now();
+  const ms = Math.max(end - now, 0);
+
+  const totalSec = Math.floor(ms / 1000);
+  const mins = Math.floor(totalSec / 60);
+  const secs = totalSec % 60;
+
+  const mm = String(mins).padStart(2, "0");
+  const ss = String(secs).padStart(2, "0");
+  return `${mm}:${ss}`;
+}
 
 export default function StudentQuizAttempt() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const quizId =
+    typeof location.state?.quizId === "number" ? location.state.quizId : null;
+  const offeringId =
+    typeof location.state?.offeringId === "number"
+      ? location.state.offeringId
+      : null;
+
+  const [quizDetail, setQuizDetail] = useState<StudentQuizDetail | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [currentQ, setCurrentQ] = useState(0);
-  const [answers, setAnswers] = useState<number[]>([]);
-  
-  // Mock Quiz
-  const questions = [
-    { id: 1, text: "What is the value of Pi?", options: ["3.14", "2.14", "3.41", "4.13"] },
-    { id: 2, text: "What is the capital of Pakistan?", options: ["Lahore", "Karachi", "Islamabad", "Quetta"] },
-    { id: 3, text: "Speed of light is?", options: ["3x10^8 m/s", "300 km/h", "Sound speed", "Infinite"] },
-  ];
+  const [answers, setAnswers] = useState<Record<string, number>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!quizId) {
+      setIsLoading(false);
+      setError("Quiz context is missing.");
+      return;
+    }
+
+    const loadQuiz = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const response = await studentQuizService.getQuizDetail(quizId);
+        setQuizDetail(response);
+      } catch (loadError) {
+        setError(getErrorMessage(loadError));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void loadQuiz();
+  }, [quizId]);
+
+  const questions = quizDetail?.questions || [];
+  const currentQuestion = questions[currentQ];
+
+  const progress = useMemo(() => {
+    if (!questions.length) return 0;
+    return ((currentQ + 1) / questions.length) * 100;
+  }, [currentQ, questions.length]);
+
+  const selectedValue = currentQuestion
+    ? answers[currentQuestion.id]
+    : undefined;
 
   const handleSelect = (idx: number) => {
-    const newAnswers = [...answers];
-    newAnswers[currentQ] = idx;
-    setAnswers(newAnswers);
+    if (!currentQuestion) return;
+    setAnswers((prev) => ({ ...prev, [currentQuestion.id]: idx }));
+  };
+
+  const handleSubmitQuiz = async () => {
+    if (!quizDetail || !quizId) {
+      return;
+    }
+
+    const payload = Object.entries(answers).map(
+      ([questionId, selectedOptionIndex]) => ({
+        questionId,
+        selectedOptionIndex,
+      }),
+    );
+
+    if (payload.length === 0) {
+      setError("Please answer at least one question before submitting.");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setError(null);
+
+      await studentQuizService.submitQuizAttempt({
+        quizId,
+        answers: payload,
+      });
+
+      navigate("/student/courses", {
+        state: offeringId ? { offeringId } : undefined,
+      });
+    } catch (submitError) {
+      setError(getErrorMessage(submitError));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleNext = () => {
     if (currentQ < questions.length - 1) {
-      setCurrentQ(currentQ + 1);
-    } else {
-      // Submit logic
-      alert("Quiz Submitted! Score calculation would happen here.");
-      navigate("/student/courses");
+      setCurrentQ((prev) => prev + 1);
+      return;
     }
+
+    void handleSubmitQuiz();
   };
 
-  return (
-    <div className="card" style={{ maxWidth: '800px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-         <h3 className="card-title" style={{ margin: 0 }}>General Knowledge Quiz</h3>
-         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ef4444', fontWeight: 'bold' }}>
-            <FontAwesomeIcon icon={faClock} /> 12:45
-         </div>
+  if (isLoading) {
+    return <div className="card settings-container">Loading quiz...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="card settings-container">
+        <p style={{ color: "#b91c1c" }}>{error}</p>
+        <button
+          className="btn"
+          onClick={() =>
+            navigate("/student/courses", {
+              state: offeringId ? { offeringId } : undefined,
+            })
+          }
+        >
+          <FontAwesomeIcon icon={faArrowLeft} /> Back to Courses
+        </button>
       </div>
+    );
+  }
+
+  if (!quizDetail || !currentQuestion) {
+    return (
+      <div className="card settings-container">
+        <p>No quiz questions found.</p>
+      </div>
+    );
+  }
+
+  if (!quizDetail.canAttempt) {
+    return (
+      <div className="card settings-container">
+        <h3 style={{ marginTop: 0 }}>{quizDetail.title}</h3>
+        <p style={{ color: "#6b7280" }}>
+          This quiz is currently {quizDetail.window} or attempt limit is
+          reached.
+        </p>
+        <p style={{ color: "#6b7280" }}>
+          Attempts used: {quizDetail.attemptsUsed}/{quizDetail.maxAttempts}
+        </p>
+        <button
+          className="btn"
+          onClick={() =>
+            navigate("/student/courses", {
+              state: offeringId ? { offeringId } : undefined,
+            })
+          }
+        >
+          <FontAwesomeIcon icon={faArrowLeft} /> Back to Courses
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="card" style={{ maxWidth: "800px", margin: "0 auto" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "1.5rem",
+        }}
+      >
+        <h3 className="card-title" style={{ margin: 0 }}>
+          {quizDetail.title}
+        </h3>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            color: "#ef4444",
+            fontWeight: "bold",
+          }}
+        >
+          <FontAwesomeIcon icon={faClock} />{" "}
+          {formatCountdown(quizDetail.endsAt)}
+        </div>
+      </div>
+
+      <p style={{ color: "#64748b", marginTop: 0 }}>
+        Attempts left: {quizDetail.attemptsRemaining} / {quizDetail.maxAttempts}
+      </p>
 
       <div className="quiz-progress">
-         <div className="quiz-progress-bar" style={{ width: `${((currentQ + 1) / questions.length) * 100}%` }}></div>
+        <div className="quiz-progress-bar" style={{ width: `${progress}%` }} />
       </div>
 
-      <div className="question-block" style={{ background: '#fff', border: 'none', padding: 0 }}>
-         <h4 style={{ fontSize: '1.25rem', marginBottom: '1.5rem' }}>
-           Q{currentQ + 1}: {questions[currentQ].text}
-         </h4>
-         
-         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {questions[currentQ].options.map((opt, idx) => (
-              <div 
-                key={idx} 
-                className={`quiz-option ${answers[currentQ] === idx ? 'selected' : ''}`}
-                onClick={() => handleSelect(idx)}
+      <div
+        className="question-block"
+        style={{ background: "#fff", border: "none", padding: 0 }}
+      >
+        <h4 style={{ fontSize: "1.25rem", marginBottom: "1.5rem" }}>
+          Q{currentQ + 1}: {currentQuestion.question}
+        </h4>
+
+        <div
+          style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}
+        >
+          {currentQuestion.options.map((opt, idx) => (
+            <div
+              key={idx}
+              className={`quiz-option ${selectedValue === idx ? "selected" : ""}`}
+              onClick={() => handleSelect(idx)}
+            >
+              <div
+                style={{
+                  width: "24px",
+                  height: "24px",
+                  borderRadius: "50%",
+                  border: "2px solid #ccc",
+                  marginRight: "1rem",
+                  display: "grid",
+                  placeItems: "center",
+                  background:
+                    selectedValue === idx
+                      ? "var(--color-primary-500)"
+                      : "transparent",
+                  borderColor:
+                    selectedValue === idx ? "var(--color-primary-500)" : "#ccc",
+                }}
               >
-                <div style={{ 
-                  width: '24px', height: '24px', borderRadius: '50%', border: '2px solid #ccc',
-                  marginRight: '1rem', display: 'grid', placeItems: 'center',
-                  background: answers[currentQ] === idx ? 'var(--color-primary-500)' : 'transparent',
-                  borderColor: answers[currentQ] === idx ? 'var(--color-primary-500)' : '#ccc'
-                }}>
-                  {answers[currentQ] === idx && <div style={{ width: '10px', height: '10px', background: '#fff', borderRadius: '50%' }}></div>}
-                </div>
-                {opt}
+                {selectedValue === idx && (
+                  <div
+                    style={{
+                      width: "10px",
+                      height: "10px",
+                      background: "#fff",
+                      borderRadius: "50%",
+                    }}
+                  />
+                )}
               </div>
-            ))}
-         </div>
+              {opt}
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-end' }}>
-         <button className="btn btn-primary" onClick={handleNext}>
-            {currentQ === questions.length - 1 ? 'Submit Quiz' : 'Next Question'} <FontAwesomeIcon icon={faArrowRight} />
-         </button>
+      {error && <p style={{ color: "#b91c1c", marginTop: "1rem" }}>{error}</p>}
+
+      <div
+        style={{
+          marginTop: "2rem",
+          display: "flex",
+          justifyContent: "space-between",
+        }}
+      >
+        <button
+          className="btn"
+          onClick={() => setCurrentQ((prev) => Math.max(prev - 1, 0))}
+          disabled={currentQ === 0 || isSubmitting}
+        >
+          <FontAwesomeIcon icon={faArrowLeft} /> Previous
+        </button>
+
+        <button
+          className="btn btn-primary"
+          onClick={handleNext}
+          disabled={isSubmitting}
+        >
+          {currentQ === questions.length - 1
+            ? isSubmitting
+              ? "Submitting..."
+              : "Submit Quiz"
+            : "Next Question"}{" "}
+          <FontAwesomeIcon icon={faArrowRight} />
+        </button>
       </div>
     </div>
   );

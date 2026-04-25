@@ -199,8 +199,8 @@ export default function FeeManagement(): React.JSX.Element {
       errors.title = "Fee title is required";
     }
 
-    if (feeForm.amount === "" || Number(feeForm.amount) < 0) {
-      errors.amount = "Amount must be zero or greater";
+    if (feeForm.amount === "" || Number(feeForm.amount) < 200) {
+      errors.amount = "Amount must be at least Rs. 200";
     }
 
     if (!feeForm.dueDate) {
@@ -314,7 +314,10 @@ export default function FeeManagement(): React.JSX.Element {
     setOpenMenuId(null);
   };
 
-  const toggleFeeMenu = (feeId: number, e: React.MouseEvent<HTMLButtonElement>) => {
+  const toggleFeeMenu = (
+    feeId: number,
+    e: React.MouseEvent<HTMLButtonElement>,
+  ) => {
     e.stopPropagation();
     setIsFilterOpen(false);
 
@@ -949,7 +952,12 @@ export default function FeeManagement(): React.JSX.Element {
 
             <form
               onSubmit={handleSaveFee}
-              style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                flex: 1,
+                minHeight: 0,
+              }}
             >
               <div
                 className="owner-modal-body"
