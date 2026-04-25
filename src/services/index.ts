@@ -17,3 +17,4 @@ export * from "./student-quiz.service";
 export * from "./student-attendance.service";
 export * from "./student-assessment.service";
 export * from "./student-offering.service";
+export * from "./payment.service";
