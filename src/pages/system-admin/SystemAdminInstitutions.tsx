@@ -30,12 +30,13 @@ export default function SystemAdminInstitutions() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalAction, setModalAction] = useState<"block" | "unblock">("block");
   const [selectedInstPrefix, setSelectedInstPrefix] = useState<string | null>(
-    null
+    null,
   );
   const [blockMessage, setBlockMessage] = useState("");
 
@@ -118,14 +119,14 @@ export default function SystemAdminInstitutions() {
       setSuccessMessage(
         modalAction === "block"
           ? "Institution blocked successfully"
-          : "Institution unblocked successfully"
+          : "Institution unblocked successfully",
       );
 
       closeModal();
       fetchInstitutions();
     } catch (err: any) {
       setError(
-        err?.response?.data?.message || `Failed to ${modalAction} institution`
+        err?.response?.data?.message || `Failed to ${modalAction} institution`,
       );
     } finally {
       setIsLoading(false);
@@ -144,8 +145,28 @@ export default function SystemAdminInstitutions() {
     setIsFilterOpen(false);
   };
 
+  const toggleMenu = (
+    prefix: string,
+    e: React.MouseEvent<HTMLButtonElement>,
+  ) => {
+    e.stopPropagation();
+    setIsFilterOpen(false);
+
+    if (openMenuId === prefix) {
+      setOpenMenuId(null);
+      return;
+    }
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    setMenuPosition({
+      top: rect.bottom + window.scrollY,
+      left: rect.right + window.scrollX - 150,
+    });
+    setOpenMenuId(prefix);
+  };
+
   const selectedInst = institutions.find(
-    (i) => i.prefix === selectedInstPrefix
+    (i) => i.prefix === selectedInstPrefix,
   );
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -257,112 +278,125 @@ export default function SystemAdminInstitutions() {
         </div>
       ) : (
         <div className="card table-container">
-          <table className="data-table sys-admin-table">
-            <thead>
-              <tr>
-                <th>Logo</th>
-                <th>Institution Name</th>
-                <th>Prefix</th>
-                <th>Location</th>
-                <th>Registered Date</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {institutions.map((inst) => (
-                <tr key={inst.prefix}>
-                  <td>
-                    <img
-                      src={inst.logo?.publicUrl || inst.logoUrl || ASSETS.logo}
-                      alt="Logo"
-                      style={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: "50%",
-                        border: "1px solid #eee",
-                        objectFit: "cover",
-                      }}
-                    />
-                  </td>
-                  <td style={{ fontWeight: "600", fontSize: "1rem" }}>
-                    {inst.name}
-                  </td>
-                  <td style={{ fontFamily: "monospace", color: "#6b7280" }}>
-                    {inst.prefix}
-                  </td>
-                  <td>
-                    {inst.city}, {inst.country}
-                  </td>
-                  <td>{formatDate(inst.createdAt)}</td>
-                  <td>
-                    <span
-                      className={`status-pill ${
-                        inst.isBlocked ? "status-blocked" : "status-unblocked"
-                      }`}
-                    >
-                      {inst.isBlocked ? "Blocked" : "Unblocked"}
-                    </span>
-                  </td>
-                  <td>
-                    <div
-                      className="action-menu-wrapper"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <button
-                        className="action-menu-btn"
-                        onClick={() =>
-                          setOpenMenuId(
-                            openMenuId === inst.prefix ? null : inst.prefix
-                          )
-                        }
-                        disabled={isLoading}
-                      >
-                        <FontAwesomeIcon icon={faEllipsisH} />
-                      </button>
-
-                      {openMenuId === inst.prefix && (
-                        <div
-                          className="action-dropdown"
-                          style={{ minWidth: "150px" }}
-                        >
-                          {!inst.isBlocked ? (
-                            <button
-                              className="dropdown-item"
-                              onClick={() =>
-                                handleActionClick(inst.prefix, "block")
-                              }
-                            >
-                              <FontAwesomeIcon
-                                icon={faBan}
-                                style={{ color: "#dc2626" }}
-                                fixedWidth
-                              />
-                              <span style={{ color: "#dc2626" }}>Block</span>
-                            </button>
-                          ) : (
-                            <button
-                              className="dropdown-item"
-                              onClick={() =>
-                                handleActionClick(inst.prefix, "unblock")
-                              }
-                            >
-                              <FontAwesomeIcon
-                                icon={faCheckCircle}
-                                style={{ color: "#059669" }}
-                                fixedWidth
-                              />
-                              <span style={{ color: "#059669" }}>Unblock</span>
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </td>
+          <div className="table-scroll">
+            <table className="data-table sys-admin-table">
+              <thead>
+                <tr>
+                  <th>Logo</th>
+                  <th>Institution Name</th>
+                  <th>Prefix</th>
+                  <th>Location</th>
+                  <th>Registered Date</th>
+                  <th>Status</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {institutions.map((inst) => (
+                  <tr key={inst.prefix}>
+                    <td>
+                      <img
+                        src={
+                          inst.logo?.publicUrl || inst.logoUrl || ASSETS.logo
+                        }
+                        alt="Logo"
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: "50%",
+                          border: "1px solid #eee",
+                          objectFit: "cover",
+                        }}
+                      />
+                    </td>
+                    <td style={{ fontWeight: "600", fontSize: "1rem" }}>
+                      {inst.name}
+                    </td>
+                    <td style={{ fontFamily: "monospace", color: "#6b7280" }}>
+                      {inst.prefix}
+                    </td>
+                    <td>
+                      {inst.city}, {inst.country}
+                    </td>
+                    <td>{formatDate(inst.createdAt)}</td>
+                    <td>
+                      <span
+                        className={`status-pill ${
+                          inst.isBlocked ? "status-blocked" : "status-unblocked"
+                        }`}
+                      >
+                        {inst.isBlocked ? "Blocked" : "Unblocked"}
+                      </span>
+                    </td>
+                    <td>
+                      <div
+                        className="action-menu-wrapper"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          className="action-menu-btn"
+                          onClick={(e) => toggleMenu(inst.prefix, e)}
+                          disabled={isLoading}
+                        >
+                          <FontAwesomeIcon icon={faEllipsisH} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Action Menu Dropdown - Rendered outside table for proper layering */}
+      {openMenuId !== null && (
+        <div
+          className="action-dropdown"
+          style={{
+            position: "fixed",
+            top: `${menuPosition.top}px`,
+            left: `${menuPosition.left}px`,
+            minWidth: "150px",
+            zIndex: 1000,
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {(() => {
+            const institution = institutions.find(
+              (i) => i.prefix === openMenuId,
+            );
+            return institution ? (
+              !institution.isBlocked ? (
+                <button
+                  className="dropdown-item"
+                  onClick={() => handleActionClick(institution.prefix, "block")}
+                >
+                  <FontAwesomeIcon
+                    icon={faBan}
+                    style={{ color: "#dc2626" }}
+                    fixedWidth
+                  />
+                  <span style={{ color: "#dc2626" }}>Block</span>
+                </button>
+              ) : (
+                <button
+                  className="dropdown-item"
+                  onClick={() =>
+                    handleActionClick(institution.prefix, "unblock")
+                  }
+                >
+                  <FontAwesomeIcon
+                    icon={faCheckCircle}
+                    style={{ color: "#059669" }}
+                    fixedWidth
+                  />
+                  <span style={{ color: "#059669" }}>Unblock</span>
+                </button>
+              )
+            ) : null;
+          })()}
         </div>
       )}
 
