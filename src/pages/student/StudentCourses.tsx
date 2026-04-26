@@ -28,28 +28,12 @@ import {
   type StudentAssignmentItem,
   type StudentQuizGradeItem,
   type StudentAttendanceItem,
+  type StudentAssessmentGradeItem,
 } from "../../services";
 import { feeService, type FeeInvoice } from "../../services/fee.service";
 import StripePaymentModal from "../../components/StripePaymentModal";
 
 type ActiveTab = "assignments" | "quizzes" | "attendance" | "grades";
-
-interface StudentGradeItem {
-  gradeId: number;
-  gradeType: "assignment" | "quiz" | "custom";
-  assessmentId: number | null;
-  title: string | null;
-  maxGrade: number | null;
-  score: number;
-  percentage: number | null;
-  feedback: string | null;
-  gradedAt: string;
-  offering: {
-    id: number | null;
-    sectionName: string | null;
-    courseName: string | null;
-  };
-}
 
 const FEE_HISTORY = [
   {
@@ -117,7 +101,7 @@ export default function StudentCourses() {
   const [attendanceRows, setAttendanceRows] = useState<StudentAttendanceItem[]>(
     [],
   );
-  const [gradeRows, setGradeRows] = useState<StudentGradeItem[]>([]);
+  const [gradeRows, setGradeRows] = useState<StudentAssessmentGradeItem[]>([]);
   const [feeRows, setFeeRows] = useState<FeeInvoice[]>([]);
   const [feeIsLoading, setFeeIsLoading] = useState(false);
   const [selectedFeeForPayment, setSelectedFeeForPayment] =
@@ -228,7 +212,7 @@ export default function StudentCourses() {
           offeringId: selectedOfferingId,
         });
 
-        setGradeRows((response.data || []) as StudentGradeItem[]);
+        setGradeRows(response.data || []);
       } catch (error) {
         setTabError(getErrorMessage(error));
       } finally {
@@ -915,7 +899,10 @@ export default function StudentCourses() {
                           fontWeight: 900,
                         }}
                       >
-                        {grade.score}/{grade.maxGrade ?? 100}
+                        {grade.score}/
+                        {grade.maxGrade !== null && grade.maxGrade !== undefined
+                          ? grade.maxGrade
+                          : "-"}
                       </span>
                     </div>
                     <div style={{ width: "100%" }}>

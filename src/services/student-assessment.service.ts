@@ -9,15 +9,15 @@ export interface StudentAssessmentReportFilters {
 }
 
 export interface StudentAssessmentGradeItem {
-  id: number;
+  gradeId: number;
   gradeType: "assignment" | "quiz" | "custom";
   assessmentId?: number;
-  assessmentTitle?: string;
+  title?: string | null;
   score: number;
-  maxGrade?: number;
-  percentage?: number;
-  feedback?: string;
-  gradedAt?: string;
+  maxGrade?: number | null;
+  percentage?: number | null;
+  feedback?: string | null;
+  gradedAt?: string | null;
   offering?: {
     id?: number;
     sectionName?: string;
