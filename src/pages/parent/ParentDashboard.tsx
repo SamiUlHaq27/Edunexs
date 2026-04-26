@@ -8,12 +8,14 @@ import {
   faGraduationCap,
   faCalendarAlt,
   faMoneyBillWave,
+  faCreditCard,
 } from "@fortawesome/free-solid-svg-icons";
 import { useOutletContext } from "react-router-dom";
 import type { ParentOutletContext } from "./ParentLayout";
 import { studentAssessmentService } from "../../services/student-assessment.service";
 import { studentAttendanceService } from "../../services/student-attendance.service";
-import { feeService } from "../../services/fee.service";
+import { feeService, type FeeInvoice } from "../../services/fee.service";
+import StripePaymentModal from "../../components/StripePaymentModal";
 
 export default function ParentDashboard() {
   const { selectedStudentProfileId, linkedStudents } =
@@ -28,9 +30,10 @@ export default function ParentDashboard() {
   const [attendance, setAttendance] = React.useState<
     Array<{ date: string; status: string }>
   >([]);
-  const [fees, setFees] = React.useState<
-    Array<{ month: string; amount: string; status: string }>
-  >([]);
+  const [fees, setFees] = React.useState<FeeInvoice[]>([]);
+  const [selectedFeeForPayment, setSelectedFeeForPayment] = React.useState<
+    FeeInvoice | null
+  >(null);
 
   const selectedStudent = linkedStudents.find(
     (student) => student.studentProfileId === selectedStudentProfileId,
@@ -83,18 +86,7 @@ export default function ParentDashboard() {
           })),
         );
 
-        setFees(
-          (feeRes.data || []).map((row) => ({
-            month: row.dueDate
-              ? new Date(row.dueDate).toLocaleDateString(undefined, {
-                  month: "long",
-                  year: "numeric",
-                })
-              : row.title,
-            amount: `Rs ${row.amount}`,
-            status: row.status,
-          })),
-        );
+        setFees(feeRes.data || []);
       } catch {
         // If endpoint fails, keep graceful fallback data so dashboard stays usable.
         setGrades([]);
@@ -107,6 +99,24 @@ export default function ParentDashboard() {
 
     void loadDashboardData();
   }, [selectedStudentProfileId]);
+
+  const handlePaymentSuccess = () => {
+    setSelectedFeeForPayment(null);
+    if (!selectedStudentProfileId) return;
+
+    void feeService
+      .getStudentFees({
+        page: 1,
+        size: 20,
+        filters: { studentProfileId: selectedStudentProfileId },
+      })
+      .then((feeRes) => {
+        setFees(feeRes.data || []);
+      })
+      .catch(() => {
+        setFees([]);
+      });
+  };
 
   if (!selectedStudentProfileId || !selectedStudent) {
     return (
@@ -164,7 +174,9 @@ export default function ParentDashboard() {
         <div className="stat-card-modern stat-orange">
           <div className="stat-content">
             <div className="stat-value">
-              {fees.find((f) => f.status === "PENDING")?.amount || "Rs 0"}
+              {fees.find((f) => f.status !== "PAID")
+                ? `Rs ${fees.find((f) => f.status !== "PAID")?.amount ?? 0}`
+                : "Rs 0"}
             </div>
             <div className="stat-label">Current Fee Due</div>
           </div>
@@ -260,24 +272,70 @@ export default function ParentDashboard() {
                   <th>Month</th>
                   <th>Amount</th>
                   <th>Status</th>
+                  <th>Action</th>
                 </tr>
               </thead>
               <tbody>
-                {(fees.length
-                  ? fees
-                  : [{ month: "-", amount: "Rs 0", status: "No records" }]
-                ).map((row) => (
-                  <tr key={`${row.month}-${row.status}`}>
-                    <td>{row.month}</td>
-                    <td>{row.amount}</td>
-                    <td>{row.status}</td>
+                {fees.length === 0 ? (
+                  <tr>
+                    <td>-</td>
+                    <td>Rs 0</td>
+                    <td>No records</td>
+                    <td>-</td>
                   </tr>
-                ))}
+                ) : (
+                  fees.map((fee) => (
+                    <tr key={fee.id}>
+                      <td>
+                        {fee.dueDate
+                          ? new Date(fee.dueDate).toLocaleDateString(undefined, {
+                              month: "long",
+                              year: "numeric",
+                            })
+                          : fee.title}
+                      </td>
+                      <td>{`Rs ${fee.amount}`}</td>
+                      <td>{fee.status}</td>
+                      <td>
+                        {fee.status !== "PAID" ? (
+                          <button
+                            type="button"
+                            className="btn btn-sm"
+                            style={{
+                              background: "#eff6ff",
+                              color: "#2563eb",
+                              border: "none",
+                            }}
+                            onClick={() => setSelectedFeeForPayment(fee)}
+                          >
+                            <FontAwesomeIcon icon={faCreditCard} /> Pay
+                          </button>
+                        ) : (
+                          <span style={{ color: "#16a34a", fontWeight: 600 }}>
+                            Paid
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </>
         )}
       </div>
+
+      {selectedFeeForPayment && (
+        <StripePaymentModal
+          isOpen={!!selectedFeeForPayment}
+          feeId={selectedFeeForPayment.id}
+          amount={selectedFeeForPayment.amount}
+          invoiceNo={selectedFeeForPayment.invoiceNo}
+          title={selectedFeeForPayment.title}
+          onClose={() => setSelectedFeeForPayment(null)}
+          onSuccess={handlePaymentSuccess}
+        />
+      )}
     </div>
   );
 }

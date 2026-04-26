@@ -236,9 +236,6 @@ export default function StudentCourses() {
   }, [isFeePage, loadFees]);
 
   if (isFeePage) {
-    const pendingFee = feeRows.find((f) => f.status === "PENDING");
-    const totalOutstanding = pendingFee ? pendingFee.amount : 0;
-
     const handlePaymentSuccess = () => {
       setSelectedFeeForPayment(null);
       void loadFees();
@@ -257,12 +254,6 @@ export default function StudentCourses() {
             <p className="hero-subtitle">
               Check your payment history and pending dues.
             </p>
-          </div>
-          <div className="hero-progress-box" style={{ width: "auto" }}>
-            <small style={{ color: "#6b7280" }}>Total Outstanding</small>
-            <h2 style={{ margin: 0, color: "#ef4444" }}>
-              Rs. {totalOutstanding.toFixed(2)}
-            </h2>
           </div>
         </div>
 
@@ -375,23 +366,26 @@ export default function StudentCourses() {
                           </span>
                         </td>
                         <td style={{ padding: "1.2rem" }}>
-                          {fee.status === "PAID" ? (
+                          {fee.status !== "PAID" ? (
+                            <button
+                              className="btn btn-primary btn-sm"
+                              onClick={() => setSelectedFeeForPayment(fee)}
+                            >
+                              <FontAwesomeIcon icon={faCreditCard} /> Pay
+                            </button>
+                          ) : (
                             <button
                               className="btn btn-sm"
                               style={{
                                 background: "#eff6ff",
                                 color: "#2563eb",
                                 border: "none",
+                                cursor: "not-allowed",
+                                opacity: 0.65,
                               }}
+                              disabled
                             >
-                              <FontAwesomeIcon icon={faDownload} /> Receipt
-                            </button>
-                          ) : (
-                            <button
-                              className="btn btn-primary btn-sm"
-                              onClick={() => setSelectedFeeForPayment(fee)}
-                            >
-                              <FontAwesomeIcon icon={faCreditCard} /> Pay
+                              <FontAwesomeIcon icon={faDownload} /> Paid
                             </button>
                           )}
                         </td>

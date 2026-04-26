@@ -159,6 +159,9 @@ export interface ListFiltersDto {
     isActive?: boolean;
     code?: string;
     title?: string;
+    studentProfileId?: number;
+    status?: string;
+    search?: string;
   };
   // Backward-compatible optional legacy keys
   limit?: number;

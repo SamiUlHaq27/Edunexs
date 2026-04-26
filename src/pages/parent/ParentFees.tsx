@@ -12,13 +12,14 @@ import {
 import { feeService, type FeeInvoice } from "../../services/fee.service";
 import StripePaymentModal from "../../components/StripePaymentModal";
 import { useOutletContext } from "react-router-dom";
-
-interface ParentOutletContext {
-  selectedStudent: { id: number; name: string } | null;
-}
+import type { ParentOutletContext } from "./ParentLayout";
 
 export default function ParentFees() {
-  const { selectedStudent } = useOutletContext<ParentOutletContext>();
+  const { selectedStudentProfileId, linkedStudents } =
+    useOutletContext<ParentOutletContext>();
+  const selectedStudent = linkedStudents.find(
+    (student) => student.studentProfileId === selectedStudentProfileId,
+  );
   const [fees, setFees] = useState<FeeInvoice[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +36,7 @@ export default function ParentFees() {
         const response = await feeService.getStudentFees({
           page: 1,
           size: 50,
-          filters: { studentProfileId: selectedStudent.id },
+          filters: { studentProfileId: selectedStudent.studentProfileId },
         });
         setFees(response.data || []);
       } catch (err) {
@@ -51,9 +52,9 @@ export default function ParentFees() {
     };
 
     void loadFees();
-  }, [selectedStudent]);
+  }, [selectedStudent?.studentProfileId]);
 
-  const pendingFee = fees.find((f) => f.status === "PENDING");
+  const pendingFee = fees.find((f) => f.status !== "PAID");
   const paidFees = fees.filter((f) => f.status === "PAID");
   const totalPending = pendingFee ? pendingFee.amount : 0;
 
@@ -66,7 +67,7 @@ export default function ParentFees() {
           const response = await feeService.getStudentFees({
             page: 1,
             size: 50,
-            filters: { studentProfileId: selectedStudent.id },
+            filters: { studentProfileId: selectedStudent.studentProfileId },
           });
           setFees(response.data || []);
         } catch (err) {
@@ -91,7 +92,7 @@ export default function ParentFees() {
   return (
     <div className="parent-fees-container hd-theme">
       <h3 className="card-title-hd">
-        Fee & Invoices for {selectedStudent.name}
+        Fee & Invoices for {selectedStudent.label}
       </h3>
 
       {isLoading && (
@@ -227,7 +228,7 @@ export default function ParentFees() {
                           </span>
                         </td>
                         <td>
-                          {fee.status === "PENDING" ? (
+                          {fee.status !== "PAID" ? (
                             <button
                               className="btn btn-sm"
                               style={{
