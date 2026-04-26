@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -141,6 +141,24 @@ export default function StudentCourses() {
     [offerings, selectedOfferingId],
   );
 
+  const loadFees = useCallback(async () => {
+    try {
+      setFeeIsLoading(true);
+      setTabError(null);
+      const response = await feeService.getStudentFees({
+        page: 1,
+        size: 50,
+        filters: {},
+      });
+      setFeeRows(response.data || []);
+    } catch (error) {
+      setTabError(getErrorMessage(error));
+      setFeeRows([]);
+    } finally {
+      setFeeIsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (isFeePage) {
       return;
@@ -225,29 +243,15 @@ export default function StudentCourses() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [activeTab, selectedOfferingId, isFeePage]);
 
+  useEffect(() => {
+    if (!isFeePage) {
+      return;
+    }
+
+    void loadFees();
+  }, [isFeePage, loadFees]);
+
   if (isFeePage) {
-    const loadFees = async () => {
-      try {
-        setFeeIsLoading(true);
-        setTabError(null);
-        const response = await feeService.getStudentFees({
-          page: 1,
-          size: 50,
-          filters: {},
-        });
-        setFeeRows(response.data || []);
-      } catch (error) {
-        setTabError(getErrorMessage(error));
-        setFeeRows([]);
-      } finally {
-        setFeeIsLoading(false);
-      }
-    };
-
-    useEffect(() => {
-      void loadFees();
-    }, []);
-
     const pendingFee = feeRows.find((f) => f.status === "PENDING");
     const totalOutstanding = pendingFee ? pendingFee.amount : 0;
 

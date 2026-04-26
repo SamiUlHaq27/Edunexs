@@ -25,7 +25,6 @@ import {
   OtpType,
 } from "../../types";
 import { institutionService } from "../../services/institution.service";
-import { fileService } from "../../services/file.service";
 import { authService } from "../../services/auth.service";
 import "../../styles/owner.css";
 
@@ -247,22 +246,6 @@ export default function AdminManagement() {
 
     setIsLoading(true);
     try {
-      let profilePictureFileId: string | undefined;
-
-      // Upload profile picture if selected
-      if (profilePhotoFile) {
-        try {
-          profilePictureFileId = await fileService.uploadFile(
-            profilePhotoFile,
-            `admin_${formData.username}_${Date.now()}`,
-          );
-        } catch (uploadErr) {
-          setError("Failed to upload profile picture");
-          setIsLoading(false);
-          return;
-        }
-      }
-
       if (isEditing) {
         // Update
         const updateData: Partial<UpdateInstitutionAdminDto> = {
@@ -280,9 +263,9 @@ export default function AdminManagement() {
         if (formData.otp && formData.otp.length >= 6) {
           updateData.otp = formData.otp;
         }
-        // Include profile picture ID if uploaded
-        if (profilePictureFileId) {
-          updateData.profilePictureFileId = profilePictureFileId;
+        // Include profile picture in the same multipart request when selected
+        if (profilePhotoFile) {
+          updateData.profilePicture = profilePhotoFile;
         }
 
         await institutionAdminService.updateAdmin(formData.id, updateData);
@@ -302,9 +285,9 @@ export default function AdminManagement() {
         if (formData.otp && formData.otp.length >= 6) {
           createData.otp = formData.otp;
         }
-        // Include profile picture ID if uploaded
-        if (profilePictureFileId) {
-          createData.profilePictureFileId = profilePictureFileId;
+        // Include profile picture in the same multipart request when selected
+        if (profilePhotoFile) {
+          createData.profilePicture = profilePhotoFile;
         }
         await institutionAdminService.createAdmin(createData);
         setSuccessMessage("Administrator added successfully!");
@@ -773,7 +756,9 @@ export default function AdminManagement() {
                       setFormData({ ...formData, username: e.target.value })
                     }
                     disabled={isLoading || isEditing}
-                    style={isEditing ? { backgroundColor: "#f3f4f6" } : undefined}
+                    style={
+                      isEditing ? { backgroundColor: "#f3f4f6" } : undefined
+                    }
                     required
                   />
                 </div>

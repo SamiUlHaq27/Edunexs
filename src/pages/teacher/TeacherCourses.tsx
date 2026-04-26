@@ -173,19 +173,6 @@ export default function TeacherCourses() {
                       {offering.teacherName || "Teacher"}
                     </p>
                   </div>
-                  <span
-                    style={{
-                      fontSize: "0.72rem",
-                      color: "#0369a1",
-                      background: "#e0f2fe",
-                      borderRadius: "999px",
-                      padding: "0.25rem 0.6rem",
-                      fontWeight: 700,
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    Offering #{offering.id}
-                  </span>
                 </div>
 
                 <div style={{ display: "grid", gap: "0.55rem" }}>

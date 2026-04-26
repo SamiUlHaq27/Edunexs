@@ -182,7 +182,9 @@ export default function TeacherManagement() {
   const filteredTeachers = teachers.filter((teacher) => {
     const matchesSearch =
       teacher.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (teacher.email?.toLowerCase().includes(searchQuery.toLowerCase()) ??
+      (teacher.recoveryEmail
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ??
         false);
     const matchesFilter =
       filterStatus === "All" ||
@@ -216,6 +218,8 @@ export default function TeacherManagement() {
   };
 
   const handleOpenModal = (teacher?: Teacher) => {
+    setError("");
+
     if (teacher) {
       // Edit Mode
       setFormData({
@@ -247,6 +251,7 @@ export default function TeacherManagement() {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setError("");
     setFormData({
       name: "",
       username: "",
@@ -299,13 +304,10 @@ export default function TeacherManagement() {
           ...(profilePictureFile && { profilePicture: profilePictureFile }),
         };
 
-        const response = await teacherService.updateTeacher(updateData);
-        if (response.teacher) {
-          setSuccessMessage("Teacher updated successfully!");
-          handleCloseModal();
-          // Refresh teacher list from backend
-          await loadTeachers();
-        }
+        await teacherService.updateTeacher(updateData);
+        setSuccessMessage("Teacher updated successfully!");
+        handleCloseModal();
+        await loadTeachers();
       } else {
         // Create Mode
         const createData: CreateTeacherDto = {
@@ -315,13 +317,10 @@ export default function TeacherManagement() {
           ...(profilePictureFile && { profilePicture: profilePictureFile }),
         };
 
-        const response = await teacherService.createTeacher(createData);
-        if (response.teacher) {
-          setSuccessMessage("Teacher created successfully!");
-          handleCloseModal();
-          // Refresh teacher list from backend
-          await loadTeachers();
-        }
+        await teacherService.createTeacher(createData);
+        setSuccessMessage("Teacher created successfully!");
+        handleCloseModal();
+        await loadTeachers();
       }
     } catch (err: any) {
       const errorMessage =
@@ -509,7 +508,7 @@ export default function TeacherManagement() {
             </span>
             <input
               className="auth-input"
-              placeholder="Search by name or email"
+              placeholder="Search by name or recovery email"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{ height: "38px", fontSize: "0.9rem" }}
@@ -570,7 +569,6 @@ export default function TeacherManagement() {
               <tr>
                 <th className="col-profile">Profile</th>
                 <th className="col-name">Name</th>
-                <th className="col-email">Email</th>
                 <th className="col-status">Status</th>
                 <th className="col-actions">Actions</th>
               </tr>
@@ -602,11 +600,6 @@ export default function TeacherManagement() {
                         {teacher.username}
                       </div>
                     </td>
-                    <td className="col-email">
-                      <div style={{ color: "#4b5563", fontSize: "0.9rem" }}>
-                        {teacher.email || "-"}
-                      </div>
-                    </td>
                     <td className="col-status">
                       <span
                         className={`status-pill ${teacher.isActive ? "status-active" : "status-inactive"}`}
@@ -634,7 +627,7 @@ export default function TeacherManagement() {
               ) : (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={4}
                     style={{
                       textAlign: "center",
                       padding: "3rem 1rem",
@@ -812,6 +805,26 @@ export default function TeacherManagement() {
               </div>
 
               <div className="owner-modal-body modal-form-grid">
+                {error && (
+                  <div
+                    style={{
+                      gridColumn: "1 / -1",
+                      padding: "0.75rem 1rem",
+                      background: "#fee2e2",
+                      border: "1px solid #fca5a5",
+                      borderRadius: "6px",
+                      color: "#991b1b",
+                      fontSize: "0.9rem",
+                    }}
+                  >
+                    <FontAwesomeIcon
+                      icon={faTimes}
+                      style={{ marginRight: "0.5rem" }}
+                    />
+                    {error}
+                  </div>
+                )}
+
                 {/* Full Name */}
                 <div>
                   <label className="auth-label">Full Name *</label>
