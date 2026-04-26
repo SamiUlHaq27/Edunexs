@@ -1,0 +1,166 @@
+@import "./tokens.css";
+
+/* Teacher Specific Layouts */
+.teacher-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-4);
+  background: var(--color-surface-base);
+  padding: var(--spacing-2) var(--spacing-3);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-muted);
+}
+
+/* Quiz Builder Specifics */
+.quiz-builder-card {
+  border-left: 4px solid var(--color-primary-500);
+}
+
+.question-block {
+  background: var(--color-surface-raised);
+  padding: var(--spacing-3);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-3);
+  border: 1px solid var(--color-border-default);
+  transition: box-shadow var(--motion-duration-fast);
+}
+
+.question-block:hover {
+  box-shadow: var(--elevation-1);
+}
+
+/* Gradebook Table Overrides */
+.gradebook-container {
+  overflow-x: auto;
+}
+
+.gradebook-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-sm);
+}
+
+.gradebook-table th {
+  background: var(--color-surface-elevated-1);
+  padding: var(--spacing-2);
+  text-align: left;
+  border-bottom: 2px solid var(--color-border-muted);
+  white-space: nowrap;
+}
+
+.gradebook-table td {
+  padding: var(--spacing-2);
+  border-bottom: 1px solid var(--color-border-muted);
+}
+
+.grade-input {
+  width: 60px;
+  padding: 4px 8px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  text-align: center;
+}
+
+.grade-input:focus {
+  border-color: var(--color-primary-500);
+  outline: none;
+}
+
+/* Keep teacher header avatar size aligned with system admin header footprint */
+.main-header .header-profile img.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+.student-courses {
+  display: flex;
+  flex-direction: column;
+}
+
+.student-header-card {
+  border-radius: 16px;
+  padding: 1.5rem;
+  color: #ffffff;
+  border: 1px solid transparent;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
+}
+
+.student-header-card h2,
+.student-header-card h3,
+.student-header-card p {
+  margin: 0;
+}
+
+.student-header-card h2,
+.student-header-card h3 {
+  line-height: 1.2;
+}
+
+.student-header-card p {
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .student-header-card {
+    padding: 1.1rem;
+  }
+}
+
+.teacher-institution-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.teacher-institution-logo {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--color-border-muted);
+  flex-shrink: 0;
+}
+
+.teacher-institution-copy h2,
+.teacher-institution-copy p {
+  margin: 0;
+}
+
+.teacher-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.teacher-modal {
+  background: #fff;
+  width: min(760px, 100%);
+  border-radius: 16px;
+  box-shadow: 0 24px 48px rgba(15, 23, 42, 0.2);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 2rem);
+  overflow: hidden;
+}
+
+.teacher-modal-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--color-border-muted);
+  background: #f8fafc;
+}
+
+.teacher-modal-body {
+  padding: 1.5rem;
+  display: grid;
+  gap: 1rem;
+  overflow-y: auto;
+}

@@ -1,0 +1,256 @@
+/* Auth pages */
+.auth-page {
+  min-height: 100vh;
+  display: grid;
+}
+
+.auth-container {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-2);
+}
+
+/* Modernized auth card */
+.auth-card {
+  padding: var(--spacing-4);
+  border-radius: 20px;
+  background: #fff;
+  border: none;
+}
+
+.auth-logo {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto var(--spacing-3) auto;
+  border-radius: 12px;
+  background: linear-gradient(
+    135deg,
+    var(--color-primary-50) 0%,
+    var(--color-primary-100) 100%
+  );
+  padding: 0.5rem;
+}
+
+.auth-title {
+  margin: 0 0 var(--spacing-1) 0;
+  font-size: var(--font-size-2xl);
+  line-height: var(--line-height-2xl);
+  color: var(--color-text-primary);
+  text-align: center;
+}
+
+.auth-subtitle {
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--spacing-3) 0;
+  text-align: center;
+}
+
+.auth-switch {
+  margin-top: var(--spacing-2);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.auth-submit {
+  margin-top: var(--spacing-1);
+  width: 100%;
+}
+
+/* Auth split layout for sidebars - flex based */
+.auth-split {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Add spacing for mobile view, which was the gap before */
+.auth-card {
+  /* No margin needed if sidebar is hidden */
+}
+
+/* Wider container when using split layout */
+.auth-container.auth-split {
+  max-width: none; /* allow full width */
+  width: 100%;
+  padding: 0; /* remove inner gutters so panes can meet page edges */
+}
+
+/* Row layout on larger screens */
+@media (min-width: 900px) {
+  .auth-split {
+    flex-direction: row;
+    align-items: stretch;
+  }
+  .auth-card {
+    margin-bottom: 0; /* Remove mobile margin */
+    padding-right: var(--spacing-4); /* Create gutter */
+  }
+}
+
+/* Reasonable sizing for columns */
+.auth-sidebar,
+.auth-card {
+  flex: 1 1 0;
+}
+
+/* Card ~40%, side panel ~60% on desktop */
+@media (min-width: 900px) {
+  .auth-card {
+    flex: 0 0 40%;
+  }
+  .auth-hero,
+  .auth-sidebar {
+    flex: 0 0 60%;
+  }
+}
+
+.auth-main {
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-sidebar {
+  display: none; /* Hide by default on mobile */
+  position: relative;
+  border-radius: 20px;
+  color: #ffffff;
+  padding: var(--spacing-4);
+  overflow: hidden;
+}
+
+@media (min-width: 900px) {
+  .auth-sidebar {
+    display: grid; /* Show on desktop */
+  }
+}
+
+/* Slider container */
+.sidebar-slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+/* Slider images */
+.slider-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 1.5s ease-in-out;
+}
+
+.slider-image.active {
+  opacity: 1;
+}
+
+/* Dark overlay for text readability */
+.sidebar-slider::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5); /* Adjust darkness */
+  z-index: 2;
+}
+
+/* Content must be on top of the slider and overlay */
+.sidebar-content {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Center content vertically */
+}
+
+/* Visual hero panel variant (image or illustration) */
+.auth-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  background: radial-gradient(
+      1000px 600px at 70% 30%,
+      rgba(0, 102, 255, 0.15),
+      transparent 60%
+    ),
+    radial-gradient(
+      800px 500px at 30% 70%,
+      rgba(51, 133, 255, 0.12),
+      transparent 60%
+    ),
+    linear-gradient(135deg, #e6f0ff 0%, #cce0ff 100%);
+  border: 1px solid rgba(0, 102, 255, 0.1);
+  display: grid;
+  place-items: center;
+  min-height: 520px;
+}
+
+.auth-hero .hero-illustration {
+  max-width: 80%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 18px 40px rgba(2, 6, 23, 0.15));
+}
+
+/* Remove page horizontal padding on desktop so panes touch screen edges */
+@media (min-width: 900px) {
+  /* keep a small left gutter, no right gutter on desktop */
+  .auth-page {
+    margin-right: 0;
+  }
+}
+
+/* Make the visual pane flush with the right edge on desktop */
+@media (min-width: 900px) {
+  .auth-hero {
+    border-radius: 0;
+    border: none;
+  }
+  .auth-sidebar {
+    border-radius: 0;
+  } /* Also make sidebar flush */
+}
+
+.sidebar-title {
+  margin: 0 0 var(--spacing-2) 0;
+  font-size: var(--font-size-xl);
+  line-height: var(--line-height-xl);
+  color: #ffffff;
+  font-weight: var(--font-weight-semibold);
+}
+
+.feature-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--spacing-2);
+}
+
+.feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.feature-item .icon {
+  color: rgba(255, 255, 255, 0.95);
+  line-height: 0;
+  font-size: 1.125rem;
+}
+
+/* Sidebar intro paragraph */
+.sidebar-intro {
+  color: rgba(255, 255, 255, 0.92);
+  margin: 0 0 var(--spacing-2) 0;
+}
