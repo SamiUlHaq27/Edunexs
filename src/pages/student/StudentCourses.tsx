@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -28,28 +28,12 @@ import {
   type StudentAssignmentItem,
   type StudentQuizGradeItem,
   type StudentAttendanceItem,
+  type StudentAssessmentGradeItem,
 } from "../../services";
 import { feeService, type FeeInvoice } from "../../services/fee.service";
 import StripePaymentModal from "../../components/StripePaymentModal";
 
 type ActiveTab = "assignments" | "quizzes" | "attendance" | "grades";
-
-interface StudentGradeItem {
-  gradeId: number;
-  gradeType: "assignment" | "quiz" | "custom";
-  assessmentId: number | null;
-  title: string | null;
-  maxGrade: number | null;
-  score: number;
-  percentage: number | null;
-  feedback: string | null;
-  gradedAt: string;
-  offering: {
-    id: number | null;
-    sectionName: string | null;
-    courseName: string | null;
-  };
-}
 
 const FEE_HISTORY = [
   {
@@ -117,7 +101,7 @@ export default function StudentCourses() {
   const [attendanceRows, setAttendanceRows] = useState<StudentAttendanceItem[]>(
     [],
   );
-  const [gradeRows, setGradeRows] = useState<StudentGradeItem[]>([]);
+  const [gradeRows, setGradeRows] = useState<StudentAssessmentGradeItem[]>([]);
   const [feeRows, setFeeRows] = useState<FeeInvoice[]>([]);
   const [feeIsLoading, setFeeIsLoading] = useState(false);
   const [selectedFeeForPayment, setSelectedFeeForPayment] =
@@ -140,6 +124,24 @@ export default function StudentCourses() {
     () => offerings.find((item) => item.id === selectedOfferingId) || null,
     [offerings, selectedOfferingId],
   );
+
+  const loadFees = useCallback(async () => {
+    try {
+      setFeeIsLoading(true);
+      setTabError(null);
+      const response = await feeService.getStudentFees({
+        page: 1,
+        size: 50,
+        filters: {},
+      });
+      setFeeRows(response.data || []);
+    } catch (error) {
+      setTabError(getErrorMessage(error));
+      setFeeRows([]);
+    } finally {
+      setFeeIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (isFeePage) {
@@ -210,7 +212,7 @@ export default function StudentCourses() {
           offeringId: selectedOfferingId,
         });
 
-        setGradeRows((response.data || []) as StudentGradeItem[]);
+        setGradeRows(response.data || []);
       } catch (error) {
         setTabError(getErrorMessage(error));
       } finally {
@@ -225,32 +227,15 @@ export default function StudentCourses() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [activeTab, selectedOfferingId, isFeePage]);
 
+  useEffect(() => {
+    if (!isFeePage) {
+      return;
+    }
+
+    void loadFees();
+  }, [isFeePage, loadFees]);
+
   if (isFeePage) {
-    const loadFees = async () => {
-      try {
-        setFeeIsLoading(true);
-        setTabError(null);
-        const response = await feeService.getStudentFees({
-          page: 1,
-          size: 50,
-          filters: {},
-        });
-        setFeeRows(response.data || []);
-      } catch (error) {
-        setTabError(getErrorMessage(error));
-        setFeeRows([]);
-      } finally {
-        setFeeIsLoading(false);
-      }
-    };
-
-    useEffect(() => {
-      void loadFees();
-    }, []);
-
-    const pendingFee = feeRows.find((f) => f.status === "PENDING");
-    const totalOutstanding = pendingFee ? pendingFee.amount : 0;
-
     const handlePaymentSuccess = () => {
       setSelectedFeeForPayment(null);
       void loadFees();
@@ -269,12 +254,6 @@ export default function StudentCourses() {
             <p className="hero-subtitle">
               Check your payment history and pending dues.
             </p>
-          </div>
-          <div className="hero-progress-box" style={{ width: "auto" }}>
-            <small style={{ color: "#6b7280" }}>Total Outstanding</small>
-            <h2 style={{ margin: 0, color: "#ef4444" }}>
-              Rs. {totalOutstanding.toFixed(2)}
-            </h2>
           </div>
         </div>
 
@@ -387,23 +366,26 @@ export default function StudentCourses() {
                           </span>
                         </td>
                         <td style={{ padding: "1.2rem" }}>
-                          {fee.status === "PAID" ? (
+                          {fee.status !== "PAID" ? (
+                            <button
+                              className="btn btn-primary btn-sm"
+                              onClick={() => setSelectedFeeForPayment(fee)}
+                            >
+                              <FontAwesomeIcon icon={faCreditCard} /> Pay
+                            </button>
+                          ) : (
                             <button
                               className="btn btn-sm"
                               style={{
                                 background: "#eff6ff",
                                 color: "#2563eb",
                                 border: "none",
+                                cursor: "not-allowed",
+                                opacity: 0.65,
                               }}
+                              disabled
                             >
-                              <FontAwesomeIcon icon={faDownload} /> Receipt
-                            </button>
-                          ) : (
-                            <button
-                              className="btn btn-primary btn-sm"
-                              onClick={() => setSelectedFeeForPayment(fee)}
-                            >
-                              <FontAwesomeIcon icon={faCreditCard} /> Pay
+                              <FontAwesomeIcon icon={faDownload} /> Paid
                             </button>
                           )}
                         </td>
@@ -911,7 +893,10 @@ export default function StudentCourses() {
                           fontWeight: 900,
                         }}
                       >
-                        {grade.score}/{grade.maxGrade ?? 100}
+                        {grade.score}/
+                        {grade.maxGrade !== null && grade.maxGrade !== undefined
+                          ? grade.maxGrade
+                          : "-"}
                       </span>
                     </div>
                     <div style={{ width: "100%" }}>

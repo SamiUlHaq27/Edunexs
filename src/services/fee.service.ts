@@ -58,10 +58,18 @@ interface DeleteFeeResponse {
   message: string;
 }
 
+type FeeListFiltersDto = Omit<ListFiltersDto, "filters"> & {
+  filters?: (NonNullable<ListFiltersDto["filters"]> & {
+    studentProfileId?: number;
+    status?: FeeStatus;
+    search?: string;
+  }) | null;
+};
+
 class FeeService {
   private readonly BASE_PATH = "/v1/fee";
 
-  async getFees(filters?: ListFiltersDto): Promise<ListFeesResponse> {
+  async getFees(filters?: FeeListFiltersDto): Promise<ListFeesResponse> {
     const response = await apiClient.post<ListFeesResponse>(
       `${this.BASE_PATH}/all`,
       filters || { page: 1, size: 100, filters: {} },
@@ -69,7 +77,7 @@ class FeeService {
     return response.data;
   }
 
-  async getStudentFees(filters?: ListFiltersDto): Promise<ListFeesResponse> {
+  async getStudentFees(filters?: FeeListFiltersDto): Promise<ListFeesResponse> {
     const response = await apiClient.post<ListFeesResponse>(
       `${this.BASE_PATH}/student/all`,
       filters || { page: 1, size: 50, filters: {} },

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -36,12 +36,19 @@ function formatCountdown(endsAt: string): string {
   const ms = Math.max(end - now, 0);
 
   const totalSec = Math.floor(ms / 1000);
-  const mins = Math.floor(totalSec / 60);
+  const hours = Math.floor(totalSec / 3600);
+  const mins = Math.floor((totalSec % 3600) / 60);
   const secs = totalSec % 60;
 
+  const hh = String(hours).padStart(2, "0");
   const mm = String(mins).padStart(2, "0");
   const ss = String(secs).padStart(2, "0");
-  return `${mm}:${ss}`;
+  return `${hh}:${mm}:${ss}`;
+}
+
+function getRemainingMs(endsAt: string): number {
+  const end = new Date(endsAt).getTime();
+  return Math.max(end - Date.now(), 0);
 }
 
 export default function StudentQuizAttempt() {
@@ -62,6 +69,8 @@ export default function StudentQuizAttempt() {
   const [currentQ, setCurrentQ] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [nowTick, setNowTick] = useState(Date.now());
+  const hasAutoSubmittedRef = useRef(false);
 
   useEffect(() => {
     if (!quizId) {
@@ -103,7 +112,7 @@ export default function StudentQuizAttempt() {
     setAnswers((prev) => ({ ...prev, [currentQuestion.id]: idx }));
   };
 
-  const handleSubmitQuiz = async () => {
+  const handleSubmitQuiz = async (forceSubmit = false) => {
     if (!quizDetail || !quizId) {
       return;
     }
@@ -115,7 +124,7 @@ export default function StudentQuizAttempt() {
       }),
     );
 
-    if (payload.length === 0) {
+    if (!forceSubmit && payload.length === 0) {
       setError("Please answer at least one question before submitting.");
       return;
     }
@@ -147,6 +156,34 @@ export default function StudentQuizAttempt() {
 
     void handleSubmitQuiz();
   };
+
+  useEffect(() => {
+    if (!quizDetail?.endsAt) {
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      setNowTick(Date.now());
+    }, 1000);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [quizDetail?.endsAt]);
+
+  useEffect(() => {
+    if (!quizDetail?.endsAt || isSubmitting) {
+      return;
+    }
+
+    const remainingMs = getRemainingMs(quizDetail.endsAt);
+    if (remainingMs > 0 || hasAutoSubmittedRef.current) {
+      return;
+    }
+
+    hasAutoSubmittedRef.current = true;
+    void handleSubmitQuiz(true);
+  }, [quizDetail?.endsAt, nowTick, isSubmitting]);
 
   if (isLoading) {
     return <div className="card settings-container">Loading quiz...</div>;

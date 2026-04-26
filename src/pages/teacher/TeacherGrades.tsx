@@ -324,7 +324,7 @@ export default function TeacherGradebook({ offeringId }: TeacherGradesProps) {
 
   return (
     <div>
-      {errorMessage && (
+      {errorMessage && !isCustomDialogOpen && (
         <div
           style={{
             background: "#fef2f2",
@@ -574,6 +574,25 @@ export default function TeacherGradebook({ offeringId }: TeacherGradesProps) {
             </div>
 
             <div className="teacher-modal-body">
+              {errorMessage && (
+                <div
+                  style={{
+                    background: "#fef2f2",
+                    color: "#b91c1c",
+                    border: "1px solid #fecaca",
+                    borderRadius: "10px",
+                    padding: "0.7rem 0.9rem",
+                    marginBottom: "0.75rem",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                  }}
+                >
+                  <FontAwesomeIcon icon={faTriangleExclamation} />
+                  {errorMessage}
+                </div>
+              )}
+
               <div
                 style={{
                   display: "grid",

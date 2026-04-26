@@ -83,9 +83,30 @@ class InstitutionAdminService {
     data: CreateInstitutionAdminDto,
   ): Promise<CreateAdminResponse> {
     try {
+      const hasFile = !!data.profilePicture;
+      let payload: FormData | CreateInstitutionAdminDto;
+
+      if (hasFile) {
+        const formData = new FormData();
+        formData.append("username", data.username);
+        formData.append("password", data.password);
+        formData.append("name", data.name);
+        if (data.email) formData.append("email", data.email);
+        if (data.otp) formData.append("otp", data.otp);
+        formData.append("profilePicture", data.profilePicture as Blob);
+        payload = formData;
+      } else {
+        payload = data;
+      }
+
       const response = await apiClient.post<CreateAdminResponse>(
         `${this.BASE_PATH}`,
-        data,
+        payload,
+        hasFile
+          ? {
+              headers: { "Content-Type": "multipart/form-data" },
+            }
+          : undefined,
       );
       return response.data;
     } catch (error) {
@@ -101,13 +122,41 @@ class InstitutionAdminService {
     data: Partial<UpdateInstitutionAdminDto>,
   ): Promise<UpdateAdminResponse> {
     try {
-      const payload = {
-        institutionAdminId: adminId,
-        ...data,
-      };
+      const hasFile = !!data.profilePicture;
+      let payload:
+        | FormData
+        | (Partial<UpdateInstitutionAdminDto> & { institutionAdminId: number });
+
+      if (hasFile) {
+        const formData = new FormData();
+        formData.append("institutionAdminId", adminId.toString());
+        if (data.name !== undefined) formData.append("name", data.name);
+        if (data.username !== undefined)
+          formData.append("username", data.username);
+        if (data.password !== undefined)
+          formData.append("password", data.password);
+        if (data.email !== undefined) formData.append("email", data.email);
+        if (data.otp !== undefined) formData.append("otp", data.otp);
+        if (data.isActive !== undefined) {
+          formData.append("isActive", data.isActive.toString());
+        }
+        formData.append("profilePicture", data.profilePicture as Blob);
+        payload = formData;
+      } else {
+        payload = {
+          institutionAdminId: adminId,
+          ...data,
+        };
+      }
+
       const response = await apiClient.put<UpdateAdminResponse>(
         `${this.BASE_PATH}`,
         payload,
+        hasFile
+          ? {
+              headers: { "Content-Type": "multipart/form-data" },
+            }
+          : undefined,
       );
       return response.data;
     } catch (error) {

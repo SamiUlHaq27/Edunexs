@@ -17,7 +17,15 @@ import {
   faTrash,
   faUsers,
 } from "@fortawesome/free-solid-svg-icons";
-import { authService, courseService, sectionService, studentGroupService, studentService, teacherService, institutionService } from "../../services";
+import {
+  authService,
+  courseService,
+  sectionService,
+  studentGroupService,
+  studentService,
+  teacherService,
+  institutionService,
+} from "../../services";
 import type { Course } from "../../services/course.service";
 import type { Section, SectionOffering } from "../../services/section.service";
 import type { Student } from "../../services/student.service";
@@ -91,18 +99,32 @@ export default function ClassManagement(): React.JSX.Element {
 
   const [isSectionModalOpen, setIsSectionModalOpen] = useState(false);
   const [editingSectionId, setEditingSectionId] = useState<number | null>(null);
-  const [sectionForm, setSectionForm] = useState<SectionFormState>(emptySectionForm);
-  const [sectionFormErrors, setSectionFormErrors] = useState<Record<string, string>>({});
+  const [sectionForm, setSectionForm] =
+    useState<SectionFormState>(emptySectionForm);
+  const [sectionFormErrors, setSectionFormErrors] = useState<
+    Record<string, string>
+  >({});
   const [draftOfferings, setDraftOfferings] = useState<DraftOfferingRow[]>([]);
-  const [draftOfferingErrors, setDraftOfferingErrors] = useState<Record<string, string>>({});
-  const [sharedStudentProfileIds, setSharedStudentProfileIds] = useState<number[]>([]);
-  const [sharedStudentGroupIds, setSharedStudentGroupIds] = useState<number[]>([]);
+  const [draftOfferingErrors, setDraftOfferingErrors] = useState<
+    Record<string, string>
+  >({});
+  const [sharedStudentProfileIds, setSharedStudentProfileIds] = useState<
+    number[]
+  >([]);
+  const [sharedStudentGroupIds, setSharedStudentGroupIds] = useState<number[]>(
+    [],
+  );
 
   const [isOfferingModalOpen, setIsOfferingModalOpen] = useState(false);
   const [activeSectionId, setActiveSectionId] = useState<number | null>(null);
-  const [editingOfferingId, setEditingOfferingId] = useState<number | null>(null);
-  const [offeringForm, setOfferingForm] = useState<OfferingFormState>(emptyOfferingForm);
-  const [offeringFormErrors, setOfferingFormErrors] = useState<Record<string, string>>({});
+  const [editingOfferingId, setEditingOfferingId] = useState<number | null>(
+    null,
+  );
+  const [offeringForm, setOfferingForm] =
+    useState<OfferingFormState>(emptyOfferingForm);
+  const [offeringFormErrors, setOfferingFormErrors] = useState<
+    Record<string, string>
+  >({});
 
   const user = authService.getUser();
   const isInstitutionAdmin = user?.role === "institution_admin";
@@ -114,13 +136,24 @@ export default function ClassManagement(): React.JSX.Element {
       }
 
       setError("");
-      const [sectionResponse, offeringResponse, courseResponse, teacherResponse, studentResponse, groupResponse] = await Promise.all([
+      const [
+        sectionResponse,
+        offeringResponse,
+        courseResponse,
+        teacherResponse,
+        studentResponse,
+        groupResponse,
+      ] = await Promise.all([
         sectionService.getSections({ page: 1, size: 100, filters: {} }),
         sectionService.getSectionOfferings({ page: 1, size: 200, filters: {} }),
         courseService.getCourses({ page: 1, size: 100, filters: {} }),
         teacherService.getTeachers({ page: 1, size: 100, filters: {} }),
         studentService.getStudents({ page: 1, size: 100, filters: {} }),
-        studentGroupService.getStudentGroups({ page: 1, size: 100, filters: {} }),
+        studentGroupService.getStudentGroups({
+          page: 1,
+          size: 100,
+          filters: {},
+        }),
       ]);
 
       setSections(sectionResponse.data || []);
@@ -131,7 +164,9 @@ export default function ClassManagement(): React.JSX.Element {
       setStudentGroups(groupResponse.data || []);
     } catch (err: any) {
       const errorMessage =
-        err?.response?.data?.message || err?.message || "Failed to load class data";
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to load class data";
       setError(errorMessage);
       console.error("Error loading class data:", err);
     } finally {
@@ -155,7 +190,9 @@ export default function ClassManagement(): React.JSX.Element {
         await loadData(true);
       } catch (err: any) {
         const errorMessage =
-          err?.response?.data?.message || err?.message || "Failed to load class management data";
+          err?.response?.data?.message ||
+          err?.message ||
+          "Failed to load class management data";
         setError(errorMessage);
       } finally {
         setIsLoading(false);
@@ -266,7 +303,9 @@ export default function ClassManagement(): React.JSX.Element {
     value: number | "",
   ) => {
     setDraftOfferings((prev) =>
-      prev.map((row) => (row.localId === localId ? { ...row, [field]: value } : row)),
+      prev.map((row) =>
+        row.localId === localId ? { ...row, [field]: value } : row,
+      ),
     );
   };
 
@@ -346,7 +385,8 @@ export default function ClassManagement(): React.JSX.Element {
       if (!hasDraftOfferings) {
         setSectionFormErrors({});
         setDraftOfferingErrors({
-          noOfferings: "Add at least one course and teacher pair to create a class",
+          noOfferings:
+            "Add at least one course and teacher pair to create a class",
         });
         return;
       }
@@ -354,7 +394,8 @@ export default function ClassManagement(): React.JSX.Element {
       const draftErrors: Record<string, string> = {};
       for (const row of draftOfferings) {
         if (row.courseId === "" || row.teacherId === "") {
-          draftErrors[row.localId] = "Course and teacher are required for each offering";
+          draftErrors[row.localId] =
+            "Course and teacher are required for each offering";
         }
       }
 
@@ -422,7 +463,9 @@ export default function ClassManagement(): React.JSX.Element {
       await loadData(true);
     } catch (err: any) {
       const errorMessage =
-        err?.response?.data?.message || err?.message || "Failed to delete class";
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to delete class";
       setError(errorMessage);
       console.error("Error deleting class:", err);
     } finally {
@@ -443,7 +486,9 @@ export default function ClassManagement(): React.JSX.Element {
       await loadData(true);
     } catch (err: any) {
       const errorMessage =
-        err?.response?.data?.message || err?.message || "Failed to update class status";
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to update class status";
       setError(errorMessage);
       console.error("Error toggling class status:", err);
     } finally {
@@ -519,7 +564,9 @@ export default function ClassManagement(): React.JSX.Element {
       await loadData(true);
     } catch (err: any) {
       const errorMessage =
-        err?.response?.data?.message || err?.message || "Failed to save offering";
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to save offering";
       setError(errorMessage);
       console.error("Error saving offering:", err);
     } finally {
@@ -539,7 +586,9 @@ export default function ClassManagement(): React.JSX.Element {
       await loadData(true);
     } catch (err: any) {
       const errorMessage =
-        err?.response?.data?.message || err?.message || "Failed to delete offering";
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to delete offering";
       setError(errorMessage);
       console.error("Error deleting offering:", err);
     }
@@ -558,7 +607,9 @@ export default function ClassManagement(): React.JSX.Element {
       await loadData(true);
     } catch (err: any) {
       const errorMessage =
-        err?.response?.data?.message || err?.message || "Failed to update offering status";
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to update offering status";
       setError(errorMessage);
       console.error("Error toggling offering status:", err);
     } finally {
@@ -600,9 +651,15 @@ export default function ClassManagement(): React.JSX.Element {
     const rect = (e.currentTarget as HTMLButtonElement).getBoundingClientRect();
     const menuWidth = 180;
     const menuHeight = 132;
-    const left = Math.max(8, Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - 8));
+    const left = Math.max(
+      8,
+      Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - 8),
+    );
     const spaceBelow = window.innerHeight - rect.bottom;
-    const top = spaceBelow >= menuHeight ? rect.bottom + 8 : Math.max(8, rect.top - menuHeight - 8);
+    const top =
+      spaceBelow >= menuHeight
+        ? rect.bottom + 8
+        : Math.max(8, rect.top - menuHeight - 8);
 
     setMenuPosition({ top, left });
     setOpenMenuId(sectionId);
@@ -611,9 +668,20 @@ export default function ClassManagement(): React.JSX.Element {
   if (isLoading) {
     return (
       <div className="admin-page-container">
-        <div style={{ display: "flex", justifyContent: "center", padding: "4rem 0" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            padding: "4rem 0",
+          }}
+        >
           <div style={{ textAlign: "center" }}>
-            <FontAwesomeIcon icon={faSpinner} spin size="2x" style={{ color: "#1e3a8a", marginBottom: "1rem" }} />
+            <FontAwesomeIcon
+              icon={faSpinner}
+              spin
+              size="2x"
+              style={{ color: "#1e3a8a", marginBottom: "1rem" }}
+            />
             <p style={{ color: "#6b7280" }}>Loading classes...</p>
           </div>
         </div>
@@ -623,9 +691,27 @@ export default function ClassManagement(): React.JSX.Element {
 
   return (
     <div className="admin-page-container">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", gap: "1rem", flexWrap: "wrap" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "1rem",
+          gap: "1rem",
+          flexWrap: "wrap",
+        }}
+      >
         <div>
-          <h2 style={{ fontSize: "1.75rem", fontWeight: "bold", color: "#111827", margin: 0 }}>Class Management</h2>
+          <h2
+            style={{
+              fontSize: "1.75rem",
+              fontWeight: "bold",
+              color: "#111827",
+              margin: 0,
+            }}
+          >
+            Class Management
+          </h2>
           <p style={{ margin: "0.35rem 0 0", color: "#6b7280" }}>
             Sections and offerings for {institution?.name || "your institution"}
           </p>
@@ -641,18 +727,45 @@ export default function ClassManagement(): React.JSX.Element {
       </div>
 
       {error && (
-        <div style={{ background: "#fef2f2", color: "#b91c1c", border: "1px solid #fecaca", padding: "0.9rem 1rem", borderRadius: "8px", marginBottom: "1rem" }}>
+        <div
+          style={{
+            background: "#fef2f2",
+            color: "#b91c1c",
+            border: "1px solid #fecaca",
+            padding: "0.9rem 1rem",
+            borderRadius: "8px",
+            marginBottom: "1rem",
+          }}
+        >
           {error}
         </div>
       )}
 
       {successMessage && (
-        <div style={{ background: "#ecfdf5", color: "#047857", border: "1px solid #a7f3d0", padding: "0.9rem 1rem", borderRadius: "8px", marginBottom: "1rem" }}>
+        <div
+          style={{
+            background: "#ecfdf5",
+            color: "#047857",
+            border: "1px solid #a7f3d0",
+            padding: "0.9rem 1rem",
+            borderRadius: "8px",
+            marginBottom: "1rem",
+          }}
+        >
           {successMessage}
         </div>
       )}
 
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: "1rem", marginBottom: "1.5rem", position: "relative", flexWrap: "wrap" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          gap: "1rem",
+          marginBottom: "1.5rem",
+          position: "relative",
+          flexWrap: "wrap",
+        }}
+      >
         <div className="input-with-icon" style={{ margin: 0, width: "300px" }}>
           <span className="input-icon">
             <FontAwesomeIcon icon={faSearch} />
@@ -669,18 +782,30 @@ export default function ClassManagement(): React.JSX.Element {
         <div style={{ position: "relative" }}>
           <button
             className="btn"
-            style={{ height: "38px", background: "#fff", border: "1px solid #d1d5db", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9rem" }}
+            style={{
+              height: "38px",
+              background: "#fff",
+              border: "1px solid #d1d5db",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              fontSize: "0.9rem",
+            }}
             onClick={(e) => {
               e.stopPropagation();
               setOpenMenuId(null);
               setIsFilterOpen(!isFilterOpen);
             }}
           >
-            {filterStatus === "All" ? "Filter" : filterStatus} <FontAwesomeIcon icon={faFilter} />
+            {filterStatus === "All" ? "Filter" : filterStatus}{" "}
+            <FontAwesomeIcon icon={faFilter} />
           </button>
 
           {isFilterOpen && (
-            <div className="filter-dropdown" onClick={(e) => e.stopPropagation()}>
+            <div
+              className="filter-dropdown"
+              onClick={(e) => e.stopPropagation()}
+            >
               {["All", "Active", "Inactive"].map((status) => (
                 <button
                   key={status}
@@ -689,10 +814,18 @@ export default function ClassManagement(): React.JSX.Element {
                     setFilterStatus(status as StatusFilter);
                     setIsFilterOpen(false);
                   }}
-                  style={{ justifyContent: "space-between", padding: "0.6rem 1rem" }}
+                  style={{
+                    justifyContent: "space-between",
+                    padding: "0.6rem 1rem",
+                  }}
                 >
                   {status}
-                  {filterStatus === status && <FontAwesomeIcon icon={faCheck} style={{ color: "#10b981" }} />}
+                  {filterStatus === status && (
+                    <FontAwesomeIcon
+                      icon={faCheck}
+                      style={{ color: "#10b981" }}
+                    />
+                  )}
                 </button>
               ))}
             </div>
@@ -700,7 +833,13 @@ export default function ClassManagement(): React.JSX.Element {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(360px, 1fr))", gap: "1.5rem" }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(360px, 1fr))",
+          gap: "1.5rem",
+        }}
+      >
         {filteredSections.length > 0 ? (
           filteredSections.map((section) => {
             const sectionOfferings = sectionOfferingsMap.get(section.id) || [];
@@ -708,18 +847,53 @@ export default function ClassManagement(): React.JSX.Element {
               <div
                 key={section.id}
                 className="card"
-                style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1.1rem", borderTop: "4px solid var(--color-primary-500)" }}
+                style={{
+                  padding: "1.5rem",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "1.1rem",
+                  borderTop: "4px solid var(--color-primary-500)",
+                }}
               >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                  }}
+                >
                   <div>
-                    <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: "bold", color: "#111827" }}>
+                    <h3
+                      style={{
+                        margin: 0,
+                        fontSize: "1.25rem",
+                        fontWeight: "bold",
+                        color: "#111827",
+                      }}
+                    >
                       {section.name}
                     </h3>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginTop: "0.4rem", flexWrap: "wrap" }}>
-                      <span style={{ fontSize: "0.85rem", color: "#6b7280", fontWeight: 600, fontFamily: "monospace" }}>
-                        Section #{section.id}
-                      </span>
-                      <span style={{ backgroundColor: section.isActive ? "#dcfce7" : "#f3f4f6", color: section.isActive ? "#166534" : "#374151", padding: "0.2rem 0.6rem", borderRadius: "999px", fontSize: "0.75rem", fontWeight: 700 }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.75rem",
+                        marginTop: "0.4rem",
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <span
+                        style={{
+                          backgroundColor: section.isActive
+                            ? "#dcfce7"
+                            : "#f3f4f6",
+                          color: section.isActive ? "#166534" : "#374151",
+                          padding: "0.2rem 0.6rem",
+                          borderRadius: "999px",
+                          fontSize: "0.75rem",
+                          fontWeight: 700,
+                        }}
+                      >
                         {section.isActive ? "Active" : "Inactive"}
                       </span>
                     </div>
@@ -742,64 +916,203 @@ export default function ClassManagement(): React.JSX.Element {
                           zIndex: 1000,
                         }}
                       >
-                        <button className="dropdown-item" onClick={() => handleOpenSectionModal(section)}>
-                          <FontAwesomeIcon icon={faEdit} fixedWidth /> Edit Class
+                        <button
+                          className="dropdown-item"
+                          onClick={() => handleOpenSectionModal(section)}
+                        >
+                          <FontAwesomeIcon icon={faEdit} fixedWidth /> Edit
+                          Class
                         </button>
-                        <button className="dropdown-item" onClick={() => openOfferingModal(section.id)}>
-                          <FontAwesomeIcon icon={faPlus} fixedWidth /> Add Offering
+                        <button
+                          className="dropdown-item"
+                          onClick={() => openOfferingModal(section.id)}
+                        >
+                          <FontAwesomeIcon icon={faPlus} fixedWidth /> Add
+                          Offering
                         </button>
-                        <button className="dropdown-item" onClick={() => handleToggleSectionStatus(section)}>
-                          <FontAwesomeIcon icon={faPowerOff} fixedWidth /> {section.isActive ? "Deactivate Class" : "Reactivate Class"}
+                        <button
+                          className="dropdown-item"
+                          onClick={() => handleToggleSectionStatus(section)}
+                        >
+                          <FontAwesomeIcon icon={faPowerOff} fixedWidth />{" "}
+                          {section.isActive
+                            ? "Deactivate Class"
+                            : "Reactivate Class"}
                         </button>
-                        <button className="dropdown-item danger" onClick={() => handleDeleteSection(section.id)}>
-                          <FontAwesomeIcon icon={faTrash} fixedWidth /> Delete Class
+                        <button
+                          className="dropdown-item danger"
+                          onClick={() => handleDeleteSection(section.id)}
+                        >
+                          <FontAwesomeIcon icon={faTrash} fixedWidth /> Delete
+                          Class
                         </button>
                       </div>
                     )}
                   </div>
                 </div>
 
-                <div style={{ background: "#f9fafb", padding: "1rem", borderRadius: "8px", border: "1px solid #f3f4f6", flexGrow: 1, display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                  <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <div
+                  style={{
+                    background: "#f9fafb",
+                    padding: "1rem",
+                    borderRadius: "8px",
+                    border: "1px solid #f3f4f6",
+                    flexGrow: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.75rem",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "0.75rem",
+                      fontWeight: 700,
+                      color: "#6b7280",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.05em",
+                    }}
+                  >
                     Offerings
                   </div>
 
                   {sectionOfferings.length > 0 ? (
                     sectionOfferings.map((offering) => (
-                      <div key={offering.id} style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: "8px", padding: "0.85rem" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", alignItems: "flex-start" }}>
+                      <div
+                        key={offering.id}
+                        style={{
+                          background: "white",
+                          border: "1px solid #e5e7eb",
+                          borderRadius: "8px",
+                          padding: "0.85rem",
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            gap: "1rem",
+                            alignItems: "flex-start",
+                          }}
+                        >
                           <div>
                             <div style={{ fontWeight: 700, color: "#111827" }}>
-                              {offering.courseTitle || `Course #${offering.courseId}`}
+                              {offering.courseTitle ||
+                                `Course #${offering.courseId}`}
                             </div>
-                            <div style={{ color: "#6b7280", fontSize: "0.85rem", marginTop: "0.2rem" }}>
-                              {offering.teacherName || `Teacher #${offering.teacherId}`}
-                              {offering.teacherUsername ? ` (${offering.teacherUsername})` : ""}
+                            <div
+                              style={{
+                                color: "#6b7280",
+                                fontSize: "0.85rem",
+                                marginTop: "0.2rem",
+                              }}
+                            >
+                              {offering.teacherName ||
+                                `Teacher #${offering.teacherId}`}
+                              {offering.teacherUsername
+                                ? ` (${offering.teacherUsername})`
+                                : ""}
                             </div>
                           </div>
-                          <span style={{ backgroundColor: offering.isActive ? "#dcfce7" : "#f3f4f6", color: offering.isActive ? "#166534" : "#374151", padding: "0.2rem 0.6rem", borderRadius: "999px", fontSize: "0.75rem", fontWeight: 700 }}>
+                          <span
+                            style={{
+                              backgroundColor: offering.isActive
+                                ? "#dcfce7"
+                                : "#f3f4f6",
+                              color: offering.isActive ? "#166534" : "#374151",
+                              padding: "0.2rem 0.6rem",
+                              borderRadius: "999px",
+                              fontSize: "0.75rem",
+                              fontWeight: 700,
+                            }}
+                          >
                             {offering.isActive ? "Active" : "Inactive"}
                           </span>
                         </div>
-                        <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", marginTop: "0.75rem", fontSize: "0.8rem", color: "#6b7280" }}>
-                          <span><FontAwesomeIcon icon={faUsers} style={{ marginRight: "0.3rem" }} /> {offering.studentIds.length} Students</span>
-                          <span><FontAwesomeIcon icon={faLayerGroup} style={{ marginRight: "0.3rem" }} /> {offering.studentProfileIds.length} Profiles</span>
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "0.75rem",
+                            flexWrap: "wrap",
+                            marginTop: "0.75rem",
+                            fontSize: "0.8rem",
+                            color: "#6b7280",
+                          }}
+                        >
+                          <span>
+                            <FontAwesomeIcon
+                              icon={faUsers}
+                              style={{ marginRight: "0.3rem" }}
+                            />{" "}
+                            {offering.studentIds.length} Students
+                          </span>
                         </div>
-                        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "0.75rem" }}>
-                          <button className="btn" style={{ background: "#e0e7ff", color: "#4338ca", border: "none", fontWeight: 600 }} onClick={() => editOffering(offering)}>
-                            <FontAwesomeIcon icon={faEdit} style={{ marginRight: "0.35rem" }} /> Edit
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "0.5rem",
+                            flexWrap: "wrap",
+                            marginTop: "0.75rem",
+                          }}
+                        >
+                          <button
+                            className="btn"
+                            style={{
+                              background: "#e0e7ff",
+                              color: "#4338ca",
+                              border: "none",
+                              fontWeight: 600,
+                            }}
+                            onClick={() => editOffering(offering)}
+                          >
+                            <FontAwesomeIcon
+                              icon={faEdit}
+                              style={{ marginRight: "0.35rem" }}
+                            />{" "}
+                            Edit
                           </button>
-                          <button className="btn" style={{ background: "#f3f4f6", color: "#374151", border: "none", fontWeight: 600 }} onClick={() => toggleOfferingStatus(offering)}>
-                            <FontAwesomeIcon icon={faPowerOff} style={{ marginRight: "0.35rem" }} /> {offering.isActive ? "Deactivate" : "Reactivate"}
+                          <button
+                            className="btn"
+                            style={{
+                              background: "#f3f4f6",
+                              color: "#374151",
+                              border: "none",
+                              fontWeight: 600,
+                            }}
+                            onClick={() => toggleOfferingStatus(offering)}
+                          >
+                            <FontAwesomeIcon
+                              icon={faPowerOff}
+                              style={{ marginRight: "0.35rem" }}
+                            />{" "}
+                            {offering.isActive ? "Deactivate" : "Reactivate"}
                           </button>
-                          <button className="btn" style={{ background: "#fee2e2", color: "#b91c1c", border: "none", fontWeight: 600 }} onClick={() => handleDeleteOffering(offering.id)}>
-                            <FontAwesomeIcon icon={faTrash} style={{ marginRight: "0.35rem" }} /> Delete
+                          <button
+                            className="btn"
+                            style={{
+                              background: "#fee2e2",
+                              color: "#b91c1c",
+                              border: "none",
+                              fontWeight: 600,
+                            }}
+                            onClick={() => handleDeleteOffering(offering.id)}
+                          >
+                            <FontAwesomeIcon
+                              icon={faTrash}
+                              style={{ marginRight: "0.35rem" }}
+                            />{" "}
+                            Delete
                           </button>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div style={{ fontSize: "0.85rem", color: "#9ca3af", fontStyle: "italic" }}>
+                    <div
+                      style={{
+                        fontSize: "0.85rem",
+                        color: "#9ca3af",
+                        fontStyle: "italic",
+                      }}
+                    >
                       No offerings yet for this class.
                     </div>
                   )}
@@ -807,59 +1120,161 @@ export default function ClassManagement(): React.JSX.Element {
 
                 <button
                   className="btn"
-                  style={{ width: "100%", background: "#e0e7ff", color: "#4338ca", border: "none", fontWeight: 600, justifyContent: "center", padding: "0.6rem 1rem", borderRadius: "6px" }}
+                  style={{
+                    width: "100%",
+                    background: "#e0e7ff",
+                    color: "#4338ca",
+                    border: "none",
+                    fontWeight: 600,
+                    justifyContent: "center",
+                    padding: "0.6rem 1rem",
+                    borderRadius: "6px",
+                  }}
                   onClick={() => openOfferingModal(section.id)}
                 >
-                  Manage Offerings
+                  Add Offerings
                 </button>
               </div>
             );
           })
         ) : (
-          <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "3rem", color: "#6b7280", background: "white", borderRadius: "12px", border: "1px dashed #d1d5db" }}>
-            <FontAwesomeIcon icon={faBook} size="3x" style={{ color: "#e5e7eb", marginBottom: "1rem" }} />
-            <p>No classes found. Adjust your filters or click "Create New Class" to get started.</p>
+          <div
+            style={{
+              gridColumn: "1 / -1",
+              textAlign: "center",
+              padding: "3rem",
+              color: "#6b7280",
+              background: "white",
+              borderRadius: "12px",
+              border: "1px dashed #d1d5db",
+            }}
+          >
+            <FontAwesomeIcon
+              icon={faBook}
+              size="3x"
+              style={{ color: "#e5e7eb", marginBottom: "1rem" }}
+            />
+            <p>
+              No classes found. Adjust your filters or click "Create New Class"
+              to get started.
+            </p>
           </div>
         )}
       </div>
 
       {isSectionModalOpen && (
         <div className="owner-modal-overlay">
-          <div className="owner-modal" style={{ width: "820px", maxHeight: "90vh", display: "flex", flexDirection: "column" }}>
-            <div className="owner-modal-header" style={{ display: "flex", justifyContent: "space-between", flexShrink: 0 }}>
-              <h3 style={{ margin: 0 }}>{editingSectionId ? "Edit Class" : "Create New Class"}</h3>
-              <button onClick={handleCloseSectionModal} style={{ background: "none", border: "none", cursor: "pointer" }}>
+          <div
+            className="owner-modal"
+            style={{
+              width: "820px",
+              maxHeight: "90vh",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <div
+              className="owner-modal-header"
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                flexShrink: 0,
+              }}
+            >
+              <h3 style={{ margin: 0 }}>
+                {editingSectionId ? "Edit Class" : "Create New Class"}
+              </h3>
+              <button
+                onClick={handleCloseSectionModal}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
                 <FontAwesomeIcon icon={faTimes} size="lg" color="#6b7280" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveSection} style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
-              <div className="owner-modal-body" style={{ display: "flex", flexDirection: "column", gap: "1rem", background: "#f9fafb", overflowY: "auto", padding: "1.5rem" }}>
-                <div style={{ background: "white", padding: "1rem", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
+            <form
+              onSubmit={handleSaveSection}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                className="owner-modal-body"
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "1rem",
+                  background: "#f9fafb",
+                  overflowY: "auto",
+                  padding: "1.5rem",
+                }}
+              >
+                <div
+                  style={{
+                    background: "white",
+                    padding: "1rem",
+                    borderRadius: "8px",
+                    border: "1px solid #e5e7eb",
+                  }}
+                >
                   <label className="auth-label">Class Name *</label>
                   <input
                     className="auth-input"
                     value={sectionForm.name}
-                    onChange={(e) => setSectionForm({ ...sectionForm, name: e.target.value })}
+                    onChange={(e) =>
+                      setSectionForm({ ...sectionForm, name: e.target.value })
+                    }
                     placeholder="e.g. Grade 10 - Section A"
                     maxLength={100}
-                    style={{ borderColor: sectionFormErrors.name ? "#ef4444" : undefined }}
+                    style={{
+                      borderColor: sectionFormErrors.name
+                        ? "#ef4444"
+                        : undefined,
+                    }}
                     required
                   />
                   {sectionFormErrors.name && (
-                    <div style={{ color: "#ef4444", fontSize: "0.8rem", marginTop: "0.35rem" }}>
+                    <div
+                      style={{
+                        color: "#ef4444",
+                        fontSize: "0.8rem",
+                        marginTop: "0.35rem",
+                      }}
+                    >
                       {sectionFormErrors.name}
                     </div>
                   )}
                 </div>
 
-                <div style={{ background: "white", padding: "1rem", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
+                <div
+                  style={{
+                    background: "white",
+                    padding: "1rem",
+                    borderRadius: "8px",
+                    border: "1px solid #e5e7eb",
+                  }}
+                >
                   <label className="auth-label">Status</label>
                   <button
                     type="button"
                     className="btn"
-                    onClick={() => setSectionForm({ ...sectionForm, isActive: !sectionForm.isActive })}
-                    style={{ background: sectionForm.isActive ? "#dcfce7" : "#f3f4f6", color: sectionForm.isActive ? "#166534" : "#374151", border: "1px solid #e5e7eb" }}
+                    onClick={() =>
+                      setSectionForm({
+                        ...sectionForm,
+                        isActive: !sectionForm.isActive,
+                      })
+                    }
+                    style={{
+                      background: sectionForm.isActive ? "#dcfce7" : "#f3f4f6",
+                      color: sectionForm.isActive ? "#166534" : "#374151",
+                      border: "1px solid #e5e7eb",
+                    }}
                   >
                     {sectionForm.isActive ? "Active" : "Inactive"}
                   </button>
@@ -867,37 +1282,99 @@ export default function ClassManagement(): React.JSX.Element {
 
                 {!editingSectionId && (
                   <>
-                    <div style={{ background: "white", padding: "1rem", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem", marginBottom: "0.75rem" }}>
+                    <div
+                      style={{
+                        background: "white",
+                        padding: "1rem",
+                        borderRadius: "8px",
+                        border: "1px solid #e5e7eb",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          gap: "1rem",
+                          marginBottom: "0.75rem",
+                        }}
+                      >
                         <div>
-                          <label className="auth-label" style={{ marginBottom: "0.25rem", display: "block" }}>
+                          <label
+                            className="auth-label"
+                            style={{
+                              marginBottom: "0.25rem",
+                              display: "block",
+                            }}
+                          >
                             Initial Course Offerings
                           </label>
-                          <p style={{ margin: 0, fontSize: "0.8rem", color: "#6b7280" }}>
-                            Each row creates one section offering for this class.
+                          <p
+                            style={{
+                              margin: 0,
+                              fontSize: "0.8rem",
+                              color: "#6b7280",
+                            }}
+                          >
+                            Each row creates one section offering for this
+                            class.
                           </p>
                         </div>
                         <button
                           type="button"
                           className="btn"
                           onClick={addDraftOfferingRow}
-                          style={{ background: "#e0e7ff", color: "#4338ca", border: "1px solid #c7d2fe" }}
+                          style={{
+                            background: "#e0e7ff",
+                            color: "#4338ca",
+                            border: "1px solid #c7d2fe",
+                          }}
                         >
-                          <FontAwesomeIcon icon={faPlus} style={{ marginRight: "0.35rem" }} />
+                          <FontAwesomeIcon
+                            icon={faPlus}
+                            style={{ marginRight: "0.35rem" }}
+                          />
                           Add Row
                         </button>
                       </div>
 
-                      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "0.75rem",
+                        }}
+                      >
                         {draftOfferingErrors.noOfferings && (
-                          <div style={{ color: "#ef4444", fontSize: "0.85rem", fontWeight: 600 }}>
+                          <div
+                            style={{
+                              color: "#ef4444",
+                              fontSize: "0.85rem",
+                              fontWeight: 600,
+                            }}
+                          >
                             {draftOfferingErrors.noOfferings}
                           </div>
                         )}
 
                         {draftOfferings.map((row, index) => (
-                          <div key={row.localId} style={{ border: "1px solid #e5e7eb", borderRadius: "8px", padding: "0.9rem", background: "#f9fafb" }}>
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: "0.75rem", alignItems: "end" }}>
+                          <div
+                            key={row.localId}
+                            style={{
+                              border: "1px solid #e5e7eb",
+                              borderRadius: "8px",
+                              padding: "0.9rem",
+                              background: "#f9fafb",
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: "grid",
+                                gridTemplateColumns: "1fr 1fr auto",
+                                gap: "0.75rem",
+                                alignItems: "end",
+                              }}
+                            >
                               <div>
                                 <label className="auth-label">Course *</label>
                                 <select
@@ -938,7 +1415,10 @@ export default function ClassManagement(): React.JSX.Element {
                                   <option value="">Select Teacher</option>
                                   {teachers.map((teacher) => (
                                     <option key={teacher.id} value={teacher.id}>
-                                      {teacher.name} {teacher.username ? `(${teacher.username})` : ""}
+                                      {teacher.name}{" "}
+                                      {teacher.username
+                                        ? `(${teacher.username})`
+                                        : ""}
                                     </option>
                                   ))}
                                 </select>
@@ -947,8 +1427,15 @@ export default function ClassManagement(): React.JSX.Element {
                               <button
                                 type="button"
                                 className="btn"
-                                onClick={() => removeDraftOfferingRow(row.localId)}
-                                style={{ background: "#fee2e2", color: "#b91c1c", border: "1px solid #fecaca", height: "42px" }}
+                                onClick={() =>
+                                  removeDraftOfferingRow(row.localId)
+                                }
+                                style={{
+                                  background: "#fee2e2",
+                                  color: "#b91c1c",
+                                  border: "1px solid #fecaca",
+                                  height: "42px",
+                                }}
                                 disabled={draftOfferings.length === 1}
                               >
                                 <FontAwesomeIcon icon={faTrash} />
@@ -956,50 +1443,162 @@ export default function ClassManagement(): React.JSX.Element {
                             </div>
 
                             {draftOfferingErrors[row.localId] && (
-                              <div style={{ color: "#ef4444", fontSize: "0.8rem", marginTop: "0.5rem" }}>
+                              <div
+                                style={{
+                                  color: "#ef4444",
+                                  fontSize: "0.8rem",
+                                  marginTop: "0.5rem",
+                                }}
+                              >
                                 {draftOfferingErrors[row.localId]}
                               </div>
                             )}
 
-                            <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", marginTop: "0.85rem", color: "#6b7280", fontSize: "0.8rem" }}>
-                              <span><FontAwesomeIcon icon={faChalkboardTeacher} style={{ marginRight: "0.25rem" }} /> Offering {index + 1}</span>
-                              <span><FontAwesomeIcon icon={faBook} style={{ marginRight: "0.25rem" }} /> Shared class enrollment applies to every row</span>
+                            <div
+                              style={{
+                                display: "flex",
+                                gap: "0.75rem",
+                                flexWrap: "wrap",
+                                marginTop: "0.85rem",
+                                color: "#6b7280",
+                                fontSize: "0.8rem",
+                              }}
+                            >
+                              <span>
+                                <FontAwesomeIcon
+                                  icon={faChalkboardTeacher}
+                                  style={{ marginRight: "0.25rem" }}
+                                />{" "}
+                                Offering {index + 1}
+                              </span>
+                              <span>
+                                <FontAwesomeIcon
+                                  icon={faBook}
+                                  style={{ marginRight: "0.25rem" }}
+                                />{" "}
+                                Shared class enrollment applies to every row
+                              </span>
                             </div>
                           </div>
                         ))}
                       </div>
                     </div>
 
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                      <div style={{ background: "white", padding: "1rem", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
-                        <label className="auth-label">Shared Student Groups</label>
-                        <div style={{ maxHeight: "220px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1fr",
+                        gap: "1rem",
+                      }}
+                    >
+                      <div
+                        style={{
+                          background: "white",
+                          padding: "1rem",
+                          borderRadius: "8px",
+                          border: "1px solid #e5e7eb",
+                        }}
+                      >
+                        <label className="auth-label">
+                          Shared Student Groups
+                        </label>
+                        <div
+                          style={{
+                            maxHeight: "220px",
+                            overflowY: "auto",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "0.25rem",
+                          }}
+                        >
                           {studentGroups.map((group) => (
-                            <label key={group.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.35rem", borderRadius: "4px", cursor: "pointer" }}>
+                            <label
+                              key={group.id}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.5rem",
+                                padding: "0.35rem",
+                                borderRadius: "4px",
+                                cursor: "pointer",
+                              }}
+                            >
                               <input
                                 type="checkbox"
-                                checked={sharedStudentGroupIds.includes(group.id)}
-                                onChange={() => toggleSharedEnrollmentValue("studentGroupIds", group.id)}
+                                checked={sharedStudentGroupIds.includes(
+                                  group.id,
+                                )}
+                                onChange={() =>
+                                  toggleSharedEnrollmentValue(
+                                    "studentGroupIds",
+                                    group.id,
+                                  )
+                                }
                               />
-                              <span style={{ fontSize: "0.85rem", color: "#374151" }}>
-                                {group.name} ({group.studentIds.length} students)
+                              <span
+                                style={{
+                                  fontSize: "0.85rem",
+                                  color: "#374151",
+                                }}
+                              >
+                                {group.name} ({group.studentIds.length}{" "}
+                                students)
                               </span>
                             </label>
                           ))}
                         </div>
                       </div>
 
-                      <div style={{ background: "white", padding: "1rem", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
-                        <label className="auth-label">Shared Individual Students</label>
-                        <div style={{ maxHeight: "220px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                      <div
+                        style={{
+                          background: "white",
+                          padding: "1rem",
+                          borderRadius: "8px",
+                          border: "1px solid #e5e7eb",
+                        }}
+                      >
+                        <label className="auth-label">
+                          Shared Individual Students
+                        </label>
+                        <div
+                          style={{
+                            maxHeight: "220px",
+                            overflowY: "auto",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: "0.25rem",
+                          }}
+                        >
                           {students.map((student) => (
-                            <label key={student.studentProfileId} style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.35rem", borderRadius: "4px", cursor: "pointer" }}>
+                            <label
+                              key={student.studentProfileId}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.5rem",
+                                padding: "0.35rem",
+                                borderRadius: "4px",
+                                cursor: "pointer",
+                              }}
+                            >
                               <input
                                 type="checkbox"
-                                checked={sharedStudentProfileIds.includes(student.studentProfileId)}
-                                onChange={() => toggleSharedEnrollmentValue("studentProfileIds", student.studentProfileId)}
+                                checked={sharedStudentProfileIds.includes(
+                                  student.studentProfileId,
+                                )}
+                                onChange={() =>
+                                  toggleSharedEnrollmentValue(
+                                    "studentProfileIds",
+                                    student.studentProfileId,
+                                  )
+                                }
                               />
-                              <span style={{ fontSize: "0.85rem", color: "#374151" }}>
+                              <span
+                                style={{
+                                  fontSize: "0.85rem",
+                                  color: "#374151",
+                                }}
+                              >
                                 {student.name} ({student.rollNo})
                               </span>
                             </label>
@@ -1010,19 +1609,44 @@ export default function ClassManagement(): React.JSX.Element {
                   </>
                 )}
 
-                <div style={{ background: "#eff6ff", color: "#1d4ed8", padding: "0.85rem 1rem", borderRadius: "8px", border: "1px solid #bfdbfe", fontSize: "0.9rem" }}>
-                  A class is created as a Section in the backend. Any offerings added here will be created immediately after the class is saved.
+                <div
+                  style={{
+                    background: "#eff6ff",
+                    color: "#1d4ed8",
+                    padding: "0.85rem 1rem",
+                    borderRadius: "8px",
+                    border: "1px solid #bfdbfe",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  A class is created as a Section in the backend. Any offerings
+                  added here will be created immediately after the class is
+                  saved.
                 </div>
               </div>
 
               <div className="owner-modal-footer" style={{ flexShrink: 0 }}>
-                <button type="button" className="btn" onClick={handleCloseSectionModal} style={{ background: "white", border: "1px solid #d1d5db" }}>
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={handleCloseSectionModal}
+                  style={{ background: "white", border: "1px solid #d1d5db" }}
+                >
                   Cancel
                 </button>
-                <button type="submit" className="btn btn-primary" style={{ backgroundColor: "#1e3a8a" }} disabled={isSaving}>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  style={{ backgroundColor: "#1e3a8a" }}
+                  disabled={isSaving}
+                >
                   {isSaving ? (
                     <>
-                      <FontAwesomeIcon icon={faSpinner} spin style={{ marginRight: "0.5rem" }} />
+                      <FontAwesomeIcon
+                        icon={faSpinner}
+                        spin
+                        style={{ marginRight: "0.5rem" }}
+                      />
                       Saving...
                     </>
                   ) : editingSectionId ? (
@@ -1039,31 +1663,106 @@ export default function ClassManagement(): React.JSX.Element {
 
       {isOfferingModalOpen && activeSectionId && (
         <div className="owner-modal-overlay">
-          <div className="owner-modal" style={{ width: "960px", maxHeight: "90vh", display: "flex", flexDirection: "column" }}>
-            <div className="owner-modal-header" style={{ display: "flex", justifyContent: "space-between", flexShrink: 0 }}>
+          <div
+            className="owner-modal"
+            style={{
+              width: "960px",
+              maxHeight: "90vh",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <div
+              className="owner-modal-header"
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                flexShrink: 0,
+              }}
+            >
               <h3 style={{ margin: 0 }}>
                 {editingOfferingId ? "Edit Offering" : "Add Offering"}
               </h3>
-              <button onClick={handleCloseOfferingModal} style={{ background: "none", border: "none", cursor: "pointer" }}>
+              <button
+                onClick={handleCloseOfferingModal}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
                 <FontAwesomeIcon icon={faTimes} size="lg" color="#6b7280" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveOffering} style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
-              <div className="owner-modal-body" style={{ display: "flex", flexDirection: "column", gap: "1rem", background: "#f9fafb", overflowY: "auto", padding: "1.5rem" }}>
-                <div style={{ background: "white", padding: "1rem", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
+            <form
+              onSubmit={handleSaveOffering}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                className="owner-modal-body"
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "1rem",
+                  background: "#f9fafb",
+                  overflowY: "auto",
+                  padding: "1.5rem",
+                }}
+              >
+                <div
+                  style={{
+                    background: "white",
+                    padding: "1rem",
+                    borderRadius: "8px",
+                    border: "1px solid #e5e7eb",
+                  }}
+                >
                   <label className="auth-label">Section</label>
-                  <input className="auth-input" value={sections.find((section) => section.id === activeSectionId)?.name || ""} readOnly />
+                  <input
+                    className="auth-input"
+                    value={
+                      sections.find((section) => section.id === activeSectionId)
+                        ?.name || ""
+                    }
+                    readOnly
+                  />
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                  <div style={{ background: "white", padding: "1rem", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: "1rem",
+                  }}
+                >
+                  <div
+                    style={{
+                      background: "white",
+                      padding: "1rem",
+                      borderRadius: "8px",
+                      border: "1px solid #e5e7eb",
+                    }}
+                  >
                     <label className="auth-label">Course *</label>
                     <select
                       className="auth-input"
                       value={offeringForm.courseId}
-                      onChange={(e) => setOfferingForm({ ...offeringForm, courseId: Number(e.target.value) })}
-                      style={{ borderColor: offeringFormErrors.courseId ? "#ef4444" : undefined }}
+                      onChange={(e) =>
+                        setOfferingForm({
+                          ...offeringForm,
+                          courseId: Number(e.target.value),
+                        })
+                      }
+                      style={{
+                        borderColor: offeringFormErrors.courseId
+                          ? "#ef4444"
+                          : undefined,
+                      }}
                       required
                     >
                       <option value="">Select Course</option>
@@ -1074,48 +1773,114 @@ export default function ClassManagement(): React.JSX.Element {
                       ))}
                     </select>
                     {offeringFormErrors.courseId && (
-                      <div style={{ color: "#ef4444", fontSize: "0.8rem", marginTop: "0.35rem" }}>
+                      <div
+                        style={{
+                          color: "#ef4444",
+                          fontSize: "0.8rem",
+                          marginTop: "0.35rem",
+                        }}
+                      >
                         {offeringFormErrors.courseId}
                       </div>
                     )}
                   </div>
 
-                  <div style={{ background: "white", padding: "1rem", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
+                  <div
+                    style={{
+                      background: "white",
+                      padding: "1rem",
+                      borderRadius: "8px",
+                      border: "1px solid #e5e7eb",
+                    }}
+                  >
                     <label className="auth-label">Teacher *</label>
                     <select
                       className="auth-input"
                       value={offeringForm.teacherId}
-                      onChange={(e) => setOfferingForm({ ...offeringForm, teacherId: Number(e.target.value) })}
-                      style={{ borderColor: offeringFormErrors.teacherId ? "#ef4444" : undefined }}
+                      onChange={(e) =>
+                        setOfferingForm({
+                          ...offeringForm,
+                          teacherId: Number(e.target.value),
+                        })
+                      }
+                      style={{
+                        borderColor: offeringFormErrors.teacherId
+                          ? "#ef4444"
+                          : undefined,
+                      }}
                       required
                     >
                       <option value="">Select Teacher</option>
                       {teachers.map((teacher) => (
                         <option key={teacher.id} value={teacher.id}>
-                          {teacher.name} {teacher.username ? `(${teacher.username})` : ""}
+                          {teacher.name}{" "}
+                          {teacher.username ? `(${teacher.username})` : ""}
                         </option>
                       ))}
                     </select>
                     {offeringFormErrors.teacherId && (
-                      <div style={{ color: "#ef4444", fontSize: "0.8rem", marginTop: "0.35rem" }}>
+                      <div
+                        style={{
+                          color: "#ef4444",
+                          fontSize: "0.8rem",
+                          marginTop: "0.35rem",
+                        }}
+                      >
                         {offeringFormErrors.teacherId}
                       </div>
                     )}
                   </div>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                  <div style={{ background: "white", padding: "1rem", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: "1rem",
+                  }}
+                >
+                  <div
+                    style={{
+                      background: "white",
+                      padding: "1rem",
+                      borderRadius: "8px",
+                      border: "1px solid #e5e7eb",
+                    }}
+                  >
                     <label className="auth-label">Student Groups</label>
-                    <div style={{ maxHeight: "220px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                    <div
+                      style={{
+                        maxHeight: "220px",
+                        overflowY: "auto",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "0.25rem",
+                      }}
+                    >
                       {studentGroups.map((group) => (
-                        <label key={group.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.35rem", borderRadius: "4px", cursor: "pointer" }}>
+                        <label
+                          key={group.id}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.5rem",
+                            padding: "0.35rem",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                          }}
+                        >
                           <input
                             type="checkbox"
-                            checked={offeringForm.studentGroupIds.includes(group.id)}
-                            onChange={() => toggleArrayValue("studentGroupIds", group.id)}
+                            checked={offeringForm.studentGroupIds.includes(
+                              group.id,
+                            )}
+                            onChange={() =>
+                              toggleArrayValue("studentGroupIds", group.id)
+                            }
                           />
-                          <span style={{ fontSize: "0.85rem", color: "#374151" }}>
+                          <span
+                            style={{ fontSize: "0.85rem", color: "#374151" }}
+                          >
                             {group.name} ({group.studentIds.length} students)
                           </span>
                         </label>
@@ -1123,17 +1888,51 @@ export default function ClassManagement(): React.JSX.Element {
                     </div>
                   </div>
 
-                  <div style={{ background: "white", padding: "1rem", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
+                  <div
+                    style={{
+                      background: "white",
+                      padding: "1rem",
+                      borderRadius: "8px",
+                      border: "1px solid #e5e7eb",
+                    }}
+                  >
                     <label className="auth-label">Individual Students</label>
-                    <div style={{ maxHeight: "220px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                    <div
+                      style={{
+                        maxHeight: "220px",
+                        overflowY: "auto",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "0.25rem",
+                      }}
+                    >
                       {students.map((student) => (
-                        <label key={student.studentProfileId} style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.35rem", borderRadius: "4px", cursor: "pointer" }}>
+                        <label
+                          key={student.studentProfileId}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "0.5rem",
+                            padding: "0.35rem",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                          }}
+                        >
                           <input
                             type="checkbox"
-                            checked={offeringForm.studentProfileIds.includes(student.studentProfileId)}
-                            onChange={() => toggleArrayValue("studentProfileIds", student.studentProfileId)}
+                            checked={offeringForm.studentProfileIds.includes(
+                              student.studentProfileId,
+                            )}
+                            onChange={() =>
+                              toggleArrayValue(
+                                "studentProfileIds",
+                                student.studentProfileId,
+                              )
+                            }
                           />
-                          <span style={{ fontSize: "0.85rem", color: "#374151" }}>
+                          <span
+                            style={{ fontSize: "0.85rem", color: "#374151" }}
+                          >
                             {student.name} ({student.rollNo})
                           </span>
                         </label>
@@ -1143,20 +1942,43 @@ export default function ClassManagement(): React.JSX.Element {
                 </div>
 
                 {selectedGroups.length > 0 || selectedStudents.length > 0 ? (
-                  <div style={{ background: "#eff6ff", color: "#1d4ed8", padding: "0.85rem 1rem", borderRadius: "8px", border: "1px solid #bfdbfe", fontSize: "0.9rem" }}>
+                  <div
+                    style={{
+                      background: "#eff6ff",
+                      color: "#1d4ed8",
+                      padding: "0.85rem 1rem",
+                      borderRadius: "8px",
+                      border: "1px solid #bfdbfe",
+                      fontSize: "0.9rem",
+                    }}
+                  >
                     Selected enrollment will apply to this offering.
                   </div>
                 ) : null}
               </div>
 
               <div className="owner-modal-footer" style={{ flexShrink: 0 }}>
-                <button type="button" className="btn" onClick={handleCloseOfferingModal} style={{ background: "white", border: "1px solid #d1d5db" }}>
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={handleCloseOfferingModal}
+                  style={{ background: "white", border: "1px solid #d1d5db" }}
+                >
                   Cancel
                 </button>
-                <button type="submit" className="btn btn-primary" style={{ backgroundColor: "#1e3a8a" }} disabled={isSaving}>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  style={{ backgroundColor: "#1e3a8a" }}
+                  disabled={isSaving}
+                >
                   {isSaving ? (
                     <>
-                      <FontAwesomeIcon icon={faSpinner} spin style={{ marginRight: "0.5rem" }} />
+                      <FontAwesomeIcon
+                        icon={faSpinner}
+                        spin
+                        style={{ marginRight: "0.5rem" }}
+                      />
                       Saving...
                     </>
                   ) : editingOfferingId ? (

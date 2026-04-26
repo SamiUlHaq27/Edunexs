@@ -127,6 +127,7 @@ export interface CreateInstitutionAdminDto {
   name: string;
   email?: string;
   otp?: string;
+  profilePicture?: File;
   profilePictureFileId?: string;
 }
 
@@ -138,6 +139,7 @@ export interface UpdateInstitutionAdminDto {
   email?: string;
   otp?: string;
   isActive?: boolean;
+  profilePicture?: File;
   profilePictureFileId?: string;
 }
 
@@ -157,6 +159,9 @@ export interface ListFiltersDto {
     isActive?: boolean;
     code?: string;
     title?: string;
+    studentProfileId?: number;
+    status?: string;
+    search?: string;
   };
   // Backward-compatible optional legacy keys
   limit?: number;

@@ -28,6 +28,7 @@ export interface CreateStudentDto {
   rollNo: string;
   grade: string;
   recoveryEmail?: string;
+  otp?: string;
   profilePicture?: File;
 }
 
@@ -91,7 +92,9 @@ class StudentService {
     return response.data;
   }
 
-  async createStudent(data: CreateStudentDto): Promise<StudentMutationResponse> {
+  async createStudent(
+    data: CreateStudentDto,
+  ): Promise<StudentMutationResponse> {
     const formData = new FormData();
     formData.append("name", data.name);
     formData.append("password", data.password);
@@ -99,6 +102,9 @@ class StudentService {
     formData.append("grade", data.grade);
     if (data.recoveryEmail) {
       formData.append("recoveryEmail", data.recoveryEmail);
+    }
+    if (data.otp) {
+      formData.append("otp", data.otp);
     }
     if (data.profilePicture) {
       formData.append("profilePicture", data.profilePicture);
@@ -116,7 +122,9 @@ class StudentService {
     return response.data;
   }
 
-  async updateStudent(data: UpdateStudentDto): Promise<StudentMutationResponse> {
+  async updateStudent(
+    data: UpdateStudentDto,
+  ): Promise<StudentMutationResponse> {
     const formData = new FormData();
     formData.append("studentId", String(data.studentId));
     if (data.name !== undefined) formData.append("name", data.name);
