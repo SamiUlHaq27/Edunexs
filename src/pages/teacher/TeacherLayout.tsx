@@ -52,6 +52,14 @@ export default function TeacherLayout() {
     void loadInstitutionInfo();
   }, []);
 
+  // Close sidebar on mobile when navigation occurs
+  const handleNavClick = () => {
+    // Only close sidebar on mobile (< 768px)
+    if (window.matchMedia("(max-width: 767.98px)").matches) {
+      setIsMinimized(true);
+    }
+  };
+
   return (
     <div
       className={`dashboard-layout ${isMinimized ? "sidebar-minimized" : ""}`}
@@ -64,12 +72,7 @@ export default function TeacherLayout() {
       />
       <aside className="dashboard-sidebar">
         <div className="sidebar-header">
-          <img
-            src={ASSETS.logo}
-            alt="Logo"
-            className="sidebar-logo"
-            style={{ background: "#fff", borderRadius: "50%" }}
-          />
+          <img src={ASSETS.logo} alt="Logo" className="sidebar-logo" />
         </div>
 
         <div className="sidebar-title-div">
@@ -83,19 +86,27 @@ export default function TeacherLayout() {
         </div>
 
         <nav className="sidebar-nav">
-          <NavLink to="/teacher/dashboard" className="nav-item">
+          <NavLink
+            to="/teacher/dashboard"
+            className="nav-item"
+            onClick={handleNavClick}
+          >
             <FontAwesomeIcon icon={faChalkboardUser} className="nav-icon" />
             <span className="nav-text">Dashboard</span>
           </NavLink>
 
-          <NavLink to="/teacher/courses" className="nav-item">
+          <NavLink
+            to="/teacher/courses"
+            className="nav-item"
+            onClick={handleNavClick}
+          >
             <FontAwesomeIcon icon={faBookOpen} className="nav-icon" />
             <span className="nav-text">My Courses</span>
           </NavLink>
         </nav>
 
         <div className="sidebar-footer">
-          <NavLink to="/logout" className="nav-item">
+          <NavLink to="/logout" className="nav-item" onClick={handleNavClick}>
             <FontAwesomeIcon icon={faSignOutAlt} className="nav-icon" />
             <span className="nav-text">Logout</span>
           </NavLink>

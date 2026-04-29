@@ -5,6 +5,21 @@
   background: linear-gradient(159deg, #0047ab 0%, #1ca9c9 100%);
 }
 
+.system-admin-sidebar .sidebar-header {
+  justify-content: flex-start;
+  border-bottom: none;
+  padding-left: 4px;
+}
+
+.system-admin-sidebar .toggle-btn {
+  position: static;
+  font-size: 1.2rem;
+}
+
+.system-admin-sidebar .sidebar-nav {
+  margin-top: var(--spacing-2);
+}
+
 /* Status Badges specific to System Admin */
 .status-pill {
   padding: 0.25rem 0.75rem;
@@ -182,6 +197,73 @@
   outline: none;
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Mobile responsive for system admin dashboard */
+@media (max-width: 767.98px) {
+  .dashboard-grid-modern {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+
+  .card {
+    overflow: auto;
+    max-height: 100vh;
+  }
+
+  .health-card {
+    gap: 1.2rem;
+  }
+
+  .health-item {
+    gap: 0.4rem;
+  }
+
+  .health-label-row {
+    font-size: 0.8rem;
+  }
+
+  .health-progress-bg {
+    height: 6px;
+  }
+
+  .pie-chart-container {
+    height: 150px;
+  }
+
+  .sys-admin-table th,
+  .sys-admin-table td {
+    padding: 1rem;
+    font-size: 0.8rem;
+  }
+
+  .sys-admin-table {
+    font-size: 0.75rem;
+  }
+
+  .table-scroll {
+    overflow-x: auto;
+  }
+
+  .modal-card {
+    width: min(95vw, 100%);
+  }
+
+  .modal-header {
+    padding: 1rem;
+  }
+
+  .modal-body {
+    padding: 1rem;
+  }
+
+  .modal-title {
+    font-size: 1rem;
+  }
+
+  .textarea-field {
+    min-height: 80px;
+  }
 }
 
 @keyframes fadeIn {

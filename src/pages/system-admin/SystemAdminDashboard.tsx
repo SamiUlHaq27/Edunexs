@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faUniversity,
@@ -195,8 +195,9 @@ const UserDemographicsChart = () => {
       style={{
         display: "flex",
         alignItems: "center",
-        height: "100%",
+        height: "250px",
         justifyContent: "space-around",
+        overflow: "auto",
       }}
     >
       {/* Donut */}
@@ -284,12 +285,36 @@ const UserDemographicsChart = () => {
 
 // --- Line Chart: Platform Usage Analytics ---
 const PlatformUsageChart = () => {
-  // Mock Data mimicking the image's line shape (Jan-Dec)
-  // Scale 0-100
-  const data = [25, 60, 40, 40, 80, 40, 65, 45, 90, 50, 90];
+  const chartScrollRef = useRef<HTMLDivElement>(null);
+  const axisScrollRef = useRef<HTMLDivElement>(null);
+
+  const handleChartScroll = () => {
+    if (chartScrollRef.current && axisScrollRef.current) {
+      axisScrollRef.current.scrollLeft = chartScrollRef.current.scrollLeft;
+    }
+  };
+
+  const handleAxisScroll = () => {
+    if (chartScrollRef.current && axisScrollRef.current) {
+      chartScrollRef.current.scrollLeft = axisScrollRef.current.scrollLeft;
+    }
+  };
+
+  // Generate data for last 30 days
+  const now = new Date();
+  const last30Days = Array.from({ length: 30 }, (_, i) => {
+    const date = new Date(now);
+    date.setDate(date.getDate() - (29 - i));
+    return date;
+  });
+
+  // Mock data for last 30 days (0-100 scale)
+  const data = [
+    25, 45, 35, 50, 55, 60, 52, 58, 65, 70, 72, 75, 73, 78, 80, 82, 85, 83, 87,
+    90, 88, 92, 95, 93, 96, 98, 97, 99, 98, 100,
+  ];
+
   // Generate SVG Points
-  // X range: 0 to 100%
-  // Y range: 100% to 0% (since SVG Y is top-down)
   const max = 100;
   const points = data
     .map((val, i) => {
@@ -300,20 +325,16 @@ const PlatformUsageChart = () => {
     .join(" ");
 
   const steps = [0, 25, 50, 75, 100];
-  const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
+  // Show every 5th day label to avoid crowding
+  const dayLabels = last30Days.map((date) => {
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    return `${month}/${day}`;
+  });
+
+  // Calculate width for 30 data points (25px per point)
+  const pointWidth = 25;
+  const chartWidth = Math.max(data.length * pointWidth, 600);
 
   return (
     <div
@@ -324,7 +345,8 @@ const PlatformUsageChart = () => {
         flexDirection: "column",
       }}
     >
-      <div style={{ flex: 1, display: "flex" }}>
+      {/* Scrollable Chart Container */}
+      <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
         {/* Y-Axis */}
         <div
           style={{
@@ -335,6 +357,7 @@ const PlatformUsageChart = () => {
             color: "#6b7280",
             fontSize: "0.75rem",
             paddingBottom: "20px",
+            flexShrink: 0,
           }}
         >
           {steps.map((s) => (
@@ -342,80 +365,102 @@ const PlatformUsageChart = () => {
           ))}
         </div>
 
-        {/* Chart Area */}
+        {/* Scrollable Chart Area */}
         <div
+          ref={chartScrollRef}
+          onScroll={handleChartScroll}
           style={{
             flex: 1,
-            position: "relative",
-            borderLeft: "1px solid #e5e7eb",
-            borderBottom: "1px solid #e5e7eb",
+            overflow: "auto",
+            overflowY: "hidden",
           }}
         >
-          {/* Grid Lines */}
+          {/* Chart Area */}
           <div
             style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              display: "flex",
-              flexDirection: "column-reverse",
-              justifyContent: "space-between",
-              zIndex: 0,
-            }}
-          >
-            {steps.map((_, i) => (
-              <div
-                key={i}
-                style={{ width: "100%", height: "1px", background: "#e5e7eb" }}
-              ></div>
-            ))}
-          </div>
-
-          {/* SVG Line */}
-          <svg
-            viewBox="0 0 100 100"
-            preserveAspectRatio="none"
-            style={{
-              position: "absolute",
-              width: "100%",
+              position: "relative",
+              borderLeft: "1px solid #e5e7eb",
+              borderBottom: "1px solid #e5e7eb",
+              width: `${chartWidth}px`,
               height: "100%",
-              overflow: "visible",
-              zIndex: 1,
             }}
           >
-            <polyline
-              fill="none"
-              stroke="#1a365d" // Dark line color
-              strokeWidth="2"
-              points={points}
-              vectorEffect="non-scaling-stroke"
-            />
-          </svg>
+            {/* Grid Lines */}
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                display: "flex",
+                flexDirection: "column-reverse",
+                justifyContent: "space-between",
+                zIndex: 0,
+              }}
+            >
+              {steps.map((_, i) => (
+                <div
+                  key={i}
+                  style={{
+                    width: "100%",
+                    height: "1px",
+                    background: "#e5e7eb",
+                  }}
+                ></div>
+              ))}
+            </div>
+
+            {/* SVG Line */}
+            <svg
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              style={{
+                position: "absolute",
+                width: "100%",
+                height: "100%",
+                overflow: "visible",
+                zIndex: 1,
+              }}
+            >
+              <polyline
+                fill="none"
+                stroke="#1a365d" // Dark line color
+                strokeWidth="2"
+                points={points}
+                vectorEffect="non-scaling-stroke"
+              />
+            </svg>
+          </div>
         </div>
       </div>
 
-      {/* X-Axis */}
+      {/* X-Axis - Scrollable to match chart */}
       <div
+        ref={axisScrollRef}
+        onScroll={handleAxisScroll}
         style={{
           display: "flex",
-          paddingLeft: "30px",
+          paddingLeft: "0px",
           paddingTop: "8px",
-          justifyContent: "space-between",
+          marginLeft: "40px",
+          overflow: "auto",
+          overflowY: "hidden",
+          gap: 0,
         }}
       >
-        {months.map((m, i) => (
+        {dayLabels.map((label, i) => (
           <span
             key={i}
             style={{
-              flex: 1,
+              flex: `0 0 ${pointWidth}px`,
               textAlign: "center",
-              fontSize: "0.75rem",
+              fontSize: "0.65rem",
               color: "#6b7280",
+              minWidth: `${pointWidth}px`,
             }}
           >
-            {m}
+            {(i % 5 === 0 || i === dayLabels.length - 1) && label}
           </span>
         ))}
       </div>

@@ -11,6 +11,16 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: var(--spacing-2);
+  flex-wrap: wrap;
+}
+
+@media (max-width: 767.98px) {
+  .parent-welcome-card {
+    padding: var(--spacing-3);
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 .child-selector {
@@ -100,6 +110,17 @@
   flex-wrap: wrap;
 }
 
+@media (max-width: 767.98px) {
+  .parent-main-tabs {
+    gap: 0.4rem;
+  }
+
+  .parent-main-tabs .btn-tab-modern {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+  }
+}
+
 .parent-main-panel {
   min-height: 300px;
 }
@@ -150,8 +171,23 @@
 
 .parent-courses-view .modern-course-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.5rem;
+}
+
+@media (max-width: 767.98px) {
+  .parent-courses-view .modern-course-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-2);
+  }
+
+  .parent-courses-view .course-card-enhanced {
+    padding: var(--spacing-2);
+  }
+
+  .parent-courses-view .card-body-content {
+    padding: 1rem;
+  }
 }
 
 .parent-courses-view .course-card-enhanced {
@@ -684,6 +720,55 @@
 @media (max-width: 767.98px) {
   .pay-now-btn-main {
     padding: 10px 20px;
+    font-size: 0.9rem;
+  }
+
+  .modern-grades-table {
+    font-size: 0.8rem;
+  }
+
+  .modern-grades-table th,
+  .modern-grades-table td {
+    padding: var(--spacing-1) var(--spacing-2);
+  }
+
+  .activity-list {
+    gap: var(--spacing-2);
+  }
+
+  .activity-item {
+    gap: var(--spacing-2);
+    padding-bottom: var(--spacing-2);
+  }
+
+  .activity-time {
+    min-width: 50px;
+    font-size: 0.7rem;
+  }
+
+  .activity-content p {
+    font-size: 0.8rem;
+  }
+
+  .dashboard-grid-modern {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-2);
+  }
+
+  .stat-card-modern {
+    padding: var(--spacing-2);
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+  }
+
+  .child-selector {
+    padding: 0.4rem 0.75rem;
     font-size: 0.9rem;
   }
 }

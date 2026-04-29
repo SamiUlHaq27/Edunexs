@@ -164,3 +164,57 @@
   gap: 1rem;
   overflow-y: auto;
 }
+
+/* Mobile responsive for teacher components */
+@media (max-width: 767.98px) {
+  .teacher-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-2);
+    padding: var(--spacing-2);
+  }
+
+  .gradebook-table {
+    font-size: var(--font-size-xs);
+  }
+
+  .gradebook-table th,
+  .gradebook-table td {
+    padding: var(--spacing-1);
+  }
+
+  .grade-input {
+    width: 50px;
+    padding: 2px 4px;
+    font-size: 0.75rem;
+  }
+
+  .teacher-institution-brand {
+    gap: 0.5rem;
+  }
+
+  .teacher-institution-logo {
+    width: 32px;
+    height: 32px;
+  }
+
+  .teacher-institution-copy h2 {
+    font-size: 1rem;
+  }
+
+  .teacher-institution-copy p {
+    font-size: 0.8rem;
+  }
+
+  .teacher-modal {
+    width: min(95vw, 100%);
+  }
+
+  .teacher-modal-header {
+    padding: 1rem;
+  }
+
+  .teacher-modal-body {
+    padding: 1rem;
+  }
+}

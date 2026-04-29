@@ -135,6 +135,14 @@ export default function ParentLayout(): React.JSX.Element {
     );
   };
 
+  // Close sidebar on mobile when navigation occurs
+  const handleNavClick = () => {
+    // Only close sidebar on mobile (< 768px)
+    if (window.matchMedia("(max-width: 767.98px)").matches) {
+      setIsMinimized(true);
+    }
+  };
+
   return (
     <div
       className={`dashboard-layout ${isMinimized ? "sidebar-minimized" : ""}`}
@@ -145,18 +153,9 @@ export default function ParentLayout(): React.JSX.Element {
         onClick={() => setIsMinimized(true)}
         aria-hidden="true"
       />
-      <aside className="dashboard-sidebar" style={{ paddingTop: "1rem" }}>
+      <aside className="dashboard-sidebar">
         <div className="sidebar-header">
-          <img
-            src={instProfile.logo}
-            alt="Logo"
-            className="sidebar-logo"
-            style={{
-              borderRadius: "50%",
-              objectFit: "cover",
-              background: "#fff",
-            }}
-          />
+          <img src={instProfile.logo} alt="Logo" className="sidebar-logo" />
         </div>
         <div className="sidebar-title-div">
           <button
@@ -200,7 +199,7 @@ export default function ParentLayout(): React.JSX.Element {
         </div>
 
         <div className="sidebar-footer">
-          <NavLink to="/logout" className="nav-item">
+          <NavLink to="/logout" className="nav-item" onClick={handleNavClick}>
             <FontAwesomeIcon icon={faSignOutAlt} className="nav-icon" />
             <span className="nav-text">Logout</span>
           </NavLink>

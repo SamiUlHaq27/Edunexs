@@ -52,6 +52,14 @@ export default function StudentLayout(): React.JSX.Element {
     void loadInstitutionInfo();
   }, []);
 
+  // Close sidebar on mobile when navigation occurs
+  const handleNavClick = () => {
+    // Only close sidebar on mobile (< 768px)
+    if (window.matchMedia("(max-width: 767.98px)").matches) {
+      setIsMinimized(true);
+    }
+  };
+
   return (
     <div
       className={`dashboard-layout ${isMinimized ? "sidebar-minimized" : ""}`}
@@ -62,18 +70,9 @@ export default function StudentLayout(): React.JSX.Element {
         onClick={() => setIsMinimized(true)}
         aria-hidden="true"
       />
-      <aside className="dashboard-sidebar" style={{ paddingTop: "1rem" }}>
+      <aside className="dashboard-sidebar">
         <div className="sidebar-header">
-          <img
-            src={institutionInfo.logo}
-            alt="Logo"
-            className="sidebar-logo"
-            style={{
-              borderRadius: "50%",
-              objectFit: "cover",
-              background: "#fff",
-            }}
-          />
+          <img src={institutionInfo.logo} alt="Logo" className="sidebar-logo" />
         </div>
         <div className="sidebar-title-div">
           <button
@@ -88,24 +87,36 @@ export default function StudentLayout(): React.JSX.Element {
         </div>
 
         <nav className="sidebar-nav">
-          <NavLink to="/student/dashboard" className="nav-item">
+          <NavLink
+            to="/student/dashboard"
+            className="nav-item"
+            onClick={handleNavClick}
+          >
             <FontAwesomeIcon icon={faHome} className="nav-icon" />
             <span className="nav-text">Overview</span>
           </NavLink>
 
-          <NavLink to="/student/courses" className="nav-item">
+          <NavLink
+            to="/student/courses"
+            className="nav-item"
+            onClick={handleNavClick}
+          >
             <FontAwesomeIcon icon={faBookReader} className="nav-icon" />
             <span className="nav-text">My Courses</span>
           </NavLink>
 
-          <NavLink to="/student/fees" className="nav-item">
+          <NavLink
+            to="/student/fees"
+            className="nav-item"
+            onClick={handleNavClick}
+          >
             <FontAwesomeIcon icon={faMoneyBillWave} className="nav-icon" />
             <span className="nav-text">Fees</span>
           </NavLink>
         </nav>
 
         <div className="sidebar-footer">
-          <NavLink to="/logout" className="nav-item">
+          <NavLink to="/logout" className="nav-item" onClick={handleNavClick}>
             <FontAwesomeIcon icon={faSignOutAlt} className="nav-icon" />
             <span className="nav-text">Logout</span>
           </NavLink>
