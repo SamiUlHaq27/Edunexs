@@ -90,7 +90,7 @@
   gap: 1.5rem;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 767.98px) {
   .student-two-col-layout {
     grid-template-columns: 1fr;
   }
@@ -131,7 +131,7 @@
 .course-tab.active {
   background: #eff6ff;
   color: #2563eb;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .tab-content-container {
@@ -153,13 +153,15 @@
   background: white;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
   gap: 1rem;
 }
 
 .task-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
   border-color: #d1d5db;
 }
 
@@ -178,9 +180,18 @@
   flex-shrink: 0;
 }
 
-.bg-yellow { background: #fef3c7; color: #d97706; }
-.bg-green { background: #d1fae5; color: #059669; }
-.bg-purple { background: #ede9fe; color: #7c3aed; }
+.bg-yellow {
+  background: #fef3c7;
+  color: #d97706;
+}
+.bg-green {
+  background: #d1fae5;
+  color: #059669;
+}
+.bg-purple {
+  background: #ede9fe;
+  color: #7c3aed;
+}
 
 .task-details {
   flex: 1;
@@ -199,8 +210,12 @@
   font-weight: 500;
 }
 
-.text-danger { color: #dc2626; }
-.text-success { color: #059669; }
+.text-danger {
+  color: #dc2626;
+}
+.text-success {
+  color: #059669;
+}
 
 .btn-sm {
   padding: 0.4rem 0.8rem;
@@ -243,7 +258,7 @@
 }
 
 .timeline::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 11px;
   top: 5px;
@@ -270,9 +285,15 @@
   margin-top: 2px;
 }
 
-.bg-danger { background: #ef4444; }
-.bg-warning { background: #f59e0b; }
-.bg-primary { background: #3b82f6; }
+.bg-danger {
+  background: #ef4444;
+}
+.bg-warning {
+  background: #f59e0b;
+}
+.bg-primary {
+  background: #3b82f6;
+}
 
 .timeline-content h5 {
   margin: 0 0 0.2rem 0;

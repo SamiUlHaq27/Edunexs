@@ -681,7 +681,7 @@
 }
 
 /* Responsive Fix for Mobile */
-@media (max-width: 480px) {
+@media (max-width: 767.98px) {
   .pay-now-btn-main {
     padding: 10px 20px;
     font-size: 0.9rem;

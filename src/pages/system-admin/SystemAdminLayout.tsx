@@ -15,11 +15,18 @@ import "../../styles/system-admin.css";
 export default function SystemAdminLayout(): React.JSX.Element {
   const [isMinimized, setIsMinimized] = useState(false);
   const adminName = authService.getUser()?.name || "System Administrator";
+  const toggleSidebar = () => setIsMinimized((current) => !current);
 
   return (
     <div
       className={`dashboard-layout ${isMinimized ? "sidebar-minimized" : ""}`}
     >
+      {/* Sidebar overlay for mobile */}
+      <div
+        className="sidebar-overlay"
+        onClick={() => toggleSidebar()}
+        aria-hidden="true"
+      />
       <aside className="dashboard-sidebar system-admin-sidebar">
         {/* Header containing ONLY the Hamburger Button */}
         <div
@@ -31,7 +38,7 @@ export default function SystemAdminLayout(): React.JSX.Element {
           }}
         >
           <button
-            onClick={() => setIsMinimized(!isMinimized)}
+            onClick={toggleSidebar}
             className="toggle-btn"
             style={{ position: "static", fontSize: "1.2rem" }} // Override absolute positioning
             aria-label="Toggle Sidebar"
@@ -64,6 +71,15 @@ export default function SystemAdminLayout(): React.JSX.Element {
 
       <main className="dashboard-main">
         <header className="main-header">
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            className="dashboard-mobile-toggle"
+            aria-label="Toggle sidebar"
+            aria-expanded={isMinimized}
+          >
+            <FontAwesomeIcon icon={faBars} />
+          </button>
           <div className="header-greeting">
             <h2>System Overview</h2>
             <p>Monitor platform performance and institutions.</p>

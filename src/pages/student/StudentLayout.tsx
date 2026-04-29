@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Outlet, NavLink } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { 
-  faHome, faBookReader, faUserCircle, faSignOutAlt, faBars,
-  faMoneyBillWave
+import {
+  faHome,
+  faBookReader,
+  faUserCircle,
+  faSignOutAlt,
+  faBars,
+  faMoneyBillWave,
 } from "@fortawesome/free-solid-svg-icons";
 import { ASSETS } from "../../config/assets";
 import { authService, institutionService } from "../../services";
@@ -37,9 +41,7 @@ export default function StudentLayout(): React.JSX.Element {
             name: institution.name,
             prefix: institution.prefix,
             logo:
-              institution.logoUrl ||
-              institution.logo?.publicUrl ||
-              ASSETS.logo,
+              institution.logoUrl || institution.logo?.publicUrl || ASSETS.logo,
           });
         }
       } catch {
@@ -51,18 +53,40 @@ export default function StudentLayout(): React.JSX.Element {
   }, []);
 
   return (
-    <div className={`dashboard-layout ${isMinimized ? "sidebar-minimized" : ""}`}>
-      <aside className="dashboard-sidebar" style={{ paddingTop: '1rem' }}>
+    <div
+      className={`dashboard-layout ${isMinimized ? "sidebar-minimized" : ""}`}
+    >
+      {/* Sidebar overlay for mobile */}
+      <div
+        className="sidebar-overlay"
+        onClick={() => setIsMinimized(true)}
+        aria-hidden="true"
+      />
+      <aside className="dashboard-sidebar" style={{ paddingTop: "1rem" }}>
         <div className="sidebar-header">
-          <img src={institutionInfo.logo} alt="Logo" className="sidebar-logo" style={{ borderRadius: '50%', objectFit: 'cover', background: '#fff' }} />
+          <img
+            src={institutionInfo.logo}
+            alt="Logo"
+            className="sidebar-logo"
+            style={{
+              borderRadius: "50%",
+              objectFit: "cover",
+              background: "#fff",
+            }}
+          />
         </div>
         <div className="sidebar-title-div">
-          <button onClick={() => setIsMinimized(!isMinimized)} className="toggle-btn">
-             <FontAwesomeIcon icon={faBars} />
+          <button
+            onClick={() => setIsMinimized(!isMinimized)}
+            className="toggle-btn"
+          >
+            <FontAwesomeIcon icon={faBars} />
           </button>
-          {!isMinimized && <h1 className="dashboard-sidebar-title">Student Portal</h1>}
+          {!isMinimized && (
+            <h1 className="dashboard-sidebar-title">Student Portal</h1>
+          )}
         </div>
-        
+
         <nav className="sidebar-nav">
           <NavLink to="/student/dashboard" className="nav-item">
             <FontAwesomeIcon icon={faHome} className="nav-icon" />
@@ -82,14 +106,23 @@ export default function StudentLayout(): React.JSX.Element {
 
         <div className="sidebar-footer">
           <NavLink to="/logout" className="nav-item">
-             <FontAwesomeIcon icon={faSignOutAlt} className="nav-icon" />
-             <span className="nav-text">Logout</span>
+            <FontAwesomeIcon icon={faSignOutAlt} className="nav-icon" />
+            <span className="nav-text">Logout</span>
           </NavLink>
         </div>
       </aside>
-      
+
       <main className="dashboard-main">
         <header className="main-header">
+          <button
+            type="button"
+            onClick={() => setIsMinimized(!isMinimized)}
+            className="dashboard-mobile-toggle"
+            aria-label="Toggle sidebar"
+            aria-expanded={isMinimized}
+          >
+            <FontAwesomeIcon icon={faBars} />
+          </button>
           <div className="header-greeting teacher-institution-brand">
             <img
               src={institutionInfo.logo}
@@ -103,8 +136,8 @@ export default function StudentLayout(): React.JSX.Element {
           </div>
           <div className="header-profile">
             <div className="user-info">
-               <span className="user-name">{user?.name || "Student"}</span>
-               <span className="user-role">{user?.role || "student"}</span>
+              <span className="user-name">{user?.name || "Student"}</span>
+              <span className="user-role">{user?.role || "student"}</span>
             </div>
             {user?.profilePicture?.publicUrl ? (
               <img
@@ -118,7 +151,7 @@ export default function StudentLayout(): React.JSX.Element {
           </div>
         </header>
         <div className="dashboard-content">
-           <Outlet />
+          <Outlet />
         </div>
       </main>
     </div>

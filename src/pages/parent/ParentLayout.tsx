@@ -139,6 +139,12 @@ export default function ParentLayout(): React.JSX.Element {
     <div
       className={`dashboard-layout ${isMinimized ? "sidebar-minimized" : ""}`}
     >
+      {/* Sidebar overlay for mobile */}
+      <div
+        className="sidebar-overlay"
+        onClick={() => setIsMinimized(true)}
+        aria-hidden="true"
+      />
       <aside className="dashboard-sidebar" style={{ paddingTop: "1rem" }}>
         <div className="sidebar-header">
           <img
@@ -203,6 +209,15 @@ export default function ParentLayout(): React.JSX.Element {
 
       <main className="dashboard-main">
         <header className="main-header">
+          <button
+            type="button"
+            onClick={() => setIsMinimized(!isMinimized)}
+            className="dashboard-mobile-toggle"
+            aria-label="Toggle sidebar"
+            aria-expanded={isMinimized}
+          >
+            <FontAwesomeIcon icon={faBars} />
+          </button>
           <div className="header-greeting">
             <h2>{instProfile.name}</h2>
             <p>Parent Dashboard</p>

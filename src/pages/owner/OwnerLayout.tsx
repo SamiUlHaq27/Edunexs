@@ -103,6 +103,12 @@ export default function OwnerLayout({
     <div
       className={`dashboard-layout ${isMinimized ? "sidebar-minimized" : ""}`}
     >
+      {/* Sidebar overlay for mobile */}
+      <div
+        className="sidebar-overlay"
+        onClick={() => setIsMinimized(true)}
+        aria-hidden="true"
+      />
       {/* --- Sidebar --- */}
       <aside className="dashboard-sidebar" style={{ paddingTop: "1rem" }}>
         <div
@@ -189,6 +195,15 @@ export default function OwnerLayout({
         >
           {/* Left Side: Logo & Institution Name (UPDATES DYNAMICALLY) */}
           <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            <button
+              type="button"
+              onClick={() => setIsMinimized(!isMinimized)}
+              className="dashboard-mobile-toggle"
+              aria-label="Toggle sidebar"
+              aria-expanded={isMinimized}
+            >
+              <FontAwesomeIcon icon={faBars} />
+            </button>
             <img
               src={instProfile.logo}
               alt="Institution Logo"

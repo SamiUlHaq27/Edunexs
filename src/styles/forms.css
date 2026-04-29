@@ -22,9 +22,10 @@
   outline: none;
   font-size: var(--font-size-base);
   line-height: var(--line-height-base);
-  transition: border-color var(--motion-duration-fast) var(--motion-ease-out),
-              box-shadow var(--motion-duration-fast) var(--motion-ease-out),
-              background-color var(--motion-duration-fast) var(--motion-ease-out);
+  transition:
+    border-color var(--motion-duration-fast) var(--motion-ease-out),
+    box-shadow var(--motion-duration-fast) var(--motion-ease-out),
+    background-color var(--motion-duration-fast) var(--motion-ease-out);
 }
 
 .auth-input:focus {
@@ -32,7 +33,9 @@
   box-shadow: 0 0 0 4px rgba(0, 102, 255, 0.1);
 }
 
-.auth-input::placeholder { color: var(--color-text-muted); }
+.auth-input::placeholder {
+  color: var(--color-text-muted);
+}
 .auth-input:disabled {
   background: var(--color-surface-elevated-1);
   color: var(--color-text-muted);
@@ -89,10 +92,34 @@
   line-height: 0; /* remove baseline gap below SVG */
 }
 
-.input-with-icon .input-right-icon svg { display: block; }
+.input-with-icon .input-right-icon svg {
+  display: block;
+}
 
 .input-with-icon.has-right .auth-input {
   padding-right: 2.5rem; /* room for right icon */
+}
+
+.auth-username-split {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.auth-username-field {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+@media (max-width: 767.98px) {
+  .auth-username-split {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .auth-username-field {
+    width: 100%;
+  }
 }
 
 /* --- OTP Input Styles --- */
@@ -174,7 +201,8 @@
 }
 
 /* Disabled Button Style */
-.btn:disabled, .btn[disabled] {
+.btn:disabled,
+.btn[disabled] {
   opacity: 0.5;
   cursor: not-allowed;
   pointer-events: none;

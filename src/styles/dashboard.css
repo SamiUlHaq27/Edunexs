@@ -39,15 +39,16 @@
   width: 80px;
 }
 
-.sidebar-minimized .dashboard-sidebar-title,
-.sidebar-minimized .nav-text {
-  opacity: 0;
-  width: 0;
-  visibility: hidden;
-  display: none; /* Added to ensure complete removal from flow */
+/* Hide labels only on desktop minimized state (width: 80px), not on mobile off-canvas open state */
+@media (min-width: 768px) {
+  .sidebar-minimized .dashboard-sidebar-title,
+  .sidebar-minimized .nav-text {
+    opacity: 0;
+    width: 0;
+    visibility: hidden;
+    display: none; /* Added to ensure complete removal from flow */
+  }
 }
-
-
 
 /* Sidebar Header */
 .sidebar-header {
@@ -112,11 +113,13 @@
   text-decoration: none;
   font-weight: var(--font-weight-medium);
   /* Animations removed */
-  transition: background-color 0.2s, color 0.2s; /* Kept only hover colors */
+  transition:
+    background-color 0.2s,
+    color 0.2s; /* Kept only hover colors */
   white-space: nowrap;
+  min-height: 44px;
+  cursor: pointer;
 }
-
-
 
 .nav-item:hover {
   background-color: var(--color-sidebar-hover-bg);
@@ -162,6 +165,24 @@
 .toggle-btn:hover {
   background-color: rgba(255, 255, 255, 0.3);
   transform: scale(1.1);
+}
+
+.dashboard-mobile-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--color-border-muted);
+  border-radius: 999px;
+  background: var(--color-surface-base);
+  color: var(--color-text-primary);
+  box-shadow: var(--elevation-1);
+  flex-shrink: 0;
+}
+
+.dashboard-mobile-toggle:hover {
+  background: var(--color-surface-elevated-1);
 }
 
 .sidebar-minimized .sidebar-title-div {
@@ -262,4 +283,140 @@
   color: var(--color-text-primary);
   font-weight: var(--font-weight-bold);
   margin: 0;
+}
+
+@media (max-width: 767.98px) {
+  .dashboard-layout {
+    position: relative;
+    flex-direction: column;
+  }
+
+  .dashboard-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(84vw, 320px);
+    max-width: 320px;
+    transform: translateX(-100%);
+    z-index: 40;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    box-shadow: var(--elevation-5);
+    transition: transform var(--motion-duration-medium) var(--motion-ease-out);
+  }
+
+  .sidebar-minimized .dashboard-sidebar {
+    transform: translateX(0);
+    width: min(84vw, 320px);
+  }
+
+  .dashboard-main {
+    width: 100%;
+    padding: 0 var(--spacing-2) var(--spacing-3);
+  }
+
+  .main-header {
+    flex-wrap: wrap;
+    gap: var(--spacing-1);
+    padding: var(--spacing-2) 0;
+  }
+
+  .main-header h2 {
+    font-size: var(--font-size-base);
+  }
+
+  .time-display {
+    display: none;
+  }
+
+  .user-info {
+    align-items: flex-start;
+  }
+
+  .user-avatar {
+    font-size: 28px;
+  }
+
+  .dashboard-mobile-toggle {
+    display: inline-flex;
+  }
+
+  .header-profile {
+    margin-left: auto;
+    gap: var(--spacing-2);
+  }
+
+  .card-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-2);
+  }
+
+  .stat-card,
+  .card {
+    padding: var(--spacing-2);
+  }
+}
+
+/* Sidebar overlay/backdrop for mobile */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 30;
+}
+
+@media (max-width: 767.98px) {
+  .sidebar-overlay {
+    display: none;
+  }
+
+  .sidebar-minimized .sidebar-overlay {
+    display: block;
+  }
+}
+
+@media (min-width: 768px) {
+  .dashboard-mobile-toggle {
+    display: none;
+  }
+
+  .sidebar-overlay {
+    display: none !important;
+  }
+
+  .dashboard-layout {
+    flex-direction: row;
+  }
+
+  .dashboard-sidebar {
+    position: relative;
+    transform: translateX(0) !important;
+    width: 260px;
+    z-index: auto;
+    box-shadow: none;
+  }
+
+  .sidebar-minimized .dashboard-sidebar {
+    width: 80px;
+  }
+
+  .dashboard-main {
+    padding: 0px 40px 40px 40px;
+  }
+
+  .main-header {
+    gap: var(--spacing-3);
+    padding: var(--spacing-2) 0;
+  }
+
+  .card-grid {
+    gap: var(--spacing-3);
+  }
+
+  .stat-card,
+  .card {
+    padding: var(--spacing-3);
+  }
 }

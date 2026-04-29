@@ -249,9 +249,9 @@ export default function Login(): React.JSX.Element {
             {/* Username Input - Split into Prefix and Username */}
             {loginMode === "username" && (
               <>
-                <div style={{ display: "flex", gap: "0.75rem" }}>
+                <div className="auth-username-split">
                   {/* Institution Prefix Input */}
-                  <div style={{ flex: 0.5 }}>
+                  <div className="auth-username-field">
                     <label className="auth-label" htmlFor="prefix">
                       Institution Prefix
                     </label>
@@ -275,7 +275,7 @@ export default function Login(): React.JSX.Element {
                   </div>
 
                   {/* Username Input */}
-                  <div style={{ flex: 1 }}>
+                  <div className="auth-username-field">
                     <label className="auth-label" htmlFor="username">
                       Username
                     </label>

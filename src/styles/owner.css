@@ -113,7 +113,7 @@
   margin-bottom: var(--spacing-4);
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 768px) {
   .charts-grid {
     grid-template-columns: 2fr 1fr;
   }
