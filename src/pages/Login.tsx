@@ -19,7 +19,7 @@ export default function Login(): React.JSX.Element {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
-  const [institutionPrefix, setInstitutionPrefix] = useState("");
+  const [institutionId, setInstitutionId] = useState("");
   const [usernameInput, setUsernameInput] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -63,8 +63,8 @@ export default function Login(): React.JSX.Element {
       }
 
       if (loginMode === "username") {
-        if (!institutionPrefix.trim()) {
-          setError("Please enter your institution prefix");
+        if (!institutionId.trim()) {
+          setError("Please enter your institution id");
           setIsLoading(false);
           return;
         }
@@ -84,7 +84,7 @@ export default function Login(): React.JSX.Element {
       const response = await authService.login({
         ...(loginMode === "email"
           ? { email }
-          : { username: usernameInput, institutionPrefix }),
+          : { username: usernameInput, institutionId: Number(institutionId) }),
         password,
       });
 
@@ -246,30 +246,27 @@ export default function Login(): React.JSX.Element {
               </>
             )}
 
-            {/* Username Input - Split into Prefix and Username */}
+            {/* Username Input - Split into Institution and Username */}
             {loginMode === "username" && (
               <>
                 <div className="auth-username-split">
-                  {/* Institution Prefix Input */}
                   <div className="auth-username-field">
-                    <label className="auth-label" htmlFor="prefix">
-                      Institution Prefix
+                    <label className="auth-label" htmlFor="institutionId">
+                      Institution ID
                     </label>
                     <div className="input-with-icon">
                       <span className="input-icon" aria-hidden>
                         <FontAwesomeIcon icon={faBuilding} />
                       </span>
                       <input
-                        id="prefix"
-                        type="text"
+                        id="institutionId"
+                        type="number"
                         className="auth-input"
-                        placeholder="ABC"
-                        value={institutionPrefix}
-                        onChange={(e) =>
-                          setInstitutionPrefix(e.target.value.toUpperCase())
-                        }
+                        placeholder="123"
+                        value={institutionId}
+                        onChange={(e) => setInstitutionId(e.target.value)}
                         disabled={isLoading}
-                        maxLength={10}
+                        min={1}
                       />
                     </div>
                   </div>
@@ -287,7 +284,7 @@ export default function Login(): React.JSX.Element {
                         id="username"
                         type="text"
                         className="auth-input"
-                        placeholder="username"
+                        placeholder="EDU001"
                         value={usernameInput}
                         onChange={(e) => setUsernameInput(e.target.value)}
                         disabled={isLoading}

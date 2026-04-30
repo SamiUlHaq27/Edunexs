@@ -32,6 +32,7 @@ import type { Student } from "../../services/student.service";
 import type { StudentGroup } from "../../services/student-group.service";
 import type { Teacher } from "../../services/teacher.service";
 import type { Institution } from "../../types";
+import ConfirmActionModal from "../../components/ConfirmActionModal";
 import "../../styles/owner.css";
 
 type StatusFilter = "All" | "Active" | "Inactive";
@@ -90,6 +91,10 @@ export default function ClassManagement(): React.JSX.Element {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [pendingDeleteAction, setPendingDeleteAction] = useState<{
+    type: "section" | "offering";
+    id: number;
+  } | null>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<StatusFilter>("All");
@@ -452,23 +457,44 @@ export default function ClassManagement(): React.JSX.Element {
   };
 
   const handleDeleteSection = async (sectionId: number) => {
-    if (!window.confirm("Are you sure you want to delete this class?")) {
-      return;
-    }
+    setPendingDeleteAction({ type: "section", id: sectionId });
+  };
+
+  const requestDeleteOffering = (offeringId: number) => {
+    setPendingDeleteAction({ type: "offering", id: offeringId });
+  };
+
+  const handleDeleteSelected = async () => {
+    if (!pendingDeleteAction) return;
 
     try {
       setError("");
-      await sectionService.deleteSection(sectionId);
-      setSuccessMessage("Class deleted successfully!");
+
+      if (pendingDeleteAction.type === "section") {
+        await sectionService.deleteSection(pendingDeleteAction.id);
+        setSuccessMessage("Class deleted successfully!");
+      } else {
+        await sectionService.deleteSectionOffering(pendingDeleteAction.id);
+        setSuccessMessage("Offering deleted successfully!");
+      }
+
       await loadData(true);
     } catch (err: any) {
       const errorMessage =
         err?.response?.data?.message ||
         err?.message ||
-        "Failed to delete class";
+        (pendingDeleteAction.type === "section"
+          ? "Failed to delete class"
+          : "Failed to delete offering");
       setError(errorMessage);
-      console.error("Error deleting class:", err);
+      console.error(
+        pendingDeleteAction.type === "section"
+          ? "Error deleting class:"
+          : "Error deleting offering:",
+        err,
+      );
     } finally {
+      setPendingDeleteAction(null);
       setOpenMenuId(null);
     }
   };
@@ -575,23 +601,7 @@ export default function ClassManagement(): React.JSX.Element {
   };
 
   const handleDeleteOffering = async (offeringId: number) => {
-    if (!window.confirm("Are you sure you want to delete this offering?")) {
-      return;
-    }
-
-    try {
-      setError("");
-      await sectionService.deleteSectionOffering(offeringId);
-      setSuccessMessage("Offering deleted successfully!");
-      await loadData(true);
-    } catch (err: any) {
-      const errorMessage =
-        err?.response?.data?.message ||
-        err?.message ||
-        "Failed to delete offering";
-      setError(errorMessage);
-      console.error("Error deleting offering:", err);
-    }
+    requestDeleteOffering(offeringId);
   };
 
   const toggleOfferingStatus = async (offering: SectionOffering) => {
@@ -1992,6 +2002,35 @@ export default function ClassManagement(): React.JSX.Element {
           </div>
         </div>
       )}
+
+      <ConfirmActionModal
+        isOpen={pendingDeleteAction !== null}
+        title={
+          pendingDeleteAction?.type === "section"
+            ? "Delete Class"
+            : "Delete Offering"
+        }
+        message={
+          pendingDeleteAction?.type === "section" ? (
+            <>
+              Are you sure you want to delete this class? This cannot be undone.
+            </>
+          ) : (
+            <>
+              Are you sure you want to delete this offering? This cannot be
+              undone.
+            </>
+          )
+        }
+        confirmLabel={
+          pendingDeleteAction?.type === "section"
+            ? "Delete Class"
+            : "Delete Offering"
+        }
+        onConfirm={handleDeleteSelected}
+        onCancel={() => setPendingDeleteAction(null)}
+        isProcessing={isSaving}
+      />
     </div>
   );
 }

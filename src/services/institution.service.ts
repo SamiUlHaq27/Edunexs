@@ -99,7 +99,7 @@ class InstitutionService {
    * Update institution status (block/unblock)
    */
   async updateStatus(data: {
-    prefix: string;
+    institutionId: number;
     isBlocked: boolean;
     message: string;
   }): Promise<void> {

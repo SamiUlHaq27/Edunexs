@@ -18,6 +18,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { teacherService, institutionService } from "../../services";
 import { ASSETS } from "../../config/assets";
+import ConfirmActionModal from "../../components/ConfirmActionModal";
 import "../../styles/owner.css";
 import "../../styles/forms.css";
 
@@ -53,6 +54,9 @@ export default function TeacherManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [editingTeacherId, setEditingTeacherId] = useState<number | null>(null);
+  const [pendingDeleteTeacherId, setPendingDeleteTeacherId] = useState<
+    number | null
+  >(null);
   const [profilePictureFile, setProfilePictureFile] = useState<File | null>(
     null,
   );
@@ -363,18 +367,18 @@ export default function TeacherManagement() {
     }
   };
 
-  const handleDelete = async (teacherId: number) => {
-    if (
-      !window.confirm(
-        "Are you sure you want to permanently remove this teacher? This action cannot be undone.",
-      )
-    ) {
+  const handleDeleteRequest = (teacherId: number) => {
+    setPendingDeleteTeacherId(teacherId);
+  };
+
+  const handleDelete = async () => {
+    if (!pendingDeleteTeacherId) {
       return;
     }
 
     try {
       setError("");
-      await teacherService.deleteTeacher(teacherId);
+      await teacherService.deleteTeacher(pendingDeleteTeacherId);
       setSuccessMessage("Teacher removed!");
       // Refresh teacher list from backend
       await loadTeachers();
@@ -386,6 +390,7 @@ export default function TeacherManagement() {
       setError(errorMessage);
       console.error("Error deleting teacher:", err);
     } finally {
+      setPendingDeleteTeacherId(null);
       setOpenMenuId(null);
     }
   };
@@ -691,7 +696,7 @@ export default function TeacherManagement() {
                   <button
                     className="dropdown-item danger"
                     onClick={() => {
-                      handleDelete(teacher.id);
+                      handleDeleteRequest(teacher.id);
                       setOpenMenuId(null);
                     }}
                   >
@@ -978,6 +983,20 @@ export default function TeacherManagement() {
           </div>
         </div>
       )}
+
+      <ConfirmActionModal
+        isOpen={pendingDeleteTeacherId !== null}
+        title="Remove Teacher"
+        message={
+          <>
+            Are you sure you want to permanently remove this teacher? This
+            action cannot be undone.
+          </>
+        }
+        confirmLabel="Remove Teacher"
+        onConfirm={handleDelete}
+        onCancel={() => setPendingDeleteTeacherId(null)}
+      />
     </div>
   );
 }

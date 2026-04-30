@@ -13,6 +13,7 @@ import {
   faUsers,
 } from "@fortawesome/free-solid-svg-icons";
 import { parentService, studentService, Parent, Student } from "../../services";
+import ConfirmActionModal from "../../components/ConfirmActionModal";
 import "../../styles/owner.css";
 
 export default function ParentManagement() {
@@ -35,6 +36,9 @@ export default function ParentManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isManageStudentsOpen, setIsManageStudentsOpen] = useState(false);
   const [selectedParentId, setSelectedParentId] = useState<number | null>(null);
+  const [pendingDeleteParentId, setPendingDeleteParentId] = useState<
+    number | null
+  >(null);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
 
   // Form States
@@ -144,20 +148,18 @@ export default function ParentManagement() {
   };
 
   // Handle delete
-  const handleDelete = async (parentId: number) => {
-    if (
-      !window.confirm(
-        "Are you sure you want to delete this parent? This action cannot be undone.",
-      )
-    ) {
-      return;
-    }
+  const requestDeleteParent = (parentId: number) => {
+    setPendingDeleteParentId(parentId);
+  };
+
+  const handleDelete = async () => {
+    if (!pendingDeleteParentId) return;
 
     setIsSaving(true);
     setError("");
 
     try {
-      await parentService.deleteParent(parentId);
+      await parentService.deleteParent(pendingDeleteParentId);
       setSuccessMessage("Parent deleted successfully");
       setOpenMenuId(null);
       await loadData();
@@ -165,6 +167,7 @@ export default function ParentManagement() {
       setError(err?.response?.data?.message || "Failed to delete parent");
     } finally {
       setIsSaving(false);
+      setPendingDeleteParentId(null);
     }
   };
 
@@ -415,7 +418,7 @@ export default function ParentManagement() {
                             <button
                               className="menu-item danger"
                               onClick={() => {
-                                handleDelete(parent.id);
+                                requestDeleteParent(parent.id);
                               }}
                               disabled={isSaving}
                             >
@@ -692,6 +695,21 @@ export default function ParentManagement() {
           </div>
         </div>
       )}
+
+      <ConfirmActionModal
+        isOpen={pendingDeleteParentId !== null}
+        title="Delete Parent"
+        message={
+          <>
+            Are you sure you want to delete this parent? This action cannot be
+            undone.
+          </>
+        }
+        confirmLabel="Delete Parent"
+        onConfirm={handleDelete}
+        onCancel={() => setPendingDeleteParentId(null)}
+        isProcessing={isSaving}
+      />
     </div>
   );
 }

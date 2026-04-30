@@ -245,6 +245,7 @@ export default function InstitutionSettings(): React.JSX.Element {
 
     try {
       const updated = await institutionService.updateInstitution({
+        prefix: formData.prefix,
         name: formData.name,
         city: formData.city,
         country: formData.country,
@@ -418,7 +419,7 @@ export default function InstitutionSettings(): React.JSX.Element {
                 <input
                   className="auth-input"
                   value={formData.prefix}
-                  disabled
+                  onChange={(e) => handleFormChange("prefix", e.target.value)}
                 />
               </div>
               <div>
