@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { toastService } from "../../services/toast.service";
 import {
   faSearch,
   faFilter,
@@ -21,8 +22,6 @@ export default function ParentManagement() {
   const [students, setStudents] = useState<Student[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
 
   // --- UI State ---
   const [searchQuery, setSearchQuery] = useState("");

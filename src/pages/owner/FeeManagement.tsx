@@ -26,6 +26,7 @@ import type { FeeInvoice, FeeStatus } from "../../services/fee.service";
 import type { Student } from "../../services/student.service";
 import type { StudentGroup } from "../../services/student-group.service";
 import ConfirmActionModal from "../../components/ConfirmActionModal";
+import { toastService } from "../../services/toast.service";
 import "../../styles/owner.css";
 
 type StatusFilter = "All" | "Paid" | "Pending" | "Overdue";
@@ -75,8 +76,6 @@ export default function FeeManagement(): React.JSX.Element {
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
   const [pendingDeleteFeeId, setPendingDeleteFeeId] = useState<number | null>(
     null,
   );

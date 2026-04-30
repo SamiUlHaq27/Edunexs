@@ -15,6 +15,7 @@ import {
   faCheck,
 } from "@fortawesome/free-solid-svg-icons";
 import { ASSETS } from "../../config/assets";
+import { toastService } from "../../services/toast.service";
 import {
   institutionAdminService,
   InstitutionAdmin,
@@ -33,8 +34,6 @@ export default function AdminManagement() {
   // Data State
   const [admins, setAdmins] = useState<InstitutionAdmin[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   // const [institutionPrefix, setInstitutionPrefix] = useState<string>("EDU");
 
   // UI State

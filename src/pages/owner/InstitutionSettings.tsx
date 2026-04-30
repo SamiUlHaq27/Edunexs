@@ -10,6 +10,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import "../../styles/owner.css";
 import { ASSETS } from "../../config/assets";
+import { toastService } from "../../services/toast.service";
 import { institutionService } from "../../services/institution.service";
 import { Institution } from "../../types";
 
@@ -17,8 +18,6 @@ export default function InstitutionSettings(): React.JSX.Element {
   const [institution, setInstitution] = useState<Institution | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [formData, setFormData] = useState<Institution | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);

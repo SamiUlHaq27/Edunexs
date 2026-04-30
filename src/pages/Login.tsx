@@ -13,6 +13,7 @@ import {
 import AuthSidebar from "../components/AuthSidebar";
 import { authService } from "../services/auth.service";
 import { institutionService } from "../services/institution.service";
+import { toastService } from "../services/toast.service";
 import { UserRole } from "../types";
 
 export default function Login(): React.JSX.Element {
@@ -57,26 +58,26 @@ export default function Login(): React.JSX.Element {
     try {
       // Validate that either email or username is provided
       if (loginMode === "email" && !email.trim()) {
-        setError("Please enter your email address");
+        toastService.error("Please enter your email address");
         setIsLoading(false);
         return;
       }
 
       if (loginMode === "username") {
         if (!institutionId.trim()) {
-          setError("Please enter your institution id");
+          toastService.error("Please enter your institution id");
           setIsLoading(false);
           return;
         }
         if (!usernameInput.trim()) {
-          setError("Please enter your username");
+          toastService.error("Please enter your username");
           setIsLoading(false);
           return;
         }
       }
 
       if (!password.trim()) {
-        setError("Please enter your password");
+        toastService.error("Please enter your password");
         setIsLoading(false);
         return;
       }
@@ -112,7 +113,10 @@ export default function Login(): React.JSX.Element {
       const dashboard = getRoleDashboard(response.user.role);
       navigate(dashboard);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to login");
+      // API error is handled by interceptor, but catch local errors
+      if (!(err instanceof Error && err.message.includes("An unexpected error occurred"))) {
+        toastService.error(err instanceof Error ? err.message : "Failed to login");
+      }
     } finally {
       setIsLoading(false);
     }

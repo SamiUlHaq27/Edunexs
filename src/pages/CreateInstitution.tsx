@@ -13,6 +13,7 @@ import { ASSETS } from "../config/assets";
 import AuthSidebar from "../components/AuthSidebar";
 import { institutionService } from "../services/institution.service";
 import { authService } from "../services/auth.service";
+import { toastService } from "../services/toast.service";
 
 export default function CreateInstitution(): React.JSX.Element {
   const navigate = useNavigate();
@@ -51,8 +52,6 @@ export default function CreateInstitution(): React.JSX.Element {
     e.preventDefault();
 
     setIsLoading(true);
-    setError(null);
-    setSuccessMessage(null);
 
     try {
       // Step 1: Create institution
@@ -75,7 +74,7 @@ export default function CreateInstitution(): React.JSX.Element {
       }
 
       // Step 3: Show success, clear session, and redirect to login
-      setSuccessMessage(
+      toastService.success(
         `Institution "${formData.name}" has been created. Please sign in again.`,
       );
 
@@ -84,7 +83,7 @@ export default function CreateInstitution(): React.JSX.Element {
         navigate("/login", { replace: true });
       }, 1500);
     } catch (err) {
-      setError(
+      toastService.error(
         err instanceof Error ? err.message : "Failed to create institution",
       );
     } finally {
