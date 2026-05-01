@@ -33,6 +33,8 @@ import "../../styles/owner.css";
 export default function AdminManagement() {
   // Data State
   const [admins, setAdmins] = useState<InstitutionAdmin[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   // const [institutionPrefix, setInstitutionPrefix] = useState<string>("EDU");
 

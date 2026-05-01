@@ -16,6 +16,8 @@ import { Institution } from "../../types";
 
 export default function InstitutionSettings(): React.JSX.Element {
   const [institution, setInstitution] = useState<Institution | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);

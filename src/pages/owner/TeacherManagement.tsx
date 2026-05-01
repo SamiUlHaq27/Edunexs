@@ -41,6 +41,7 @@ export default function TeacherManagement() {
   // Loading & Error State
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState("");
 
   // UI State
   const [searchQuery, setSearchQuery] = useState("");

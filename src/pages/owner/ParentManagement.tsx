@@ -22,6 +22,8 @@ export default function ParentManagement() {
   const [students, setStudents] = useState<Student[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   // --- UI State ---
   const [searchQuery, setSearchQuery] = useState("");
