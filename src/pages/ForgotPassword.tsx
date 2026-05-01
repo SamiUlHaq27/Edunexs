@@ -13,6 +13,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import AuthSidebar from "../components/AuthSidebar";
 import { authService } from "../services/auth.service";
+import { toastService } from "../services/toast.service";
 import { OtpType } from "../types";
 
 export default function ForgotPassword(): React.JSX.Element {
@@ -33,8 +34,6 @@ export default function ForgotPassword(): React.JSX.Element {
 
   // Loading & Error States
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // --- Real-time Validation Logic ---
   const checks = {
@@ -57,8 +56,6 @@ export default function ForgotPassword(): React.JSX.Element {
     e.preventDefault();
 
     setIsLoading(true);
-    setError(null);
-    setSuccessMessage(null);
 
     try {
       await authService.sendOtp({
@@ -66,14 +63,13 @@ export default function ForgotPassword(): React.JSX.Element {
         type: OtpType.PASSWORD_RESET,
       });
 
-      setSuccessMessage(`Verification code sent to ${email}`);
+      toastService.success(`Verification code sent to ${email}`);
       setTimeout(() => {
         setStep(2);
-        setSuccessMessage(null);
       }, 1500);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to send verification code"
+      toastService.error(
+        err instanceof Error ? err.message : "Failed to send verification code",
       );
     } finally {
       setIsLoading(false);
@@ -84,21 +80,19 @@ export default function ForgotPassword(): React.JSX.Element {
     e.preventDefault();
 
     if (!canSubmit) {
-      setError(
-        "Please fulfill all password requirements and ensure passwords match."
+      toastService.error(
+        "Please fulfill all password requirements and ensure passwords match.",
       );
       return;
     }
 
     const otpCode = otp.join("");
     if (otpCode.length < 6) {
-      setError("Please enter the full 6-digit code.");
+      toastService.error("Please enter the full 6-digit code.");
       return;
     }
 
     setIsLoading(true);
-    setError(null);
-    setSuccessMessage(null);
 
     try {
       await authService.resetPassword({
@@ -107,12 +101,16 @@ export default function ForgotPassword(): React.JSX.Element {
         newPassword,
       });
 
-      setSuccessMessage("Password reset successfully! Redirecting to login...");
+      toastService.success(
+        "Password reset successfully! Redirecting to login...",
+      );
       setTimeout(() => {
         navigate("/login");
       }, 1500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to reset password");
+      toastService.error(
+        err instanceof Error ? err.message : "Failed to reset password",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -129,7 +127,7 @@ export default function ForgotPassword(): React.JSX.Element {
 
   const handleOtpKeyDown = (
     index: number,
-    e: React.KeyboardEvent<HTMLInputElement>
+    e: React.KeyboardEvent<HTMLInputElement>,
   ) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       otpRefs.current[index - 1]?.focus();
@@ -166,38 +164,6 @@ export default function ForgotPassword(): React.JSX.Element {
               ? "Enter your email to receive a reset code"
               : "Enter the code and set your new password"}
           </p>
-
-          {error && (
-            <div
-              style={{
-                padding: "0.75rem 1rem",
-                marginBottom: "1rem",
-                backgroundColor: "#fee",
-                border: "1px solid #fcc",
-                borderRadius: "0.5rem",
-                color: "#c33",
-                fontSize: "0.875rem",
-              }}
-            >
-              {error}
-            </div>
-          )}
-
-          {successMessage && (
-            <div
-              style={{
-                padding: "0.75rem 1rem",
-                marginBottom: "1rem",
-                backgroundColor: "#efe",
-                border: "1px solid #cfc",
-                borderRadius: "0.5rem",
-                color: "#383",
-                fontSize: "0.875rem",
-              }}
-            >
-              {successMessage}
-            </div>
-          )}
 
           {step === 1 ? (
             <form onSubmit={handleSendOtp} className="auth-form">

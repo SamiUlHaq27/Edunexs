@@ -15,25 +15,32 @@ import "../../styles/system-admin.css";
 export default function SystemAdminLayout(): React.JSX.Element {
   const [isMinimized, setIsMinimized] = useState(false);
   const adminName = authService.getUser()?.name || "System Administrator";
+  const toggleSidebar = () => setIsMinimized((current) => !current);
+
+  // Close sidebar on mobile when navigation occurs
+  const handleNavClick = () => {
+    // Only close sidebar on mobile (< 768px)
+    if (window.matchMedia("(max-width: 767.98px)").matches) {
+      setIsMinimized(true);
+    }
+  };
 
   return (
     <div
       className={`dashboard-layout ${isMinimized ? "sidebar-minimized" : ""}`}
     >
+      {/* Sidebar overlay for mobile */}
+      <div
+        className="sidebar-overlay"
+        onClick={() => setIsMinimized(true)}
+        aria-hidden="true"
+      />
       <aside className="dashboard-sidebar system-admin-sidebar">
         {/* Header containing ONLY the Hamburger Button */}
-        <div
-          className="sidebar-header"
-          style={{
-            justifyContent: "flex-start",
-            borderBottom: "none",
-            paddingLeft: "4px",
-          }}
-        >
+        <div className="sidebar-header">
           <button
-            onClick={() => setIsMinimized(!isMinimized)}
+            onClick={toggleSidebar}
             className="toggle-btn"
-            style={{ position: "static", fontSize: "1.2rem" }} // Override absolute positioning
             aria-label="Toggle Sidebar"
           >
             <FontAwesomeIcon icon={faBars} />
@@ -41,13 +48,21 @@ export default function SystemAdminLayout(): React.JSX.Element {
         </div>
 
         {/* Navigation Items */}
-        <nav className="sidebar-nav" style={{ marginTop: "1rem" }}>
-          <NavLink to="/system-admin/dashboard" className="nav-item">
+        <nav className="sidebar-nav">
+          <NavLink
+            to="/system-admin/dashboard"
+            className="nav-item"
+            onClick={handleNavClick}
+          >
             <FontAwesomeIcon icon={faTachometerAlt} className="nav-icon" />
             <span className="nav-text">Dashboard</span>
           </NavLink>
 
-          <NavLink to="/system-admin/institutions" className="nav-item">
+          <NavLink
+            to="/system-admin/institutions"
+            className="nav-item"
+            onClick={handleNavClick}
+          >
             <FontAwesomeIcon icon={faUniversity} className="nav-icon" />
             <span className="nav-text">Institutions</span>
           </NavLink>
@@ -55,7 +70,7 @@ export default function SystemAdminLayout(): React.JSX.Element {
 
         {/* Footer */}
         <div className="sidebar-footer">
-          <NavLink to="/logout" className="nav-item">
+          <NavLink to="/logout" className="nav-item" onClick={handleNavClick}>
             <FontAwesomeIcon icon={faSignOutAlt} className="nav-icon" />
             <span className="nav-text">Logout</span>
           </NavLink>
@@ -64,6 +79,15 @@ export default function SystemAdminLayout(): React.JSX.Element {
 
       <main className="dashboard-main">
         <header className="main-header">
+          <button
+            type="button"
+            onClick={() => setIsMinimized(!isMinimized)}
+            className="dashboard-mobile-toggle"
+            aria-label="Toggle sidebar"
+            aria-expanded={isMinimized}
+          >
+            <FontAwesomeIcon icon={faBars} />
+          </button>
           <div className="header-greeting">
             <h2>System Overview</h2>
             <p>Monitor platform performance and institutions.</p>

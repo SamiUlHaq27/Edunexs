@@ -25,6 +25,27 @@
   gap: 1.5rem;
 }
 
+@media (max-width: 767.98px) {
+  .student-hero-banner {
+    padding: 1.5rem 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .hero-progress-box {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .hero-title {
+    font-size: 1.25rem;
+  }
+
+  .hero-subtitle {
+    font-size: 0.8rem;
+  }
+}
+
 .hero-content {
   flex: 1;
   min-width: 300px;
@@ -90,7 +111,7 @@
   gap: 1.5rem;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 767.98px) {
   .student-two-col-layout {
     grid-template-columns: 1fr;
   }
@@ -131,7 +152,7 @@
 .course-tab.active {
   background: #eff6ff;
   color: #2563eb;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .tab-content-container {
@@ -153,13 +174,15 @@
   background: white;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
   gap: 1rem;
 }
 
 .task-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
   border-color: #d1d5db;
 }
 
@@ -178,9 +201,18 @@
   flex-shrink: 0;
 }
 
-.bg-yellow { background: #fef3c7; color: #d97706; }
-.bg-green { background: #d1fae5; color: #059669; }
-.bg-purple { background: #ede9fe; color: #7c3aed; }
+.bg-yellow {
+  background: #fef3c7;
+  color: #d97706;
+}
+.bg-green {
+  background: #d1fae5;
+  color: #059669;
+}
+.bg-purple {
+  background: #ede9fe;
+  color: #7c3aed;
+}
 
 .task-details {
   flex: 1;
@@ -199,8 +231,12 @@
   font-weight: 500;
 }
 
-.text-danger { color: #dc2626; }
-.text-success { color: #059669; }
+.text-danger {
+  color: #dc2626;
+}
+.text-success {
+  color: #059669;
+}
 
 .btn-sm {
   padding: 0.4rem 0.8rem;
@@ -243,7 +279,7 @@
 }
 
 .timeline::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 11px;
   top: 5px;
@@ -270,9 +306,15 @@
   margin-top: 2px;
 }
 
-.bg-danger { background: #ef4444; }
-.bg-warning { background: #f59e0b; }
-.bg-primary { background: #3b82f6; }
+.bg-danger {
+  background: #ef4444;
+}
+.bg-warning {
+  background: #f59e0b;
+}
+.bg-primary {
+  background: #3b82f6;
+}
 
 .timeline-content h5 {
   margin: 0 0 0.2rem 0;
@@ -284,4 +326,77 @@
   margin: 0;
   font-size: 0.8rem;
   color: #6b7280;
+}
+
+/* Mobile responsive for student dashboard */
+@media (max-width: 767.98px) {
+  .student-course-page {
+    gap: 1rem;
+  }
+
+  .task-grid {
+    gap: 0.75rem;
+  }
+
+  .task-card {
+    padding: 1rem;
+    gap: 0.75rem;
+  }
+
+  .task-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.1rem;
+  }
+
+  .task-details h4 {
+    font-size: 0.95rem;
+  }
+
+  .due-date {
+    font-size: 0.75rem;
+  }
+
+  .sidebar-col {
+    flex-direction: row;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .quick-stat-card {
+    flex: 1;
+    min-width: 150px;
+  }
+
+  .timeline {
+    padding-left: 0.25rem;
+  }
+
+  .timeline::before {
+    left: 6px;
+  }
+
+  .timeline-dot {
+    width: 12px;
+    height: 12px;
+  }
+
+  .tab-content-container {
+    padding: 1rem;
+    min-height: 300px;
+  }
+
+  .course-tabs {
+    gap: 0.25rem;
+    padding: 0.25rem;
+  }
+
+  .course-tab {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .hero-content {
+    min-width: 100%;
+  }
 }

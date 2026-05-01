@@ -27,6 +27,8 @@ import {
   StudentGroup as ApiStudentGroup,
 } from "../../services";
 import { OtpType } from "../../types";
+import { toastService } from "../../services/toast.service";
+import ConfirmActionModal from "../../components/ConfirmActionModal";
 import "../../styles/owner.css";
 
 export default function StudentManagement() {
@@ -55,6 +57,10 @@ export default function StudentManagement() {
   const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [pendingDeleteAction, setPendingDeleteAction] = useState<{
+    type: "student" | "group";
+    id: number;
+  } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [profilePhotoPreview, setProfilePhotoPreview] = useState<string>(
     "/dummy/teacher-dummy-profile-picture.png",
@@ -270,21 +276,39 @@ export default function StudentManagement() {
     }
   };
 
-  const handleDeleteStudent = async (id: number) => {
-    if (!window.confirm("Remove this student?")) return;
+  const requestDeleteStudent = (id: number) => {
+    setPendingDeleteAction({ type: "student", id });
+  };
+
+  const requestDeleteGroup = (id: number) => {
+    setPendingDeleteAction({ type: "group", id });
+  };
+
+  const handleDeleteSelected = async () => {
+    if (!pendingDeleteAction) return;
+
     try {
       setError("");
-      await studentService.deleteStudent(id);
-      setSuccessMessage("Student removed successfully!");
+
+      if (pendingDeleteAction.type === "student") {
+        await studentService.deleteStudent(pendingDeleteAction.id);
+        setSuccessMessage("Student removed successfully!");
+      } else {
+        await studentGroupService.deleteStudentGroup(pendingDeleteAction.id);
+        setSuccessMessage("Group deleted successfully!");
+      }
+
       await loadData();
     } catch (err: any) {
-      setError(
-        err?.response?.data?.message ||
-          err?.message ||
-          "Failed to remove student",
-      );
+      const fallbackMessage =
+        pendingDeleteAction.type === "student"
+          ? "Failed to remove student"
+          : "Failed to delete group";
+      setError(err?.response?.data?.message || err?.message || fallbackMessage);
+    } finally {
+      setPendingDeleteAction(null);
+      setOpenMenuId(null);
     }
-    setOpenMenuId(null);
   };
 
   const toggleStudentStatus = async (student: ApiStudent) => {
@@ -371,26 +395,7 @@ export default function StudentManagement() {
   };
 
   const handleDeleteGroup = async (id: number) => {
-    if (
-      !window.confirm(
-        "Delete this group? Students will remain in the directory.",
-      )
-    ) {
-      return;
-    }
-    try {
-      setError("");
-      await studentGroupService.deleteStudentGroup(id);
-      setSuccessMessage("Group deleted successfully!");
-      await loadData();
-    } catch (err: any) {
-      setError(
-        err?.response?.data?.message ||
-          err?.message ||
-          "Failed to delete group",
-      );
-    }
-    setOpenMenuId(null);
+    requestDeleteGroup(id);
   };
 
   const toggleGroupStudent = (studentProfileId: number) => {
@@ -797,7 +802,7 @@ export default function StudentManagement() {
                     <button
                       className="dropdown-item danger"
                       onClick={() => {
-                        handleDeleteStudent(selectedStudent.id);
+                        requestDeleteStudent(selectedStudent.id);
                         setOpenMenuId(null);
                       }}
                     >
@@ -943,7 +948,7 @@ export default function StudentManagement() {
                         </button>
                         <button
                           className="dropdown-item danger"
-                          onClick={() => handleDeleteGroup(group.id)}
+                          onClick={() => requestDeleteGroup(group.id)}
                         >
                           <FontAwesomeIcon icon={faTrash} fixedWidth /> Delete
                           Group
@@ -1401,6 +1406,33 @@ export default function StudentManagement() {
           </div>
         </div>
       )}
+
+      <ConfirmActionModal
+        isOpen={pendingDeleteAction !== null}
+        title={
+          pendingDeleteAction?.type === "student"
+            ? "Delete Student"
+            : "Delete Group"
+        }
+        message={
+          pendingDeleteAction?.type === "student" ? (
+            <>
+              Are you sure you want to remove this student? This cannot be
+              undone.
+            </>
+          ) : (
+            <>Delete this group? Students will remain in the directory.</>
+          )
+        }
+        confirmLabel={
+          pendingDeleteAction?.type === "student"
+            ? "Delete Student"
+            : "Delete Group"
+        }
+        onConfirm={handleDeleteSelected}
+        onCancel={() => setPendingDeleteAction(null)}
+        isProcessing={isSaving}
+      />
     </div>
   );
 }

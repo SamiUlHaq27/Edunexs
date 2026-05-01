@@ -12,6 +12,7 @@ import {
   studentAssignmentService,
   type StudentSubmission,
 } from "../../services";
+import ConfirmActionModal from "../../components/ConfirmActionModal";
 
 function getErrorMessage(error: unknown): string {
   if (error && typeof error === "object" && "response" in error) {
@@ -39,6 +40,7 @@ export default function StudentAssignmentSubmit() {
   const [existingSubmission, setExistingSubmission] =
     useState<StudentSubmission | null>(null);
   const [isRemoving, setIsRemoving] = useState(false);
+  const [isRemoveConfirmOpen, setIsRemoveConfirmOpen] = useState(false);
 
   const assignmentId =
     typeof location.state?.assignmentId === "number"
@@ -99,10 +101,6 @@ export default function StudentAssignmentSubmit() {
 
   const handleRemoveExisting = async () => {
     if (!assignmentId) return;
-
-    if (!window.confirm("Are you sure you want to remove this submission?")) {
-      return;
-    }
 
     try {
       setIsRemoving(true);
@@ -282,7 +280,7 @@ export default function StudentAssignmentSubmit() {
                   border: "none",
                   flex: 1,
                 }}
-                onClick={() => void handleRemoveExisting()}
+                onClick={() => setIsRemoveConfirmOpen(true)}
                 disabled={isRemoving}
               >
                 <FontAwesomeIcon icon={faTrash} />{" "}
@@ -369,6 +367,21 @@ export default function StudentAssignmentSubmit() {
       {success && (
         <p style={{ color: "#166534", marginTop: "1rem" }}>{success}</p>
       )}
+
+      <ConfirmActionModal
+        isOpen={isRemoveConfirmOpen}
+        title="Remove Submission"
+        message={
+          <>
+            Are you sure you want to remove this submission? You can upload a
+            new file afterward.
+          </>
+        }
+        confirmLabel="Remove Submission"
+        onConfirm={handleRemoveExisting}
+        onCancel={() => setIsRemoveConfirmOpen(false)}
+        isProcessing={isRemoving}
+      />
 
       <div style={{ marginTop: "2rem", textAlign: "right" }}>
         <button

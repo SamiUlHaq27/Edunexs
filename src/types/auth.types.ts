@@ -27,7 +27,7 @@ export interface User {
     publicUrl: string;
   } | null;
   role: UserRole;
-  institutionId?: string;
+  institutionId?: number | null;
   studentProfileId?: number | null;
   linkedStudentIds?: number[];
   isActive: boolean;
@@ -57,6 +57,7 @@ export interface LoginDto {
   email?: string;
   username?: string;
   institutionPrefix?: string;
+  institutionId?: number;
   password: string;
 }
 
@@ -85,6 +86,7 @@ export interface ApiError {
 
 // Institution Interface
 export interface Institution {
+  id: number;
   prefix: string;
   name: string;
   city: string;
@@ -107,7 +109,7 @@ export interface Institution {
 }
 
 export interface UpdateInstitutionStatusDto {
-  prefix: string;
+  institutionId: number;
   isBlocked: boolean;
   message: string;
 }

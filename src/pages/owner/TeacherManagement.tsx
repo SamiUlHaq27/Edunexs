@@ -18,6 +18,8 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { teacherService, institutionService } from "../../services";
 import { ASSETS } from "../../config/assets";
+import { toastService } from "../../services/toast.service";
+import ConfirmActionModal from "../../components/ConfirmActionModal";
 import "../../styles/owner.css";
 import "../../styles/forms.css";
 
@@ -40,7 +42,6 @@ export default function TeacherManagement() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
 
   // UI State
   const [searchQuery, setSearchQuery] = useState("");
@@ -53,6 +54,9 @@ export default function TeacherManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [editingTeacherId, setEditingTeacherId] = useState<number | null>(null);
+  const [pendingDeleteTeacherId, setPendingDeleteTeacherId] = useState<
+    number | null
+  >(null);
   const [profilePictureFile, setProfilePictureFile] = useState<File | null>(
     null,
   );
@@ -118,7 +122,6 @@ export default function TeacherManagement() {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        setError("");
 
         // Load Institution
         const inst = await institutionService.getMyInstitution();
@@ -134,7 +137,7 @@ export default function TeacherManagement() {
       } catch (err: any) {
         const errorMessage =
           err?.response?.data?.message || err?.message || "Failed to load data";
-        setError(errorMessage);
+        toastService.error(errorMessage);
         console.error("Error loading data:", err);
       } finally {
         setIsLoading(false);
@@ -147,7 +150,6 @@ export default function TeacherManagement() {
   // Load teachers list
   const loadTeachers = async () => {
     try {
-      setError("");
       const response = await teacherService.getTeachers();
       setTeachers(response.data || []);
     } catch (err: any) {
@@ -155,18 +157,10 @@ export default function TeacherManagement() {
         err?.response?.data?.message ||
         err?.message ||
         "Failed to load teachers";
-      setError(errorMessage);
+      toastService.error(errorMessage);
       console.error("Error loading teachers:", err);
     }
   };
-
-  // Dismiss success message after 3 seconds
-  useEffect(() => {
-    if (successMessage) {
-      const timer = setTimeout(() => setSuccessMessage(""), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [successMessage]);
 
   // Close menus when clicking outside
   useEffect(() => {
@@ -305,7 +299,7 @@ export default function TeacherManagement() {
         };
 
         await teacherService.updateTeacher(updateData);
-        setSuccessMessage("Teacher updated successfully!");
+        toastService.success("Teacher updated successfully!");
         handleCloseModal();
         await loadTeachers();
       } else {
@@ -318,7 +312,7 @@ export default function TeacherManagement() {
         };
 
         await teacherService.createTeacher(createData);
-        setSuccessMessage("Teacher created successfully!");
+        toastService.success("Teacher created successfully!");
         handleCloseModal();
         await loadTeachers();
       }
@@ -327,7 +321,7 @@ export default function TeacherManagement() {
         err?.response?.data?.message ||
         err?.message ||
         "Failed to save teacher";
-      setError(errorMessage);
+      toastService.error(errorMessage);
       console.error("Error saving teacher:", err);
     } finally {
       setIsSaving(false);
@@ -336,17 +330,16 @@ export default function TeacherManagement() {
 
   const handleToggleStatus = async (teacher: Teacher) => {
     try {
-      setError("");
       const newStatus = !teacher.isActive;
 
       if (newStatus) {
         // Reactivate
         await teacherService.activateTeacher(teacher.id);
-        setSuccessMessage("Teacher reactivated!");
+        toastService.success("Teacher reactivated!");
       } else {
         // Deactivate (Soft Delete)
         await teacherService.deactivateTeacher(teacher.id);
-        setSuccessMessage("Teacher deactivated!");
+        toastService.success("Teacher deactivated!");
       }
 
       // Refresh teacher list from backend
@@ -356,26 +349,25 @@ export default function TeacherManagement() {
         err?.response?.data?.message ||
         err?.message ||
         "Failed to update teacher status";
-      setError(errorMessage);
+      toastService.error(errorMessage);
       console.error("Error toggling teacher status:", err);
     } finally {
       setOpenMenuId(null);
     }
   };
 
-  const handleDelete = async (teacherId: number) => {
-    if (
-      !window.confirm(
-        "Are you sure you want to permanently remove this teacher? This action cannot be undone.",
-      )
-    ) {
+  const handleDeleteRequest = (teacherId: number) => {
+    setPendingDeleteTeacherId(teacherId);
+  };
+
+  const handleDelete = async () => {
+    if (!pendingDeleteTeacherId) {
       return;
     }
 
     try {
-      setError("");
-      await teacherService.deleteTeacher(teacherId);
-      setSuccessMessage("Teacher removed!");
+      await teacherService.deleteTeacher(pendingDeleteTeacherId);
+      toastService.success("Teacher removed!");
       // Refresh teacher list from backend
       await loadTeachers();
     } catch (err: any) {
@@ -383,9 +375,10 @@ export default function TeacherManagement() {
         err?.response?.data?.message ||
         err?.message ||
         "Failed to delete teacher";
-      setError(errorMessage);
+      toastService.error(errorMessage);
       console.error("Error deleting teacher:", err);
     } finally {
+      setPendingDeleteTeacherId(null);
       setOpenMenuId(null);
     }
   };
@@ -436,42 +429,6 @@ export default function TeacherManagement() {
           Add New Teacher
         </button>
       </div>
-
-      {/* --- Success Message --- */}
-      {successMessage && (
-        <div
-          style={{
-            padding: "1rem",
-            marginBottom: "1rem",
-            background: "#d1fae5",
-            border: "1px solid #6ee7b7",
-            borderRadius: "6px",
-            color: "#065f46",
-            fontSize: "0.9rem",
-          }}
-        >
-          <FontAwesomeIcon icon={faCheck} style={{ marginRight: "0.5rem" }} />
-          {successMessage}
-        </div>
-      )}
-
-      {/* --- Error Message --- */}
-      {error && (
-        <div
-          style={{
-            padding: "1rem",
-            marginBottom: "1rem",
-            background: "#fee2e2",
-            border: "1px solid #fca5a5",
-            borderRadius: "6px",
-            color: "#991b1b",
-            fontSize: "0.9rem",
-          }}
-        >
-          <FontAwesomeIcon icon={faTimes} style={{ marginRight: "0.5rem" }} />
-          {error}
-        </div>
-      )}
 
       {/* --- Main Card --- */}
       <div
@@ -691,7 +648,7 @@ export default function TeacherManagement() {
                   <button
                     className="dropdown-item danger"
                     onClick={() => {
-                      handleDelete(teacher.id);
+                      handleDeleteRequest(teacher.id);
                       setOpenMenuId(null);
                     }}
                   >
@@ -978,6 +935,20 @@ export default function TeacherManagement() {
           </div>
         </div>
       )}
+
+      <ConfirmActionModal
+        isOpen={pendingDeleteTeacherId !== null}
+        title="Remove Teacher"
+        message={
+          <>
+            Are you sure you want to permanently remove this teacher? This
+            action cannot be undone.
+          </>
+        }
+        confirmLabel="Remove Teacher"
+        onConfirm={handleDelete}
+        onCancel={() => setPendingDeleteTeacherId(null)}
+      />
     </div>
   );
 }

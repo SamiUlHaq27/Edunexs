@@ -15,6 +15,7 @@ import {
   faCheck,
 } from "@fortawesome/free-solid-svg-icons";
 import { ASSETS } from "../../config/assets";
+import { toastService } from "../../services/toast.service";
 import {
   institutionAdminService,
   InstitutionAdmin,
@@ -26,15 +27,16 @@ import {
 } from "../../types";
 import { institutionService } from "../../services/institution.service";
 import { authService } from "../../services/auth.service";
+import ConfirmActionModal from "../../components/ConfirmActionModal";
 import "../../styles/owner.css";
 
 export default function AdminManagement() {
   // Data State
   const [admins, setAdmins] = useState<InstitutionAdmin[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [institutionPrefix, setInstitutionPrefix] = useState<string>("EDU");
+  const [isLoading, setIsLoading] = useState(false);
+  // const [institutionPrefix, setInstitutionPrefix] = useState<string>("EDU");
 
   // UI State
   const [filterStatus, setFilterStatus] = useState<
@@ -53,6 +55,9 @@ export default function AdminManagement() {
     "/dummy/institution-admin-dummy-profile-picture.jpg",
   );
   const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [pendingDeleteAdminId, setPendingDeleteAdminId] = useState<
+    number | null
+  >(null);
 
   // Form State
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -71,9 +76,9 @@ export default function AdminManagement() {
     const loadData = async () => {
       try {
         const institution = await institutionService.getMyInstitution();
-        if (institution?.prefix) {
-          setInstitutionPrefix(institution.prefix);
-        }
+        // if (institution?.prefix) {
+        //   setInstitutionPrefix(institution.prefix);
+        // }
       } catch (err) {
         setError(
           "Unable to load institution context. Some fields may be unavailable.",
@@ -307,15 +312,19 @@ export default function AdminManagement() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!window.confirm("Are you sure you want to delete this admin?")) {
+  const requestDeleteAdmin = (id: number) => {
+    setPendingDeleteAdminId(id);
+  };
+
+  const handleDelete = async () => {
+    if (!pendingDeleteAdminId) {
       return;
     }
 
     setIsLoading(true);
     setError(null);
     try {
-      await institutionAdminService.deleteAdmin(id);
+      await institutionAdminService.deleteAdmin(pendingDeleteAdminId);
       setSuccessMessage("Administrator deleted successfully!");
       setTimeout(() => {
         setSuccessMessage(null);
@@ -328,6 +337,7 @@ export default function AdminManagement() {
     } finally {
       setIsLoading(false);
       setOpenMenuId(null);
+      setPendingDeleteAdminId(null);
     }
   };
 
@@ -624,7 +634,7 @@ export default function AdminManagement() {
                   <button
                     className="dropdown-item danger"
                     onClick={() => {
-                      handleDelete(admin.id);
+                      requestDeleteAdmin(admin.id);
                       setOpenMenuId(null);
                     }}
                     disabled={isLoading}
@@ -750,7 +760,7 @@ export default function AdminManagement() {
                   <label className="auth-label">Employee ID</label>
                   <input
                     className="auth-input"
-                    placeholder="Enter employee ID"
+                    placeholder="EDUA001"
                     value={formData.username}
                     onChange={(e) =>
                       setFormData({ ...formData, username: e.target.value })
@@ -768,7 +778,7 @@ export default function AdminManagement() {
                   <label className="auth-label">Full Name</label>
                   <input
                     className="auth-input"
-                    placeholder="Full Name"
+                    placeholder="Haider Ali"
                     value={formData.name}
                     onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
@@ -806,7 +816,7 @@ export default function AdminManagement() {
                       <input
                         type={showPassword ? "text" : "password"}
                         className="auth-input"
-                        placeholder="Password"
+                        placeholder="••••••••"
                         value={formData.password}
                         onChange={(e) =>
                           setFormData({ ...formData, password: e.target.value })
@@ -836,7 +846,7 @@ export default function AdminManagement() {
                       <input
                         type={showConfirm ? "text" : "password"}
                         className="auth-input"
-                        placeholder="Confirm Password"
+                        placeholder="••••••••"
                         value={formData.confirm}
                         onChange={(e) =>
                           setFormData({ ...formData, confirm: e.target.value })
@@ -930,6 +940,21 @@ export default function AdminManagement() {
           </div>
         </div>
       )}
+
+      <ConfirmActionModal
+        isOpen={pendingDeleteAdminId !== null}
+        title="Delete Administrator"
+        message={
+          <>
+            Are you sure you want to delete this admin? This action cannot be
+            undone.
+          </>
+        }
+        confirmLabel="Delete Administrator"
+        onConfirm={handleDelete}
+        onCancel={() => setPendingDeleteAdminId(null)}
+        isProcessing={isLoading}
+      />
     </div>
   );
 }

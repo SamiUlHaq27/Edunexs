@@ -4,6 +4,7 @@ import { ASSETS } from "../config/assets";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faKey } from "@fortawesome/free-solid-svg-icons";
 import AuthSidebar from "../components/AuthSidebar";
+import { toastService } from "../services/toast.service";
 
 export default function VerifyEmail(): React.JSX.Element {
   // Email state - user should pass this from signup flow (or from URL if available)
@@ -17,8 +18,6 @@ export default function VerifyEmail(): React.JSX.Element {
 
   // Loading & Error States
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [resendTimer, setResendTimer] = useState(0);
 
   // Timer countdown for resend button
@@ -70,23 +69,21 @@ export default function VerifyEmail(): React.JSX.Element {
     e.preventDefault();
 
     if (!email) {
-      setError("Email address is missing. Please start from signup.");
+      toastService.error("Email address is missing. Please start from signup.");
       return;
     }
 
     const otpCode = otp.join("");
     if (otpCode.length < 6) {
-      setError("Please enter the full 6-digit code.");
+      toastService.error("Please enter the full 6-digit code.");
       return;
     }
 
     setIsLoading(true);
-    setError(null);
-    setSuccessMessage(null);
 
     // Simulate verification (replace with actual API call)
     setTimeout(() => {
-      setSuccessMessage("Email verified successfully!");
+      toastService.success("Email verified successfully!");
       setIsLoading(false);
       // Redirect to login after delay
       setTimeout(() => {
@@ -98,20 +95,20 @@ export default function VerifyEmail(): React.JSX.Element {
   const handleResendOtp = async () => {
     if (resendTimer > 0 || !email) return;
 
-    setError(null);
-    setSuccessMessage(null);
     setIsLoading(true);
 
     try {
       // Simulate resend OTP (replace with actual API call)
       setTimeout(() => {
-        setSuccessMessage(`New verification code sent to ${email}`);
+        toastService.success(`New verification code sent to ${email}`);
         setIsLoading(false);
         setResendTimer(60); // 60-second cooldown
         setOtp(new Array(6).fill(""));
       }, 1000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to resend code");
+      toastService.error(
+        err instanceof Error ? err.message : "Failed to resend code",
+      );
       setIsLoading(false);
     }
   };
@@ -132,38 +129,6 @@ export default function VerifyEmail(): React.JSX.Element {
               ? `Please enter the code sent to ${email}`
               : "Please enter the code sent to your email address."}
           </p>
-
-          {error && (
-            <div
-              style={{
-                padding: "0.75rem 1rem",
-                marginBottom: "1rem",
-                backgroundColor: "#fee",
-                border: "1px solid #fcc",
-                borderRadius: "0.5rem",
-                color: "#c33",
-                fontSize: "0.875rem",
-              }}
-            >
-              {error}
-            </div>
-          )}
-
-          {successMessage && (
-            <div
-              style={{
-                padding: "0.75rem 1rem",
-                marginBottom: "1rem",
-                backgroundColor: "#efe",
-                border: "1px solid #cfc",
-                borderRadius: "0.5rem",
-                color: "#383",
-                fontSize: "0.875rem",
-              }}
-            >
-              {successMessage}
-            </div>
-          )}
 
           <form onSubmit={onVerify} className="auth-form">
             <label className="auth-label">Verification Code</label>
