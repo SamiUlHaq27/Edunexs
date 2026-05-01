@@ -20,7 +20,7 @@ export default function Login(): React.JSX.Element {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
-  const [institutionId, setInstitutionId] = useState("");
+  const [institutionPrefix, setInstitutionPrefix] = useState("");
   const [usernameInput, setUsernameInput] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -64,8 +64,8 @@ export default function Login(): React.JSX.Element {
       }
 
       if (loginMode === "username") {
-        if (!institutionId.trim()) {
-          toastService.error("Please enter your institution id");
+        if (!institutionPrefix.trim()) {
+          toastService.error("Please enter your institution prefix");
           setIsLoading(false);
           return;
         }
@@ -85,7 +85,10 @@ export default function Login(): React.JSX.Element {
       const response = await authService.login({
         ...(loginMode === "email"
           ? { email }
-          : { username: usernameInput, institutionId: Number(institutionId) }),
+          : {
+              username: usernameInput,
+              institutionPrefix: institutionPrefix.trim().toUpperCase(),
+            }),
         password,
       });
 
@@ -255,22 +258,23 @@ export default function Login(): React.JSX.Element {
               <>
                 <div className="auth-username-split">
                   <div className="auth-username-field">
-                    <label className="auth-label" htmlFor="institutionId">
-                      Institution ID
+                    <label className="auth-label" htmlFor="institutionPrefix">
+                      Institution Prefix
                     </label>
                     <div className="input-with-icon">
                       <span className="input-icon" aria-hidden>
                         <FontAwesomeIcon icon={faBuilding} />
                       </span>
                       <input
-                        id="institutionId"
-                        type="number"
+                        id="institutionPrefix"
+                        type="text"
                         className="auth-input"
-                        placeholder="123"
-                        value={institutionId}
-                        onChange={(e) => setInstitutionId(e.target.value)}
+                        placeholder="EDU"
+                        value={institutionPrefix}
+                        onChange={(e) =>
+                          setInstitutionPrefix(e.target.value)
+                        }
                         disabled={isLoading}
-                        min={1}
                       />
                     </div>
                   </div>

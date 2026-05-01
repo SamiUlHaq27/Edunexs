@@ -56,6 +56,7 @@ export interface SignupDto {
 export interface LoginDto {
   email?: string;
   username?: string;
+  institutionPrefix?: string;
   institutionId?: number;
   password: string;
 }
