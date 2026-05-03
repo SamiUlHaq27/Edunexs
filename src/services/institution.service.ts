@@ -14,8 +14,15 @@ class InstitutionService {
       );
       return response.data;
     } catch (error) {
-      // If 404 or no institution found, return null
-      return null;
+      // If 404 (not found), return null so callers may redirect to create page.
+      // For other errors (network / server), surface a specific error so
+      // callers can show a "Service unavailable" toast and avoid redirecting.
+      const status = (error as any)?.response?.status;
+      if (status === 404) {
+        return null;
+      }
+
+      throw new Error("Service unavailable");
     }
   }
 

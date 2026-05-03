@@ -10,7 +10,8 @@ import {
   faBookOpen,
   faChalkboard,
   faSignOutAlt,
-  faBars,
+  faChevronLeft,
+  faChevronRight,
   faBell,
   faFileInvoiceDollar,
   faUsers,
@@ -125,7 +126,10 @@ export default function OwnerLayout({
             className="toggle-btn"
             aria-label="Toggle Sidebar"
           >
-            <FontAwesomeIcon icon={faBars} size="lg" />
+            <FontAwesomeIcon
+              icon={isMinimized ? faChevronRight : faChevronLeft}
+              size="lg"
+            />
           </button>
         </div>
 
@@ -233,7 +237,9 @@ export default function OwnerLayout({
               aria-label="Toggle sidebar"
               aria-expanded={isMinimized}
             >
-              <FontAwesomeIcon icon={faBars} />
+              <FontAwesomeIcon
+                icon={isMinimized ? faChevronRight : faChevronLeft}
+              />
             </button>
             <img
               src={instProfile.logo}

@@ -8,7 +8,7 @@
 
 .dashboard-sidebar {
   scrollbar-width: none;
-  width: 260px;
+  width: 240px;
   background: linear-gradient(
     159deg,
     var(--color-sidebar-start) 0%,
@@ -17,7 +17,7 @@
   border-right: 1px solid var(--color-border-muted);
   display: flex;
   flex-direction: column;
-  padding: var(--spacing-3);
+  padding: 1rem;
   color: var(--color-sidebar-text);
   border-top-right-radius: var(--radius-lg);
   border-bottom-right-radius: var(--radius-lg);
@@ -37,7 +37,8 @@
 
 /* Minimized state */
 .sidebar-minimized .dashboard-sidebar {
-  width: 80px;
+  /* width: 80px; */
+  align-items: center;
 }
 
 /* Hide labels only on desktop minimized state (width: 80px), not on mobile off-canvas open state */
@@ -107,7 +108,7 @@
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-1);
+  /* gap: var(--spacing-1); */
 }
 
 .nav-item {
@@ -115,7 +116,7 @@
   margin-bottom: 8px;
   align-items: center;
   gap: var(--spacing-2);
-  padding: var(--spacing-1_5) var(--spacing-2);
+  /* padding: var(--spacing-1_5) var(--spacing-2); */
   border-radius: var(--radius-md);
   color: var(--color-sidebar-text);
   text-decoration: none;
@@ -125,12 +126,13 @@
     background-color 0.2s,
     color 0.2s; /* Kept only hover colors */
   white-space: nowrap;
-  min-height: 44px;
+  min-height: 34px;
   cursor: pointer;
+  padding: 0px 10px;
 }
 
 .nav-item:hover {
-  /* background-color: var(--color-sidebar-hover-bg); */
+  background-color: var(--color-sidebar-hover-bg);
   color: var(--color-sidebar-text-hover);
 }
 
@@ -531,13 +533,13 @@
   .dashboard-sidebar {
     position: relative;
     transform: translateX(0) !important;
-    width: 260px;
+    width: 240px;
     z-index: auto;
     box-shadow: none;
   }
 
   .sidebar-minimized .dashboard-sidebar {
-    width: 80px;
+    width: 50px;
   }
 
   .dashboard-main {

@@ -3,7 +3,8 @@ import { Outlet, NavLink } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faSignOutAlt,
-  faBars,
+  faChevronLeft,
+  faChevronRight,
   faUserTie,
   faChild,
 } from "@fortawesome/free-solid-svg-icons";
@@ -162,7 +163,9 @@ export default function ParentLayout(): React.JSX.Element {
             onClick={() => setIsMinimized(!isMinimized)}
             className="toggle-btn"
           >
-            <FontAwesomeIcon icon={faBars} />
+            <FontAwesomeIcon
+              icon={isMinimized ? faChevronRight : faChevronLeft}
+            />
           </button>
           <h1 className="dashboard-sidebar-title">Parent Portal</h1>
         </div>
@@ -215,7 +218,9 @@ export default function ParentLayout(): React.JSX.Element {
             aria-label="Toggle sidebar"
             aria-expanded={isMinimized}
           >
-            <FontAwesomeIcon icon={faBars} />
+            <FontAwesomeIcon
+              icon={isMinimized ? faChevronRight : faChevronLeft}
+            />
           </button>
           <div className="header-greeting">
             <h2>{instProfile.name}</h2>

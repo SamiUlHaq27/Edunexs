@@ -104,6 +104,7 @@ export default function CourseManagement(): React.JSX.Element {
           err?.message ||
           "Failed to load course management data";
         setError(errorMessage);
+        toastService.error(errorMessage);
         console.error("Error loading course management data:", err);
       } finally {
         setIsLoading(false);

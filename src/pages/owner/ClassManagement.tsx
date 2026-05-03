@@ -26,6 +26,7 @@ import {
   teacherService,
   institutionService,
 } from "../../services";
+import { toastService } from "../../services/toast.service";
 import type { Course } from "../../services/course.service";
 import type { Section, SectionOffering } from "../../services/section.service";
 import type { Student } from "../../services/student.service";
@@ -199,6 +200,7 @@ export default function ClassManagement(): React.JSX.Element {
           err?.message ||
           "Failed to load class management data";
         setError(errorMessage);
+        toastService.error(errorMessage);
       } finally {
         setIsLoading(false);
       }
