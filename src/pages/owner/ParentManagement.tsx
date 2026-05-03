@@ -282,7 +282,7 @@ export default function ParentManagement() {
           <FontAwesomeIcon icon={faUsers} /> Parent Management
         </h1>
         <button
-          className="btn-primary"
+          className="btn btn-primary"
           onClick={openCreateModal}
           disabled={isSaving}
         >
@@ -570,7 +570,7 @@ export default function ParentManagement() {
               <div className="modal-actions">
                 <button
                   type="button"
-                  className="btn-secondary"
+                  className="btn btn-secondary"
                   onClick={() => !isSaving && setIsModalOpen(false)}
                   disabled={isSaving}
                 >
@@ -578,7 +578,7 @@ export default function ParentManagement() {
                 </button>
                 <button
                   type="submit"
-                  className="btn-primary"
+                  className="btn btn-primary"
                   disabled={
                     isSaving ||
                     !form.name ||
@@ -670,7 +670,7 @@ export default function ParentManagement() {
               <div className="modal-actions">
                 <button
                   type="button"
-                  className="btn-secondary"
+                  className="btn btn-secondary"
                   onClick={() => !isSaving && setIsManageStudentsOpen(false)}
                   disabled={isSaving}
                 >
@@ -678,7 +678,7 @@ export default function ParentManagement() {
                 </button>
                 <button
                   type="submit"
-                  className="btn-primary"
+                  className="btn btn-primary"
                   disabled={isSaving}
                 >
                   {isSaving ? (

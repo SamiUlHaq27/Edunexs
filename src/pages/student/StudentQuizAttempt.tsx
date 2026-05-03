@@ -242,32 +242,15 @@ export default function StudentQuizAttempt() {
 
   return (
     <div className="card" style={{ maxWidth: "800px", margin: "0 auto" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "1.5rem",
-        }}
-      >
-        <h3 className="card-title" style={{ margin: 0 }}>
-          {quizDetail.title}
-        </h3>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            color: "#ef4444",
-            fontWeight: "bold",
-          }}
-        >
+      <div className="quiz-attempt-header">
+        <h3 className="card-title quiz-attempt-title">{quizDetail.title}</h3>
+        <div className="quiz-timer">
           <FontAwesomeIcon icon={faClock} />{" "}
           {formatCountdown(quizDetail.endsAt)}
         </div>
       </div>
 
-      <p style={{ color: "#64748b", marginTop: 0 }}>
+      <p className="quiz-attempt-info">
         Attempts left: {quizDetail.attemptsRemaining} / {quizDetail.maxAttempts}
       </p>
 
@@ -275,49 +258,21 @@ export default function StudentQuizAttempt() {
         <div className="quiz-progress-bar" style={{ width: `${progress}%` }} />
       </div>
 
-      <div
-        className="question-block"
-        style={{ background: "#fff", border: "none", padding: 0 }}
-      >
-        <h4 style={{ fontSize: "1.25rem", marginBottom: "1.5rem" }}>
+      <div className="question-block quiz-attempt-question">
+        <h4>
           Q{currentQ + 1}: {currentQuestion.question}
         </h4>
 
-        <div
-          style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}
-        >
+        <div className="quiz-options-grid">
           {currentQuestion.options.map((opt, idx) => (
             <div
               key={idx}
               className={`quiz-option ${selectedValue === idx ? "selected" : ""}`}
               onClick={() => handleSelect(idx)}
             >
-              <div
-                style={{
-                  width: "24px",
-                  height: "24px",
-                  borderRadius: "50%",
-                  border: "2px solid #ccc",
-                  marginRight: "1rem",
-                  display: "grid",
-                  placeItems: "center",
-                  background:
-                    selectedValue === idx
-                      ? "var(--color-primary-500)"
-                      : "transparent",
-                  borderColor:
-                    selectedValue === idx ? "var(--color-primary-500)" : "#ccc",
-                }}
-              >
+              <div className="quiz-option-radio">
                 {selectedValue === idx && (
-                  <div
-                    style={{
-                      width: "10px",
-                      height: "10px",
-                      background: "#fff",
-                      borderRadius: "50%",
-                    }}
-                  />
+                  <div className="quiz-option-radio-dot" />
                 )}
               </div>
               {opt}
