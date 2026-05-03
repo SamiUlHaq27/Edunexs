@@ -11,7 +11,6 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import "../../styles/owner-dashboard.css";
 import { institutionService } from "../../services/institution.service";
-import { institutionAdminService } from "../../services/institution-admin.service";
 import { courseService } from "../../services/course.service";
 import { Institution } from "../../types";
 
@@ -146,20 +145,16 @@ export default function OwnerDashboard() {
 
     const fetchDashboardData = async () => {
       try {
-        const [institutionData, adminsData, coursesData] = await Promise.all([
+        const [institutionData, coursesData] = await Promise.all([
           institutionService.getMyInstitution(),
-          institutionAdminService.getAdmins({
-            page: 1,
-            size: 200,
-            filters: {},
-          }),
           courseService.getCourses({ page: 1, size: 1, filters: {} }),
         ]);
 
         if (!mounted) return;
         setInstitution(institutionData);
-        setAdminCount(adminsData.total ?? adminsData.data?.length ?? 0);
         setCourseCount(coursesData.total ?? coursesData.data?.length ?? 0);
+        // Do not fetch admins list here since institution admins cannot access it
+        setAdminCount(0);
       } catch (_error) {
         if (!mounted) return;
         setInstitution(null);

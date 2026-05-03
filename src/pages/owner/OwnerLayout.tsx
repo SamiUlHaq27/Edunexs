@@ -253,10 +253,10 @@ export default function OwnerLayout({
 
           {/* Right Side */}
           <div className="header-profile">
-            <div className="header-notification">
+            {/* <div className="header-notification">
               <FontAwesomeIcon icon={faBell} size="lg" />
               <span className="notification-badge" />
-            </div>
+            </div> */}
 
             <div className="header-user">
               <div className="user-info">
