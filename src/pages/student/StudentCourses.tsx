@@ -438,42 +438,20 @@ export default function StudentCourses() {
   if (!selectedOfferingId) {
     return (
       <div className="student-course-page">
-        <div
-          className="student-header-card"
-          style={{
-            background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
-            marginBottom: "0.5rem",
-            position: "relative",
-            overflow: "hidden",
-            minHeight: "150px",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-          }}
-        >
-          <div className="hero-content">
-            <span className="badge badge-outline">Academic Workspace</span>
-            <h1
-              className="hero-title"
-              style={{ fontSize: "2rem", marginTop: "0.75rem" }}
-            >
-              My Courses
-            </h1>
-            <p className="hero-subtitle">
+        <div className="student-header-card">
+          <div className="student-header-card-content">
+            <span className="student-header-card-badge">
+              Academic Workspace
+            </span>
+            <h1 className="student-header-card-title">My Courses</h1>
+            <p className="student-header-card-subtitle">
               Select a course to open assignments, quizzes, attendance, and
               grades.
             </p>
           </div>
           <FontAwesomeIcon
             icon={faBookReader}
-            style={{
-              position: "absolute",
-              right: "18px",
-              bottom: "-16px",
-              fontSize: "7rem",
-              opacity: 0.15,
-              transform: "rotate(-12deg)",
-            }}
+            className="student-header-card-graphic"
           />
         </div>
 
@@ -504,99 +482,75 @@ export default function StudentCourses() {
             {offerings.map((offering) => (
               <div
                 key={offering.id}
-                className="card settings-container"
+                className="card settings-container course-card-enhanced student-course-card"
                 style={{
-                  borderRadius: "14px",
-                  padding: "1.25rem",
-                  border: "1px solid #e2e8f0",
                   display: "flex",
                   flexDirection: "column",
-                  gap: "0.95rem",
+                  gap: "1rem",
+                  padding: 0,
+                  overflow: "hidden",
                 }}
               >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "flex-start",
-                    gap: "0.8rem",
-                  }}
-                >
-                  <div
-                    className="task-icon"
-                    style={{
-                      background: "#e0f2fe",
-                      color: "#0369a1",
-                      margin: 0,
-                    }}
-                  >
-                    <FontAwesomeIcon icon={faChalkboardTeacher} />
+                <div className="course-card-accent" />
+
+                <div className="course-card-body">
+                  <div className="course-card-top-row">
+                    <div
+                      className="course-card-icon"
+                      style={{
+                        background: offering.isActive ? "#dbeafe" : "#f1f5f9",
+                        color: offering.isActive ? "#1d4ed8" : "#475569",
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faChalkboardTeacher} />
+                    </div>
+
+                    <span
+                      className={`course-card-status ${offering.isActive ? "is-active" : "is-inactive"}`}
+                    >
+                      {offering.isActive ? "Active" : "Inactive"}
+                    </span>
                   </div>
-                  <span
-                    className="status-badge"
-                    style={{
-                      background: offering.isActive ? "#dcfce7" : "#fef2f2",
-                      color: offering.isActive ? "#166534" : "#b91c1c",
-                    }}
-                  >
-                    {offering.isActive ? "Active" : "Inactive"}
-                  </span>
-                </div>
 
-                <div>
-                  <h4
-                    style={{
-                      margin: "0 0 0.45rem 0",
-                      fontSize: "1.15rem",
-                      color: "#111827",
-                    }}
-                  >
-                    {offering.courseTitle || `Course ${offering.courseId}`}
-                  </h4>
-                  <p
-                    style={{ margin: 0, color: "#64748b", fontSize: "0.9rem" }}
-                  >
-                    Instructor: {offering.teacherName || "Teacher"}
-                  </p>
-                </div>
+                  <div>
+                    <h4 className="course-card-title">
+                      {offering.courseTitle || `Course ${offering.courseId}`}
+                    </h4>
+                    <p className="course-card-subtitle">
+                      Instructor: {offering.teacherName || "Teacher"}
+                    </p>
+                  </div>
 
-                <div
-                  style={{
-                    display: "grid",
-                    gap: "0.45rem",
-                    color: "#334155",
-                    fontSize: "0.9rem",
-                  }}
-                >
-                  <span>Section: {offering.sectionName || "N/A"}</span>
-                  <span>Course Code: {offering.courseCode || "N/A"}</span>
-                  <span>Offering ID: {offering.id}</span>
-                </div>
+                  <div className="course-card-meta-grid">
+                    <span className="course-card-meta-item">
+                      <strong>Section</strong>
+                      <span>{offering.sectionName || "N/A"}</span>
+                    </span>
+                    <span className="course-card-meta-item">
+                      <strong>Code</strong>
+                      <span>{offering.courseCode || "N/A"}</span>
+                    </span>
+                    <span className="course-card-meta-item">
+                      <strong>Students</strong>
+                      <span>{offering.studentProfileIds.length}</span>
+                    </span>
+                  </div>
 
-                <button
-                  type="button"
-                  className="btn"
-                  style={{
-                    background: "#f8fafc",
-                    color: "#1d4ed8",
-                    border: "1px solid #dbeafe",
-                    width: "100%",
-                    justifyContent: "center",
-                    marginTop: "auto",
-                    fontWeight: 700,
-                  }}
-                  onClick={() =>
-                    navigate("/student/courses", {
-                      state: { offeringId: offering.id },
-                    })
-                  }
-                >
-                  Open Course
-                  <FontAwesomeIcon
-                    icon={faArrowRight}
-                    style={{ marginLeft: "0.5rem" }}
-                  />
-                </button>
+                  <div className="course-card-footer-row">
+                    <button
+                      type="button"
+                      className="btn course-card-cta"
+                      onClick={() =>
+                        navigate("/student/courses", {
+                          state: { offeringId: offering.id },
+                        })
+                      }
+                    >
+                      Open Course
+                      <FontAwesomeIcon icon={faArrowRight} />
+                    </button>
+                  </div>
+                </div>
               </div>
             ))}
           </div>

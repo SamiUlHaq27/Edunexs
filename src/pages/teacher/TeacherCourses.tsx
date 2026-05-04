@@ -10,9 +10,7 @@ import {
   faLaptopCode,
   faArrowLeft,
   faArrowRight,
-  faUsers,
   faBookOpen,
-  faLayerGroup,
 } from "@fortawesome/free-solid-svg-icons";
 import { teacherDashboardService } from "../../services";
 import type { TeacherOfferingSummary } from "../../services/teacher-dashboard.service";
@@ -57,37 +55,14 @@ export default function TeacherCourses() {
 
   if (!courseId) {
     return (
-      <div className="student-courses">
-        <div
-          className="student-header-card"
-          style={{
-            background: "linear-gradient(135deg, #1e293b 0%, #334155 100%)",
-            marginBottom: "2rem",
-            position: "relative",
-            overflow: "hidden",
-            minHeight: "150px",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-          }}
-        >
-          <div style={{ position: "relative", zIndex: 2 }}>
-            <span
-              style={{
-                background: "rgba(255,255,255,0.2)",
-                padding: "4px 12px",
-                borderRadius: "20px",
-                fontSize: "0.8rem",
-              }}
-            >
+      <div className="teacher-courses">
+        <div className="teacher-header-card">
+          <div className="teacher-header-card-content">
+            <span className="teacher-header-card-badge">
               Teaching Portfolio
             </span>
-            <h2
-              style={{ margin: "10px 0", fontSize: "2rem", fontWeight: "800" }}
-            >
-              My Courses
-            </h2>
-            <p style={{ opacity: 0.9, fontSize: "1rem" }}>
+            <h2 className="teacher-header-card-title">My Courses</h2>
+            <p className="teacher-header-card-subtitle">
               Select a course to manage assignments, quizzes, attendance, and
               grades.
             </p>
@@ -95,14 +70,7 @@ export default function TeacherCourses() {
 
           <FontAwesomeIcon
             icon={faBookOpen}
-            style={{
-              position: "absolute",
-              right: "20px",
-              bottom: "-20px",
-              fontSize: "8rem",
-              opacity: 0.15,
-              transform: "rotate(-15deg)",
-            }}
+            className="teacher-header-card-graphic"
           />
         </div>
 
@@ -125,110 +93,72 @@ export default function TeacherCourses() {
         )}
 
         {!isLoadingOfferings && offerings.length > 0 && (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(270px, 1fr))",
-              gap: "1.25rem",
-            }}
-          >
+          <div className="teacher-course-grid">
             {offerings.map((offering) => (
               <div
                 key={offering.id}
-                className="card settings-container"
-                style={{
-                  borderRadius: "14px",
-                  padding: "1.25rem",
-                  border: "1px solid #e2e8f0",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "0.9rem",
-                }}
+                className="card settings-container teacher-course-card"
+                style={{ display: "flex", flexDirection: "column", gap: 0 }}
               >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    justifyContent: "space-between",
-                    gap: "0.75rem",
-                  }}
-                >
-                  <div>
-                    <h3
+                <div className="teacher-course-card-accent" />
+
+                <div className="teacher-course-card-body">
+                  <div className="teacher-course-card-top-row">
+                    <div
+                      className="teacher-course-card-icon"
                       style={{
-                        margin: 0,
-                        fontSize: "1.05rem",
-                        color: "#0f172a",
+                        background: offering.isActive ? "#dbeafe" : "#f1f5f9",
+                        color: offering.isActive ? "#1d4ed8" : "#475569",
                       }}
                     >
+                      <FontAwesomeIcon icon={faLaptopCode} />
+                    </div>
+
+                    <span
+                      className={`teacher-course-card-status ${offering.isActive ? "is-active" : "is-inactive"}`}
+                    >
+                      {offering.isActive ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+
+                  <div>
+                    <h3 className="teacher-course-card-title">
                       {offering.courseTitle || `Course ${offering.courseId}`}
                     </h3>
-                    <p
-                      style={{
-                        margin: "0.3rem 0 0",
-                        color: "#64748b",
-                        fontSize: "0.9rem",
-                      }}
-                    >
+                    <p className="teacher-course-card-subtitle">
                       {offering.teacherName || "Teacher"}
                     </p>
                   </div>
-                </div>
 
-                <div style={{ display: "grid", gap: "0.55rem" }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.55rem",
-                      color: "#334155",
-                    }}
-                  >
-                    <FontAwesomeIcon icon={faLayerGroup} />
-                    <span>Class: {offering.sectionName || "N/A"}</span>
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.55rem",
-                      color: "#334155",
-                    }}
-                  >
-                    <FontAwesomeIcon icon={faLaptopCode} />
-                    <span>Course Code: {offering.courseCode || "N/A"}</span>
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.55rem",
-                      color: "#334155",
-                    }}
-                  >
-                    <FontAwesomeIcon icon={faUsers} />
-                    <span>
-                      Students: {offering.studentProfileIds?.length || 0}
+                  <div className="teacher-course-card-meta-grid">
+                    <span className="teacher-course-card-meta-item">
+                      <strong>Class</strong>
+                      <span>{offering.sectionName || "N/A"}</span>
+                    </span>
+                    <span className="teacher-course-card-meta-item">
+                      <strong>Code</strong>
+                      <span>{offering.courseCode || "N/A"}</span>
+                    </span>
+                    <span className="teacher-course-card-meta-item">
+                      <strong>Students</strong>
+                      <span>{offering.studentProfileIds?.length || 0}</span>
                     </span>
                   </div>
-                </div>
 
-                <Link
-                  to={`/teacher/courses/${offering.id}`}
-                  style={{
-                    marginTop: "0.25rem",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "0.45rem",
-                    fontSize: "0.9rem",
-                    fontWeight: 700,
-                    color: "#2563eb",
-                    textDecoration: "none",
-                  }}
-                >
-                  Open Course Workspace
-                  <FontAwesomeIcon icon={faArrowRight} />
-                </Link>
+                  <div className="teacher-course-card-footer-row">
+                    <span className="teacher-course-card-footer-note">
+                      Offering ID: {offering.id}
+                    </span>
+
+                    <Link
+                      to={`/teacher/courses/${offering.id}`}
+                      className="teacher-course-card-cta"
+                    >
+                      Open Course Workspace
+                      <FontAwesomeIcon icon={faArrowRight} />
+                    </Link>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -265,57 +195,23 @@ export default function TeacherCourses() {
     `Course ${selectedOffering?.courseId || ""}`;
 
   return (
-    <div className="student-courses">
-      <div
-        className="student-header-card"
-        style={{
-          background: "linear-gradient(135deg, #1e293b 0%, #334155 100%)",
-          marginBottom: "2rem",
-          position: "relative",
-          overflow: "hidden",
-          minHeight: "170px",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-        }}
-      >
-        <div style={{ position: "relative", zIndex: 2 }}>
-          <Link
-            to="/teacher/courses"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.45rem",
-              color: "#cbd5e1",
-              textDecoration: "none",
-              fontSize: "0.9rem",
-              marginBottom: "0.65rem",
-              fontWeight: 600,
-            }}
-          >
+    <div className="teacher-courses">
+      <div className="teacher-header-card teacher-header-card--detail">
+        <div className="teacher-header-card-content">
+          <Link to="/teacher/courses" className="teacher-header-card-backlink">
             <FontAwesomeIcon icon={faArrowLeft} />
             Back to Courses
           </Link>
-          <h2
-            style={{ margin: "6px 0", fontSize: "2.1rem", fontWeight: "800" }}
-          >
+          <h2 className="teacher-header-card-title teacher-header-card-title--detail">
             {courseLabel}
           </h2>
-          <p
-            style={{
-              opacity: 0.9,
-              fontSize: "1rem",
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-            }}
-          >
+          <p className="teacher-header-card-subtitle teacher-header-card-subtitle--detail">
             <FontAwesomeIcon icon={faUserTie} />
-            Instructor: {selectedOffering?.teacherName || "Lead Instructor"}
+            <span>
+              Instructor: {selectedOffering?.teacherName || "Lead Instructor"}
+            </span>
           </p>
-          <p
-            style={{ opacity: 0.85, fontSize: "0.92rem", marginTop: "0.45rem" }}
-          >
+          <p className="teacher-header-card-meta">
             Class: {selectedOffering?.sectionName || "N/A"} | Course Code:{" "}
             {selectedOffering?.courseCode || "N/A"}
           </p>
@@ -323,14 +219,7 @@ export default function TeacherCourses() {
 
         <FontAwesomeIcon
           icon={faLaptopCode}
-          style={{
-            position: "absolute",
-            right: "20px",
-            bottom: "-20px",
-            fontSize: "10rem",
-            opacity: 0.15,
-            transform: "rotate(-15deg)",
-          }}
+          className="teacher-header-card-graphic teacher-header-card-graphic--detail"
         />
       </div>
 
