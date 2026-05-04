@@ -35,6 +35,15 @@ import StripePaymentModal from "../../components/StripePaymentModal";
 
 type ActiveTab = "assignments" | "quizzes" | "attendance" | "grades";
 
+function isActiveTab(value: unknown): value is ActiveTab {
+  return (
+    value === "assignments" ||
+    value === "quizzes" ||
+    value === "attendance" ||
+    value === "grades"
+  );
+}
+
 const FEE_HISTORY = [
   {
     id: 1,
@@ -89,7 +98,15 @@ function getErrorMessage(error: unknown): string {
 }
 
 export default function StudentCourses() {
-  const [activeTab, setActiveTab] = useState<ActiveTab>("assignments");
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const maybeActiveTab = location.state?.activeTab;
+  const selectedActiveTab = isActiveTab(maybeActiveTab) ? maybeActiveTab : null;
+
+  const [activeTab, setActiveTab] = useState<ActiveTab>(
+    selectedActiveTab || "assignments",
+  );
   const [offerings, setOfferings] = useState<StudentOfferingSummary[]>([]);
   const [isLoadingOfferings, setIsLoadingOfferings] = useState(true);
   const [offeringsError, setOfferingsError] = useState<string | null>(null);
@@ -110,9 +127,6 @@ export default function StudentCourses() {
   const [tabLoading, setTabLoading] = useState(false);
   const [tabError, setTabError] = useState<string | null>(null);
 
-  const location = useLocation();
-  const navigate = useNavigate();
-
   const isFeePage = location.pathname === "/student/fees";
   const maybeOfferingId = location.state?.offeringId;
   const selectedOfferingId =
@@ -124,6 +138,14 @@ export default function StudentCourses() {
     () => offerings.find((item) => item.id === selectedOfferingId) || null,
     [offerings, selectedOfferingId],
   );
+
+  useEffect(() => {
+    if (!selectedActiveTab) {
+      return;
+    }
+
+    setActiveTab(selectedActiveTab);
+  }, [selectedActiveTab]);
 
   const loadFees = useCallback(async () => {
     try {
@@ -750,6 +772,7 @@ export default function StudentCourses() {
                             offeringId: selectedOffering.id,
                             quizId: quiz.quizId,
                             quizTitle: quiz.title,
+                            activeTab: "quizzes",
                           },
                         })
                       }

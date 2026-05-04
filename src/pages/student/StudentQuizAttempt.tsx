@@ -61,6 +61,13 @@ export default function StudentQuizAttempt() {
     typeof location.state?.offeringId === "number"
       ? location.state.offeringId
       : null;
+  const activeTab =
+    location.state?.activeTab === "assignments" ||
+    location.state?.activeTab === "quizzes" ||
+    location.state?.activeTab === "attendance" ||
+    location.state?.activeTab === "grades"
+      ? location.state.activeTab
+      : "quizzes";
 
   const [quizDetail, setQuizDetail] = useState<StudentQuizDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -71,6 +78,12 @@ export default function StudentQuizAttempt() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [nowTick, setNowTick] = useState(Date.now());
   const hasAutoSubmittedRef = useRef(false);
+  const hadTimeRemainingOnLoadRef = useRef<boolean | null>(null);
+
+  useEffect(() => {
+    hasAutoSubmittedRef.current = false;
+    hadTimeRemainingOnLoadRef.current = null;
+  }, [quizId]);
 
   useEffect(() => {
     if (!quizId) {
@@ -84,6 +97,7 @@ export default function StudentQuizAttempt() {
         setIsLoading(true);
         setError(null);
         const response = await studentQuizService.getQuizDetail(quizId);
+        hadTimeRemainingOnLoadRef.current = getRemainingMs(response.endsAt) > 0;
         setQuizDetail(response);
       } catch (loadError) {
         setError(getErrorMessage(loadError));
@@ -139,7 +153,7 @@ export default function StudentQuizAttempt() {
       });
 
       navigate("/student/courses", {
-        state: offeringId ? { offeringId } : undefined,
+        state: offeringId ? { offeringId, activeTab } : { activeTab },
       });
     } catch (submitError) {
       setError(getErrorMessage(submitError));
@@ -176,6 +190,11 @@ export default function StudentQuizAttempt() {
       return;
     }
 
+    // Only auto-submit when timer expires during an active attempt.
+    if (hadTimeRemainingOnLoadRef.current !== true) {
+      return;
+    }
+
     const remainingMs = getRemainingMs(quizDetail.endsAt);
     if (remainingMs > 0 || hasAutoSubmittedRef.current) {
       return;
@@ -197,7 +216,7 @@ export default function StudentQuizAttempt() {
           className="btn"
           onClick={() =>
             navigate("/student/courses", {
-              state: offeringId ? { offeringId } : undefined,
+              state: offeringId ? { offeringId, activeTab } : { activeTab },
             })
           }
         >
@@ -230,7 +249,7 @@ export default function StudentQuizAttempt() {
           className="btn"
           onClick={() =>
             navigate("/student/courses", {
-              state: offeringId ? { offeringId } : undefined,
+              state: offeringId ? { offeringId, activeTab } : { activeTab },
             })
           }
         >
