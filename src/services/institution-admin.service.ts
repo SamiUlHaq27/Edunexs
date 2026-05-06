@@ -13,6 +13,10 @@ interface PaginatedAdminsResponse {
   limit: number;
 }
 
+interface AdminCountResponse {
+  total: number;
+}
+
 export interface InstitutionAdmin {
   id: number;
   authId: number;
@@ -69,6 +73,17 @@ class InstitutionAdminService {
       const response = await apiClient.post<PaginatedAdminsResponse>(
         `${this.BASE_PATH}/all`,
         filters || { page: 1, size: 10, filters: {} },
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getAdminCount(): Promise<AdminCountResponse> {
+    try {
+      const response = await apiClient.get<AdminCountResponse>(
+        `${this.BASE_PATH}/count`,
       );
       return response.data;
     } catch (error) {
