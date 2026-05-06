@@ -235,13 +235,15 @@ export default function StudentQuizAttempt() {
   }
 
   if (!quizDetail.canAttempt) {
+    const blockedReason =
+      quizDetail.window === "active"
+        ? "You have reached the attempt limit for this quiz."
+        : `This quiz is currently ${quizDetail.window}.`;
+
     return (
       <div className="card settings-container">
         <h3 style={{ marginTop: 0 }}>{quizDetail.title}</h3>
-        <p style={{ color: "#6b7280" }}>
-          This quiz is currently {quizDetail.window} or attempt limit is
-          reached.
-        </p>
+        <p style={{ color: "#6b7280" }}>{blockedReason}</p>
         <p style={{ color: "#6b7280" }}>
           Attempts used: {quizDetail.attemptsUsed}/{quizDetail.maxAttempts}
         </p>

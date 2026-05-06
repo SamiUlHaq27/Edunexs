@@ -36,6 +36,8 @@ const buildEmptyQuestion = (id: number): QuestionForm => ({
   correctOptionIndex: 0,
 });
 
+const toUtcISOString = (value: string) => new Date(value).toISOString();
+
 export default function TeacherQuizzes({ offeringId }: TeacherQuizzesProps) {
   const [view, setView] = useState<"list" | "create" | "submissions">("list");
   const [isLoading, setIsLoading] = useState(false);
@@ -157,8 +159,8 @@ export default function TeacherQuizzes({ offeringId }: TeacherQuizzesProps) {
     const payload: CreateTeacherQuizDto = {
       offeringId,
       title: title.trim(),
-      startsAt,
-      endsAt,
+      startsAt: toUtcISOString(startsAt),
+      endsAt: toUtcISOString(endsAt),
       maxAttempts,
       questions: sanitizedQuestions,
     };
