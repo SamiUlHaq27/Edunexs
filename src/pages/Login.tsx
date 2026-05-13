@@ -103,10 +103,11 @@ export default function Login(): React.JSX.Element {
             setIsLoading(false);
             return;
           }
-        } catch (institutionError) {
-          // Institution check failed, silently redirect to create institution
-          // This handles cases where the API returns any error (404, 500, etc.)
-          navigate("/create-institution");
+        } catch (institutionError: any) {
+          // If the institution check failed due to network/server error,
+          // show a service unavailable toast and stay on the same page.
+          const msg = institutionError?.message || "Service unavailable";
+          toastService.error(msg);
           setIsLoading(false);
           return;
         }
@@ -117,8 +118,15 @@ export default function Login(): React.JSX.Element {
       navigate(dashboard);
     } catch (err) {
       // API error is handled by interceptor, but catch local errors
-      if (!(err instanceof Error && err.message.includes("An unexpected error occurred"))) {
-        toastService.error(err instanceof Error ? err.message : "Failed to login");
+      if (
+        !(
+          err instanceof Error &&
+          err.message.includes("An unexpected error occurred")
+        )
+      ) {
+        toastService.error(
+          err instanceof Error ? err.message : "Failed to login",
+        );
       }
     } finally {
       setIsLoading(false);
@@ -271,9 +279,7 @@ export default function Login(): React.JSX.Element {
                         className="auth-input"
                         placeholder="EDU"
                         value={institutionPrefix}
-                        onChange={(e) =>
-                          setInstitutionPrefix(e.target.value)
-                        }
+                        onChange={(e) => setInstitutionPrefix(e.target.value)}
                         disabled={isLoading}
                       />
                     </div>

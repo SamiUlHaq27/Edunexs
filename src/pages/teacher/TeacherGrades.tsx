@@ -5,8 +5,11 @@ import {
   faSearch,
   faTriangleExclamation,
   faXmark,
+  faTrash,
 } from "@fortawesome/free-solid-svg-icons";
+import ConfirmActionModal from "../../components/ConfirmActionModal";
 import { teacherGradebookService } from "../../services";
+import { toastService } from "../../services/toast.service";
 
 interface TeacherGradesProps {
   offeringId?: number;
@@ -63,6 +66,8 @@ export default function TeacherGradebook({ offeringId }: TeacherGradesProps) {
       score: string;
     }>
   >([]);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [gradeToDelete, setGradeToDelete] = useState<GradeEntry | null>(null);
 
   const canUseApi = useMemo(() => Number.isFinite(offeringId), [offeringId]);
   const getGradeKey = (grade: GradeEntry) =>
@@ -227,7 +232,9 @@ export default function TeacherGradebook({ offeringId }: TeacherGradesProps) {
   const startInlineEdit = (grade: GradeEntry) => {
     setEditingGradeKey(getGradeKey(grade));
     setScoreDraft(
-      grade.score === null || Number.isNaN(grade.score) ? "" : String(grade.score),
+      grade.score === null || Number.isNaN(grade.score)
+        ? ""
+        : String(grade.score),
     );
     setFeedbackDraft(grade.feedback ?? "");
   };
@@ -289,6 +296,34 @@ export default function TeacherGradebook({ offeringId }: TeacherGradesProps) {
     } catch (error) {
       console.error("Failed to save grade", error);
       setErrorMessage("Could not save grade changes.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const requestDeleteGrade = (grade: GradeEntry) => {
+    setGradeToDelete(grade);
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteGrade = async () => {
+    if (!offeringId || !selectedRow || !gradeToDelete?.gradeId) return;
+
+    try {
+      setIsSaving(true);
+      setErrorMessage(null);
+      await teacherGradebookService.deleteGrade({
+        gradeId: gradeToDelete.gradeId,
+      });
+      toastService.success("Custom grade deleted successfully.");
+      setIsDeleteConfirmOpen(false);
+      setGradeToDelete(null);
+      await loadStudentGrades(selectedRow);
+      const refreshed = await teacherGradebookService.getGradebook(offeringId);
+      setRows(refreshed.data || []);
+    } catch (error) {
+      console.error("Failed to delete custom grade", error);
+      toastService.error("Could not delete custom grade.");
     } finally {
       setIsSaving(false);
     }
@@ -859,29 +894,69 @@ export default function TeacherGradebook({ offeringId }: TeacherGradesProps) {
                                 : ""}
                             </div>
                             {!isEditing && grade.feedback && (
-                              <div style={{ marginTop: "0.5rem", color: "#334155" }}>
+                              <div
+                                style={{
+                                  marginTop: "0.5rem",
+                                  color: "#334155",
+                                }}
+                              >
                                 {grade.feedback}
                               </div>
                             )}
                           </div>
 
-                          <button
-                            onClick={() =>
-                              isEditing ? cancelInlineEdit() : startInlineEdit(grade)
-                            }
-                            disabled={!canEdit}
+                          <div
                             style={{
-                              border: "1px solid #cbd5e1",
-                              background: isEditing ? "#dbeafe" : "white",
-                              color: canEdit ? "#1d4ed8" : "#94a3b8",
-                              borderRadius: "10px",
-                              padding: "0.55rem 0.8rem",
-                              cursor: canEdit ? "pointer" : "not-allowed",
-                              fontWeight: 700,
+                              display: "flex",
+                              gap: "0.5rem",
+                              flexWrap: "wrap",
                             }}
                           >
-                            {isEditing ? "Cancel" : canEdit ? "Edit" : "Not Graded"}
-                          </button>
+                            <button
+                              onClick={() =>
+                                isEditing
+                                  ? cancelInlineEdit()
+                                  : startInlineEdit(grade)
+                              }
+                              disabled={!canEdit}
+                              style={{
+                                border: "1px solid #cbd5e1",
+                                background: isEditing ? "#dbeafe" : "white",
+                                color: canEdit ? "#1d4ed8" : "#94a3b8",
+                                borderRadius: "10px",
+                                padding: "0.55rem 0.8rem",
+                                cursor: canEdit ? "pointer" : "not-allowed",
+                                fontWeight: 700,
+                              }}
+                            >
+                              {isEditing
+                                ? "Cancel"
+                                : canEdit
+                                  ? "Edit"
+                                  : "Not Graded"}
+                            </button>
+
+                            {grade.gradeType === "custom" &&
+                              grade.gradeId !== null && (
+                                <button
+                                  onClick={() => requestDeleteGrade(grade)}
+                                  disabled={isSaving}
+                                  style={{
+                                    border: "1px solid #fecaca",
+                                    background: "white",
+                                    color: "#b91c1c",
+                                    borderRadius: "10px",
+                                    padding: "0.55rem 0.8rem",
+                                    cursor: isSaving
+                                      ? "not-allowed"
+                                      : "pointer",
+                                    fontWeight: 700,
+                                  }}
+                                >
+                                  <FontAwesomeIcon icon={faTrash} /> Delete
+                                </button>
+                              )}
+                          </div>
                         </div>
 
                         {isEditing && (
@@ -893,7 +968,12 @@ export default function TeacherGradebook({ offeringId }: TeacherGradesProps) {
                             }}
                           >
                             <label style={{ display: "grid", gap: "0.3rem" }}>
-                              <span style={{ fontSize: "0.88rem", color: "#475569" }}>
+                              <span
+                                style={{
+                                  fontSize: "0.88rem",
+                                  color: "#475569",
+                                }}
+                              >
                                 Score
                               </span>
                               <input
@@ -902,7 +982,9 @@ export default function TeacherGradebook({ offeringId }: TeacherGradesProps) {
                                 max={grade.maxGrade ?? undefined}
                                 step="0.01"
                                 value={scoreDraft}
-                                onChange={(event) => setScoreDraft(event.target.value)}
+                                onChange={(event) =>
+                                  setScoreDraft(event.target.value)
+                                }
                                 style={{
                                   width: "100%",
                                   padding: "0.65rem 0.8rem",
@@ -912,7 +994,12 @@ export default function TeacherGradebook({ offeringId }: TeacherGradesProps) {
                               />
                             </label>
                             <label style={{ display: "grid", gap: "0.3rem" }}>
-                              <span style={{ fontSize: "0.88rem", color: "#475569" }}>
+                              <span
+                                style={{
+                                  fontSize: "0.88rem",
+                                  color: "#475569",
+                                }}
+                              >
                                 Feedback
                               </span>
                               <textarea
@@ -977,6 +1064,26 @@ export default function TeacherGradebook({ offeringId }: TeacherGradesProps) {
           </div>
         </div>
       )}
+
+      <ConfirmActionModal
+        isOpen={isDeleteConfirmOpen}
+        title="Delete custom grade"
+        message={
+          <span>
+            Delete this custom grade for the student? This will remove the
+            student&apos;s custom grade entry but keep the custom grade
+            definition.
+          </span>
+        }
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        isProcessing={isSaving}
+        onConfirm={handleDeleteGrade}
+        onCancel={() => {
+          setIsDeleteConfirmOpen(false);
+          setGradeToDelete(null);
+        }}
+      />
     </div>
   );
 }

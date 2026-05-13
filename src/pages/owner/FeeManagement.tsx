@@ -145,6 +145,10 @@ export default function FeeManagement(): React.JSX.Element {
           return;
         }
         await loadData(true);
+      } catch (err: any) {
+        const msg = err?.message || "Service unavailable";
+        toastService.error(msg);
+        console.error("Error checking institution:", err);
       } finally {
         setIsLoading(false);
       }
@@ -555,7 +559,6 @@ export default function FeeManagement(): React.JSX.Element {
           Generate Invoice
         </button>
       </div>
-      onClick={() => requestDeleteFee(fee.id)}
       {error && (
         <div
           style={{
@@ -824,7 +827,7 @@ export default function FeeManagement(): React.JSX.Element {
                             />
                             <button
                               className="dropdown-item danger"
-                              onClick={() => handleDeleteFee(fee.id)}
+                              onClick={() => requestDeleteFee(fee.id)}
                             >
                               <FontAwesomeIcon icon={faTrash} fixedWidth />{" "}
                               Delete Invoice

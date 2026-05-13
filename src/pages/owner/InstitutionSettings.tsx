@@ -17,7 +17,6 @@ import { Institution } from "../../types";
 export default function InstitutionSettings(): React.JSX.Element {
   const [institution, setInstitution] = useState<Institution | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -197,7 +196,7 @@ export default function InstitutionSettings(): React.JSX.Element {
             >
               <FontAwesomeIcon icon={faMapMarkerAlt} /> {institution.address}
             </span>
-            <span
+            {/* <span
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -206,7 +205,7 @@ export default function InstitutionSettings(): React.JSX.Element {
             >
               <FontAwesomeIcon icon={faGlobe} /> {institution.city},{" "}
               {institution.country}
-            </span>
+            </span> */}
           </div>
         </div>
 
@@ -258,7 +257,7 @@ export default function InstitutionSettings(): React.JSX.Element {
       setFormData(updatedInstitution);
       setLogoFile(null);
       setIsEditOpen(false);
-      setSuccessMessage("Institution details updated successfully.");
+      toastService.success("Institution details updated successfully.");
     } catch (err) {
       setError(
         err instanceof Error
@@ -291,24 +290,9 @@ export default function InstitutionSettings(): React.JSX.Element {
       >
         Institution Details
       </h2>
-      {successMessage && (
-        <div
-          style={{
-            padding: "0.75rem 1rem",
-            marginBottom: "1rem",
-            backgroundColor: "#efe",
-            border: "1px solid #cfc",
-            borderRadius: "0.5rem",
-            color: "#166534",
-            fontSize: "0.875rem",
-          }}
-        >
-          {successMessage}
-        </div>
-      )}
       {renderCard()}
 
-      <div className="inst-bottom-grid">
+      {/* <div className="inst-bottom-grid">
         <div className="inst-events-panel">
           <h3 style={{ marginBottom: "1.5rem", fontWeight: "bold" }}>
             Upcoming Events & Calendar
@@ -363,7 +347,7 @@ export default function InstitutionSettings(): React.JSX.Element {
             ))}
           </div>
         </div>
-      </div>
+      </div> */}
 
       {isEditOpen && formData && (
         <div className="owner-modal-overlay">

@@ -152,6 +152,18 @@ class TeacherQuizService {
       throw error;
     }
   }
+
+  async deleteQuiz(quizId: number): Promise<{ message: string }> {
+    try {
+      const response = await apiClient.post<{ message: string }>(
+        `${this.BASE_PATH}/delete`,
+        { quizId },
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 export const teacherQuizService = new TeacherQuizService();

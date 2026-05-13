@@ -5,7 +5,8 @@ import {
   faTachometerAlt,
   faUniversity,
   faSignOutAlt,
-  faBars,
+  faChevronLeft,
+  faChevronRight,
   faUserShield,
 } from "@fortawesome/free-solid-svg-icons";
 import { authService } from "../../services/auth.service";
@@ -43,7 +44,9 @@ export default function SystemAdminLayout(): React.JSX.Element {
             className="toggle-btn"
             aria-label="Toggle Sidebar"
           >
-            <FontAwesomeIcon icon={faBars} />
+            <FontAwesomeIcon
+              icon={isMinimized ? faChevronRight : faChevronLeft}
+            />
           </button>
         </div>
 
@@ -86,7 +89,9 @@ export default function SystemAdminLayout(): React.JSX.Element {
             aria-label="Toggle sidebar"
             aria-expanded={isMinimized}
           >
-            <FontAwesomeIcon icon={faBars} />
+            <FontAwesomeIcon
+              icon={isMinimized ? faChevronRight : faChevronLeft}
+            />
           </button>
           <div className="header-greeting">
             <h2>System Overview</h2>

@@ -5,7 +5,8 @@ import {
   faChalkboardUser,
   faBookOpen,
   faSignOutAlt,
-  faBars,
+  faChevronLeft,
+  faChevronRight,
   faUserCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { ASSETS } from "../../config/assets";
@@ -80,7 +81,9 @@ export default function TeacherLayout() {
             onClick={() => setIsMinimized(!isMinimized)}
             className="toggle-btn"
           >
-            <FontAwesomeIcon icon={faBars} />
+            <FontAwesomeIcon
+              icon={isMinimized ? faChevronRight : faChevronLeft}
+            />
           </button>
           <h1 className="dashboard-sidebar-title">Teacher Portal</h1>
         </div>
@@ -122,7 +125,9 @@ export default function TeacherLayout() {
             aria-label="Toggle sidebar"
             aria-expanded={isMinimized}
           >
-            <FontAwesomeIcon icon={faBars} />
+            <FontAwesomeIcon
+              icon={isMinimized ? faChevronRight : faChevronLeft}
+            />
           </button>
           <div className="header-greeting teacher-institution-brand">
             <img

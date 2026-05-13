@@ -6,7 +6,8 @@ import {
   faBookReader,
   faUserCircle,
   faSignOutAlt,
-  faBars,
+  faChevronLeft,
+  faChevronRight,
   faMoneyBillWave,
 } from "@fortawesome/free-solid-svg-icons";
 import { ASSETS } from "../../config/assets";
@@ -79,7 +80,9 @@ export default function StudentLayout(): React.JSX.Element {
             onClick={() => setIsMinimized(!isMinimized)}
             className="toggle-btn"
           >
-            <FontAwesomeIcon icon={faBars} />
+            <FontAwesomeIcon
+              icon={isMinimized ? faChevronRight : faChevronLeft}
+            />
           </button>
           {!isMinimized && (
             <h1 className="dashboard-sidebar-title">Student Portal</h1>
@@ -132,7 +135,9 @@ export default function StudentLayout(): React.JSX.Element {
             aria-label="Toggle sidebar"
             aria-expanded={isMinimized}
           >
-            <FontAwesomeIcon icon={faBars} />
+            <FontAwesomeIcon
+              icon={isMinimized ? faChevronRight : faChevronLeft}
+            />
           </button>
           <div className="header-greeting teacher-institution-brand">
             <img

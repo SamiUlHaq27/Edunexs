@@ -177,8 +177,8 @@ export default function StudentAssignmentSubmit() {
       </button>
 
       <div className="student-header-card">
-        <h2 style={{ margin: 0, color: "#020202" }}>{assignmentTitle}</h2>
-        <p style={{ opacity: 0.95, marginTop: "0.5rem", color: "#000000" }}>
+        <h2 style={{ margin: 0 }}>{assignmentTitle}</h2>
+        <p style={{ opacity: 0.95, marginTop: "0.5rem" }}>
           Due: {dueDate ? new Date(dueDate).toLocaleDateString() : "N/A"}
           {maxGrade ? ` • ${maxGrade} Marks` : ""}
         </p>
