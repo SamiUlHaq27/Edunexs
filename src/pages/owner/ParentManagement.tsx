@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { toastService } from "../../services/toast.service";
 import {
   faSearch,
   faFilter,
@@ -32,6 +31,10 @@ export default function ParentManagement() {
   >("All");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+  const [parentMenuPosition, setParentMenuPosition] = useState({
+    top: 0,
+    left: 0,
+  });
 
   // --- Modal States ---
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -188,6 +191,22 @@ export default function ParentManagement() {
       );
     }
     setIsManageStudentsOpen(true);
+  };
+
+  const toggleParentMenu = (parentId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (openMenuId === parentId) {
+      setOpenMenuId(null);
+      return;
+    }
+
+    const button = e.currentTarget as HTMLButtonElement;
+    const rect = button.getBoundingClientRect();
+    setParentMenuPosition({
+      top: rect.bottom + window.scrollY,
+      left: rect.right + window.scrollX - 180,
+    });
+    setOpenMenuId(parentId);
   };
 
   // Handle add/remove students
@@ -386,48 +405,19 @@ export default function ParentManagement() {
                   <td>{parent.linkedStudentCount}</td>
                   <td>{new Date(parent.createdAt).toLocaleDateString()}</td>
                   <td>
-                    <div className="action-buttons">
+                    <div className="action-btn-wrapper">
                       <button
-                        title="Manage Students"
-                        onClick={() => handleManageStudents(parent.id)}
+                        className="btn action-btn"
+                        style={{
+                          background: "transparent",
+                          padding: "0.4rem",
+                          color: "#6b7280",
+                        }}
+                        onClick={(e) => toggleParentMenu(parent.id, e)}
                         disabled={isSaving}
                       >
-                        <FontAwesomeIcon icon={faUsers} />
+                        <FontAwesomeIcon icon={faEllipsisH} />
                       </button>
-                      <button
-                        title="Edit"
-                        onClick={() => openEditModal(parent)}
-                        disabled={isSaving}
-                      >
-                        <FontAwesomeIcon icon={faEdit} />
-                      </button>
-                      <div className="menu-container">
-                        <button
-                          className="menu-btn"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenMenuId(
-                              openMenuId === parent.id ? null : parent.id,
-                            );
-                          }}
-                          disabled={isSaving}
-                        >
-                          <FontAwesomeIcon icon={faEllipsisH} />
-                        </button>
-                        {openMenuId === parent.id && (
-                          <div className="dropdown-menu">
-                            <button
-                              className="menu-item danger"
-                              onClick={() => {
-                                requestDeleteParent(parent.id);
-                              }}
-                              disabled={isSaving}
-                            >
-                              <FontAwesomeIcon icon={faTrash} /> Delete
-                            </button>
-                          </div>
-                        )}
-                      </div>
                     </div>
                   </td>
                 </tr>
@@ -436,6 +426,58 @@ export default function ParentManagement() {
           </table>
         )}
       </div>
+
+      {openMenuId !== null && (
+        <div
+          className="action-menu-dropdown"
+          style={{
+            position: "fixed",
+            top: `${parentMenuPosition.top}px`,
+            left: `${parentMenuPosition.left}px`,
+            zIndex: 1000,
+            width: "180px",
+          }}
+        >
+          {(() => {
+            const selectedParent = parents.find((p) => p.id === openMenuId);
+            if (!selectedParent) return null;
+            return (
+              <>
+                <button
+                  className="dropdown-item"
+                  onClick={() => {
+                    handleManageStudents(selectedParent.id);
+                    setOpenMenuId(null);
+                  }}
+                  disabled={isSaving}
+                >
+                  <FontAwesomeIcon icon={faUsers} fixedWidth /> Manage Students
+                </button>
+                <button
+                  className="dropdown-item"
+                  onClick={() => {
+                    openEditModal(selectedParent);
+                    setOpenMenuId(null);
+                  }}
+                  disabled={isSaving}
+                >
+                  <FontAwesomeIcon icon={faEdit} fixedWidth /> Edit Parent
+                </button>
+                <button
+                  className="dropdown-item danger"
+                  onClick={() => {
+                    requestDeleteParent(selectedParent.id);
+                    setOpenMenuId(null);
+                  }}
+                  disabled={isSaving}
+                >
+                  <FontAwesomeIcon icon={faTrash} fixedWidth /> Delete Parent
+                </button>
+              </>
+            );
+          })()}
+        </div>
+      )}
 
       {/* Create/Edit Modal */}
       {isModalOpen && (

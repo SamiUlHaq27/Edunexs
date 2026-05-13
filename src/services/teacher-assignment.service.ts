@@ -147,6 +147,21 @@ class TeacherAssignmentService {
       throw error;
     }
   }
+
+  async deleteAssignment(
+    assignmentId: number,
+    hard = false,
+  ): Promise<{ message: string }> {
+    try {
+      const response = await apiClient.post<{ message: string }>(
+        `${this.BASE_PATH}/delete`,
+        { assignmentId, hard },
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 export const teacherAssignmentService = new TeacherAssignmentService();

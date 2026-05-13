@@ -9,8 +9,11 @@ import {
   faCloudUploadAlt,
   faSave,
   faListCheck,
+  faTrash,
 } from "@fortawesome/free-solid-svg-icons";
+import ConfirmActionModal from "../../components/ConfirmActionModal";
 import { teacherAssignmentService } from "../../services";
+import { toastService } from "../../services/toast.service";
 import type {
   CreateTeacherAssignmentDto,
   TeacherAssignment,
@@ -49,6 +52,9 @@ export default function TeacherAssignments({
   const [selectedSubmission, setSelectedSubmission] =
     useState<AssignmentSubmissionRow | null>(null);
   const [files, setFiles] = useState<File[]>([]);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [deletingAssignment, setDeletingAssignment] =
+    useState<TeacherAssignment | null>(null);
 
   const [formData, setFormData] = useState<{
     title: string;
@@ -120,6 +126,33 @@ export default function TeacherAssignments({
       setErrorMessage("Could not load assignment submissions.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const confirmDelete = (assignment: TeacherAssignment) => {
+    setDeletingAssignment(assignment);
+    setIsConfirmOpen(true);
+  };
+
+  const doDeleteAssignment = async () => {
+    if (!deletingAssignment) return;
+    try {
+      setIsSubmitting(true);
+      await teacherAssignmentService.deleteAssignment(
+        deletingAssignment.id,
+        true,
+      );
+      toastService.success(
+        "Assignment and associated data deleted successfully.",
+      );
+      setIsConfirmOpen(false);
+      setDeletingAssignment(null);
+      await loadAssignments();
+    } catch (error) {
+      console.error("Failed to delete assignment", error);
+      toastService.error("Failed to delete assignment.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -543,13 +576,33 @@ export default function TeacherAssignments({
                       Submissions: {assignment.submissionCount || 0}
                     </div>
                   </div>
-                  <button
-                    className="btn"
-                    style={{ border: "1px solid #d1d5db" }}
-                    onClick={() => void loadSubmissions(assignment)}
+                  <div
+                    style={{ display: "flex", gap: 8, alignItems: "center" }}
                   >
-                    <FontAwesomeIcon icon={faListCheck} /> Submissions
-                  </button>
+                    <button
+                      className="btn"
+                      style={{ border: "1px solid #d1d5db" }}
+                      onClick={() => void loadSubmissions(assignment)}
+                    >
+                      <FontAwesomeIcon icon={faListCheck} /> Submissions
+                    </button>
+
+                    <button
+                      className="btn"
+                      onClick={() => confirmDelete(assignment)}
+                      style={{ border: "1px solid #fecaca", color: "#b91c1c" }}
+                      title={
+                        assignment.assessmentType === "quiz"
+                          ? "Delete quiz and grades"
+                          : "Delete assignment and grades"
+                      }
+                    >
+                      <FontAwesomeIcon icon={faTrash} />{" "}
+                      {assignment.assessmentType === "quiz"
+                        ? "Delete Quiz"
+                        : "Delete Assignment"}
+                    </button>
+                  </div>
                 </div>
               ))}
               {!assignments.length && (
@@ -559,6 +612,22 @@ export default function TeacherAssignments({
           )}
         </div>
       )}
+
+      <ConfirmActionModal
+        isOpen={isConfirmOpen}
+        title={"Delete assignment"}
+        message={
+          "Are you sure you want to delete this assignment? This action cannot be undone."
+        }
+        confirmLabel={"Delete"}
+        cancelLabel={"Cancel"}
+        isProcessing={isSubmitting}
+        onConfirm={doDeleteAssignment}
+        onCancel={() => {
+          setIsConfirmOpen(false);
+          setDeletingAssignment(null);
+        }}
+      />
     </div>
   );
 }

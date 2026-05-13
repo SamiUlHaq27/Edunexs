@@ -685,7 +685,7 @@ export default function SystemAdminDashboard() {
         </div>
 
         {/* Card 4: Platform Usage Analytics */}
-        <div className="card" style={{ padding: "1.5rem" }}>
+        {/* <div className="card" style={{ padding: "1.5rem" }}>
           <h3
             className="card-title"
             style={{ fontWeight: "bold", color: "#000", marginBottom: "0" }}
@@ -702,7 +702,7 @@ export default function SystemAdminDashboard() {
             Daily Active Users (Last 30 Days)
           </p>
           <PlatformUsageChart />
-        </div>
+        </div> */}
       </div>
     </div>
   );
