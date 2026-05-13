@@ -5,7 +5,8 @@ import {
   faChalkboardUser,
   faBookOpen,
   faSignOutAlt,
-  faBars,
+  faChevronLeft,
+  faChevronRight,
   faUserCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import { ASSETS } from "../../config/assets";
@@ -52,18 +53,27 @@ export default function TeacherLayout() {
     void loadInstitutionInfo();
   }, []);
 
+  // Close sidebar on mobile when navigation occurs
+  const handleNavClick = () => {
+    // Only close sidebar on mobile (< 768px)
+    if (window.matchMedia("(max-width: 767.98px)").matches) {
+      setIsMinimized(true);
+    }
+  };
+
   return (
     <div
       className={`dashboard-layout ${isMinimized ? "sidebar-minimized" : ""}`}
     >
+      {/* Sidebar overlay for mobile */}
+      <div
+        className="sidebar-overlay"
+        onClick={() => setIsMinimized(true)}
+        aria-hidden="true"
+      />
       <aside className="dashboard-sidebar">
         <div className="sidebar-header">
-          <img
-            src={ASSETS.logo}
-            alt="Logo"
-            className="sidebar-logo"
-            style={{ background: "#fff", borderRadius: "50%" }}
-          />
+          <img src={ASSETS.logo} alt="Logo" className="sidebar-logo" />
         </div>
 
         <div className="sidebar-title-div">
@@ -71,25 +81,35 @@ export default function TeacherLayout() {
             onClick={() => setIsMinimized(!isMinimized)}
             className="toggle-btn"
           >
-            <FontAwesomeIcon icon={faBars} />
+            <FontAwesomeIcon
+              icon={isMinimized ? faChevronRight : faChevronLeft}
+            />
           </button>
           <h1 className="dashboard-sidebar-title">Teacher Portal</h1>
         </div>
 
         <nav className="sidebar-nav">
-          <NavLink to="/teacher/dashboard" className="nav-item">
+          <NavLink
+            to="/teacher/dashboard"
+            className="nav-item"
+            onClick={handleNavClick}
+          >
             <FontAwesomeIcon icon={faChalkboardUser} className="nav-icon" />
             <span className="nav-text">Dashboard</span>
           </NavLink>
 
-          <NavLink to="/teacher/courses" className="nav-item">
+          <NavLink
+            to="/teacher/courses"
+            className="nav-item"
+            onClick={handleNavClick}
+          >
             <FontAwesomeIcon icon={faBookOpen} className="nav-icon" />
             <span className="nav-text">My Courses</span>
           </NavLink>
         </nav>
 
         <div className="sidebar-footer">
-          <NavLink to="/logout" className="nav-item">
+          <NavLink to="/logout" className="nav-item" onClick={handleNavClick}>
             <FontAwesomeIcon icon={faSignOutAlt} className="nav-icon" />
             <span className="nav-text">Logout</span>
           </NavLink>
@@ -98,6 +118,17 @@ export default function TeacherLayout() {
 
       <main className="dashboard-main">
         <header className="main-header">
+          <button
+            type="button"
+            onClick={() => setIsMinimized(!isMinimized)}
+            className="dashboard-mobile-toggle"
+            aria-label="Toggle sidebar"
+            aria-expanded={isMinimized}
+          >
+            <FontAwesomeIcon
+              icon={isMinimized ? faChevronRight : faChevronLeft}
+            />
+          </button>
           <div className="header-greeting teacher-institution-brand">
             <img
               src={institutionInfo.logo}

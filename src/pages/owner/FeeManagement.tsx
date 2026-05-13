@@ -25,6 +25,8 @@ import {
 import type { FeeInvoice, FeeStatus } from "../../services/fee.service";
 import type { Student } from "../../services/student.service";
 import type { StudentGroup } from "../../services/student-group.service";
+import ConfirmActionModal from "../../components/ConfirmActionModal";
+import { toastService } from "../../services/toast.service";
 import "../../styles/owner.css";
 
 type StatusFilter = "All" | "Paid" | "Pending" | "Overdue";
@@ -76,6 +78,9 @@ export default function FeeManagement(): React.JSX.Element {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [pendingDeleteFeeId, setPendingDeleteFeeId] = useState<number | null>(
+    null,
+  );
 
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<StatusFilter>("All");
@@ -140,6 +145,10 @@ export default function FeeManagement(): React.JSX.Element {
           return;
         }
         await loadData(true);
+      } catch (err: any) {
+        const msg = err?.message || "Service unavailable";
+        toastService.error(msg);
+        console.error("Error checking institution:", err);
       } finally {
         setIsLoading(false);
       }
@@ -399,16 +408,18 @@ export default function FeeManagement(): React.JSX.Element {
     }
   };
 
-  const handleDeleteFee = async (feeId: number) => {
-    if (
-      !window.confirm("Are you sure you want to delete this invoice record?")
-    ) {
+  const requestDeleteFee = (feeId: number) => {
+    setPendingDeleteFeeId(feeId);
+  };
+
+  const handleDeleteFee = async () => {
+    if (!pendingDeleteFeeId) {
       return;
     }
 
     try {
       setError("");
-      await feeService.deleteFee(feeId);
+      await feeService.deleteFee(pendingDeleteFeeId);
       setSuccessMessage("Invoice deleted successfully!");
       await loadData(true);
     } catch (err: any) {
@@ -418,6 +429,7 @@ export default function FeeManagement(): React.JSX.Element {
         "Failed to delete invoice";
       setError(message);
     } finally {
+      setPendingDeleteFeeId(null);
       setOpenMenuId(null);
     }
   };
@@ -547,7 +559,6 @@ export default function FeeManagement(): React.JSX.Element {
           Generate Invoice
         </button>
       </div>
-
       {error && (
         <div
           style={{
@@ -562,7 +573,6 @@ export default function FeeManagement(): React.JSX.Element {
           {error}
         </div>
       )}
-
       {successMessage && (
         <div
           style={{
@@ -577,7 +587,6 @@ export default function FeeManagement(): React.JSX.Element {
           {successMessage}
         </div>
       )}
-
       <div
         className="card"
         style={{
@@ -818,7 +827,7 @@ export default function FeeManagement(): React.JSX.Element {
                             />
                             <button
                               className="dropdown-item danger"
-                              onClick={() => handleDeleteFee(fee.id)}
+                              onClick={() => requestDeleteFee(fee.id)}
                             >
                               <FontAwesomeIcon icon={faTrash} fixedWidth />{" "}
                               Delete Invoice
@@ -864,7 +873,6 @@ export default function FeeManagement(): React.JSX.Element {
           </table>
         </div>
       </div>
-
       {isModalOpen && (
         <div
           className="owner-modal-overlay"
@@ -1414,6 +1422,19 @@ export default function FeeManagement(): React.JSX.Element {
           </div>
         </div>
       )}
+      <ConfirmActionModal
+        isOpen={pendingDeleteFeeId !== null}
+        title="Delete Invoice"
+        message={
+          <>
+            Are you sure you want to delete this invoice record? This action
+            cannot be undone.
+          </>
+        }
+        confirmLabel="Delete Invoice"
+        onConfirm={handleDeleteFee}
+        onCancel={() => setPendingDeleteFeeId(null)}
+      />
     </div>
   );
 }

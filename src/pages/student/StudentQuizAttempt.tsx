@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -36,12 +36,19 @@ function formatCountdown(endsAt: string): string {
   const ms = Math.max(end - now, 0);
 
   const totalSec = Math.floor(ms / 1000);
-  const mins = Math.floor(totalSec / 60);
+  const hours = Math.floor(totalSec / 3600);
+  const mins = Math.floor((totalSec % 3600) / 60);
   const secs = totalSec % 60;
 
+  const hh = String(hours).padStart(2, "0");
   const mm = String(mins).padStart(2, "0");
   const ss = String(secs).padStart(2, "0");
-  return `${mm}:${ss}`;
+  return `${hh}:${mm}:${ss}`;
+}
+
+function getRemainingMs(endsAt: string): number {
+  const end = new Date(endsAt).getTime();
+  return Math.max(end - Date.now(), 0);
 }
 
 export default function StudentQuizAttempt() {
@@ -54,6 +61,13 @@ export default function StudentQuizAttempt() {
     typeof location.state?.offeringId === "number"
       ? location.state.offeringId
       : null;
+  const activeTab =
+    location.state?.activeTab === "assignments" ||
+    location.state?.activeTab === "quizzes" ||
+    location.state?.activeTab === "attendance" ||
+    location.state?.activeTab === "grades"
+      ? location.state.activeTab
+      : "quizzes";
 
   const [quizDetail, setQuizDetail] = useState<StudentQuizDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -62,6 +76,14 @@ export default function StudentQuizAttempt() {
   const [currentQ, setCurrentQ] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [nowTick, setNowTick] = useState(Date.now());
+  const hasAutoSubmittedRef = useRef(false);
+  const hadTimeRemainingOnLoadRef = useRef<boolean | null>(null);
+
+  useEffect(() => {
+    hasAutoSubmittedRef.current = false;
+    hadTimeRemainingOnLoadRef.current = null;
+  }, [quizId]);
 
   useEffect(() => {
     if (!quizId) {
@@ -75,6 +97,7 @@ export default function StudentQuizAttempt() {
         setIsLoading(true);
         setError(null);
         const response = await studentQuizService.getQuizDetail(quizId);
+        hadTimeRemainingOnLoadRef.current = getRemainingMs(response.endsAt) > 0;
         setQuizDetail(response);
       } catch (loadError) {
         setError(getErrorMessage(loadError));
@@ -103,7 +126,7 @@ export default function StudentQuizAttempt() {
     setAnswers((prev) => ({ ...prev, [currentQuestion.id]: idx }));
   };
 
-  const handleSubmitQuiz = async () => {
+  const handleSubmitQuiz = async (forceSubmit = false) => {
     if (!quizDetail || !quizId) {
       return;
     }
@@ -115,7 +138,7 @@ export default function StudentQuizAttempt() {
       }),
     );
 
-    if (payload.length === 0) {
+    if (!forceSubmit && payload.length === 0) {
       setError("Please answer at least one question before submitting.");
       return;
     }
@@ -130,7 +153,7 @@ export default function StudentQuizAttempt() {
       });
 
       navigate("/student/courses", {
-        state: offeringId ? { offeringId } : undefined,
+        state: offeringId ? { offeringId, activeTab } : { activeTab },
       });
     } catch (submitError) {
       setError(getErrorMessage(submitError));
@@ -148,6 +171,39 @@ export default function StudentQuizAttempt() {
     void handleSubmitQuiz();
   };
 
+  useEffect(() => {
+    if (!quizDetail?.endsAt) {
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      setNowTick(Date.now());
+    }, 1000);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [quizDetail?.endsAt]);
+
+  useEffect(() => {
+    if (!quizDetail?.endsAt || isSubmitting) {
+      return;
+    }
+
+    // Only auto-submit when timer expires during an active attempt.
+    if (hadTimeRemainingOnLoadRef.current !== true) {
+      return;
+    }
+
+    const remainingMs = getRemainingMs(quizDetail.endsAt);
+    if (remainingMs > 0 || hasAutoSubmittedRef.current) {
+      return;
+    }
+
+    hasAutoSubmittedRef.current = true;
+    void handleSubmitQuiz(true);
+  }, [quizDetail?.endsAt, nowTick, isSubmitting]);
+
   if (isLoading) {
     return <div className="card settings-container">Loading quiz...</div>;
   }
@@ -160,7 +216,7 @@ export default function StudentQuizAttempt() {
           className="btn"
           onClick={() =>
             navigate("/student/courses", {
-              state: offeringId ? { offeringId } : undefined,
+              state: offeringId ? { offeringId, activeTab } : { activeTab },
             })
           }
         >
@@ -179,13 +235,15 @@ export default function StudentQuizAttempt() {
   }
 
   if (!quizDetail.canAttempt) {
+    const blockedReason =
+      quizDetail.window === "active"
+        ? "You have reached the attempt limit for this quiz."
+        : `This quiz is currently ${quizDetail.window}.`;
+
     return (
       <div className="card settings-container">
         <h3 style={{ marginTop: 0 }}>{quizDetail.title}</h3>
-        <p style={{ color: "#6b7280" }}>
-          This quiz is currently {quizDetail.window} or attempt limit is
-          reached.
-        </p>
+        <p style={{ color: "#6b7280" }}>{blockedReason}</p>
         <p style={{ color: "#6b7280" }}>
           Attempts used: {quizDetail.attemptsUsed}/{quizDetail.maxAttempts}
         </p>
@@ -193,7 +251,7 @@ export default function StudentQuizAttempt() {
           className="btn"
           onClick={() =>
             navigate("/student/courses", {
-              state: offeringId ? { offeringId } : undefined,
+              state: offeringId ? { offeringId, activeTab } : { activeTab },
             })
           }
         >
@@ -205,32 +263,15 @@ export default function StudentQuizAttempt() {
 
   return (
     <div className="card" style={{ maxWidth: "800px", margin: "0 auto" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "1.5rem",
-        }}
-      >
-        <h3 className="card-title" style={{ margin: 0 }}>
-          {quizDetail.title}
-        </h3>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            color: "#ef4444",
-            fontWeight: "bold",
-          }}
-        >
+      <div className="quiz-attempt-header">
+        <h3 className="card-title quiz-attempt-title">{quizDetail.title}</h3>
+        <div className="quiz-timer">
           <FontAwesomeIcon icon={faClock} />{" "}
           {formatCountdown(quizDetail.endsAt)}
         </div>
       </div>
 
-      <p style={{ color: "#64748b", marginTop: 0 }}>
+      <p className="quiz-attempt-info">
         Attempts left: {quizDetail.attemptsRemaining} / {quizDetail.maxAttempts}
       </p>
 
@@ -238,49 +279,21 @@ export default function StudentQuizAttempt() {
         <div className="quiz-progress-bar" style={{ width: `${progress}%` }} />
       </div>
 
-      <div
-        className="question-block"
-        style={{ background: "#fff", border: "none", padding: 0 }}
-      >
-        <h4 style={{ fontSize: "1.25rem", marginBottom: "1.5rem" }}>
+      <div className="question-block quiz-attempt-question">
+        <h4>
           Q{currentQ + 1}: {currentQuestion.question}
         </h4>
 
-        <div
-          style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}
-        >
+        <div className="quiz-options-grid">
           {currentQuestion.options.map((opt, idx) => (
             <div
               key={idx}
               className={`quiz-option ${selectedValue === idx ? "selected" : ""}`}
               onClick={() => handleSelect(idx)}
             >
-              <div
-                style={{
-                  width: "24px",
-                  height: "24px",
-                  borderRadius: "50%",
-                  border: "2px solid #ccc",
-                  marginRight: "1rem",
-                  display: "grid",
-                  placeItems: "center",
-                  background:
-                    selectedValue === idx
-                      ? "var(--color-primary-500)"
-                      : "transparent",
-                  borderColor:
-                    selectedValue === idx ? "var(--color-primary-500)" : "#ccc",
-                }}
-              >
+              <div className="quiz-option-radio">
                 {selectedValue === idx && (
-                  <div
-                    style={{
-                      width: "10px",
-                      height: "10px",
-                      background: "#fff",
-                      borderRadius: "50%",
-                    }}
-                  />
+                  <div className="quiz-option-radio-dot" />
                 )}
               </div>
               {opt}

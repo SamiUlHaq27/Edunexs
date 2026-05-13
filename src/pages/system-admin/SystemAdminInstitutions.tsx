@@ -1,26 +1,23 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faSearch,
-  faFilter,
-  faEllipsisH,
-  faCheckCircle,
   faBan,
-  faTimes,
-  faPaperPlane,
+  faCheckCircle,
+  faEllipsisH,
   faExclamationTriangle,
+  faFilter,
+  faPaperPlane,
+  faTimes,
 } from "@fortawesome/free-solid-svg-icons";
 import { ASSETS } from "../../config/assets";
 import { institutionService } from "../../services/institution.service";
 import { Institution } from "../../types";
 
-export default function SystemAdminInstitutions() {
+export default function SystemAdminInstitutions(): React.JSX.Element {
   const [institutions, setInstitutions] = useState<Institution[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
-  // Pagination & Filters
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
@@ -28,39 +25,27 @@ export default function SystemAdminInstitutions() {
     "all" | "blocked" | "unblocked"
   >("all");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
-
-  // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalAction, setModalAction] = useState<"block" | "unblock">("block");
-  const [selectedInstPrefix, setSelectedInstPrefix] = useState<string | null>(
-    null,
-  );
+  const [selectedInstitution, setSelectedInstitution] =
+    useState<Institution | null>(null);
   const [blockMessage, setBlockMessage] = useState("");
 
   useEffect(() => {
-    fetchInstitutions();
+    void fetchInstitutions();
   }, [page, filterStatus]);
 
   useEffect(() => {
-    const handleClickOutside = () => {
-      setOpenMenuId(null);
-      setIsFilterOpen(false);
-    };
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
-  }, []);
+    if (!successMessage && !error) return;
 
-  useEffect(() => {
-    if (successMessage || error) {
-      const timer = setTimeout(() => {
-        setSuccessMessage(null);
-        setError(null);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
+    const timer = setTimeout(() => {
+      setSuccessMessage(null);
+      setError(null);
+    }, 5000);
+
+    return () => clearTimeout(timer);
   }, [successMessage, error]);
 
   const fetchInstitutions = async () => {
@@ -68,17 +53,15 @@ export default function SystemAdminInstitutions() {
     setError(null);
 
     try {
-      const filters: any = {
+      const response = await institutionService.getAllInstitutions({
         page,
         size: 10,
-        filters: {},
-      };
+        filters:
+          filterStatus === "all"
+            ? {}
+            : { isBlocked: filterStatus === "blocked" },
+      });
 
-      if (filterStatus !== "all") {
-        filters.filters.isBlocked = filterStatus === "blocked";
-      }
-
-      const response = await institutionService.getAllInstitutions(filters);
       setInstitutions(response.data || []);
       setTotal(response.total || 0);
       setTotalPages(response.totalPages || 1);
@@ -89,27 +72,64 @@ export default function SystemAdminInstitutions() {
     }
   };
 
-  const handleActionClick = (prefix: string, action: "block" | "unblock") => {
-    setOpenMenuId(null);
-    setSelectedInstPrefix(prefix);
-    setModalAction(action);
+  const filteredInstitution = useMemo(
+    () =>
+      institutions.find((institution) => institution.id === openMenuId) ?? null,
+    [institutions, openMenuId],
+  );
 
-    if (action === "block") {
-      setBlockMessage("");
+  const handleFilterChange = (status: "all" | "blocked" | "unblocked") => {
+    setFilterStatus(status);
+    setPage(1);
+    setIsFilterOpen(false);
+  };
+
+  const toggleMenu = (
+    institutionId: number,
+    event: React.MouseEvent<HTMLButtonElement>,
+  ) => {
+    event.stopPropagation();
+    setIsFilterOpen(false);
+
+    if (openMenuId === institutionId) {
+      setOpenMenuId(null);
+      return;
     }
 
+    const rect = event.currentTarget.getBoundingClientRect();
+    setMenuPosition({
+      top: rect.bottom + window.scrollY,
+      left: rect.right + window.scrollX - 150,
+    });
+    setOpenMenuId(institutionId);
+  };
+
+  const openActionModal = (
+    institution: Institution,
+    action: "block" | "unblock",
+  ) => {
+    setOpenMenuId(null);
+    setSelectedInstitution(institution);
+    setModalAction(action);
+    setBlockMessage(action === "block" ? "" : "Institution has been unblocked");
     setIsModalOpen(true);
   };
 
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedInstitution(null);
+    setBlockMessage("");
+  };
+
   const confirmAction = async () => {
-    if (!selectedInstPrefix) return;
+    if (!selectedInstitution) return;
 
     setIsLoading(true);
     setError(null);
 
     try {
       await institutionService.updateStatus({
-        prefix: selectedInstPrefix,
+        institutionId: selectedInstitution.id,
         isBlocked: modalAction === "block",
         message:
           blockMessage ||
@@ -123,7 +143,7 @@ export default function SystemAdminInstitutions() {
       );
 
       closeModal();
-      fetchInstitutions();
+      await fetchInstitutions();
     } catch (err: any) {
       setError(
         err?.response?.data?.message || `Failed to ${modalAction} institution`,
@@ -133,48 +153,12 @@ export default function SystemAdminInstitutions() {
     }
   };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setSelectedInstPrefix(null);
-    setBlockMessage("");
-  };
-
-  const handleFilterChange = (status: "all" | "blocked" | "unblocked") => {
-    setFilterStatus(status);
-    setPage(1);
-    setIsFilterOpen(false);
-  };
-
-  const toggleMenu = (
-    prefix: string,
-    e: React.MouseEvent<HTMLButtonElement>,
-  ) => {
-    e.stopPropagation();
-    setIsFilterOpen(false);
-
-    if (openMenuId === prefix) {
-      setOpenMenuId(null);
-      return;
-    }
-
-    const rect = e.currentTarget.getBoundingClientRect();
-    setMenuPosition({
-      top: rect.bottom + window.scrollY,
-      left: rect.right + window.scrollX - 150,
-    });
-    setOpenMenuId(prefix);
-  };
-
-  const selectedInst = institutions.find(
-    (i) => i.prefix === selectedInstPrefix,
-  );
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
     });
-  };
 
   return (
     <div
@@ -183,7 +167,6 @@ export default function SystemAdminInstitutions() {
         setIsFilterOpen(false);
       }}
     >
-      {/* Success/Error Messages */}
       {successMessage && (
         <div
           className="alert alert-success"
@@ -198,6 +181,7 @@ export default function SystemAdminInstitutions() {
           {successMessage}
         </div>
       )}
+
       {error && (
         <div
           className="alert alert-error"
@@ -232,9 +216,9 @@ export default function SystemAdminInstitutions() {
               background: "#fff",
               border: "1px solid #d1d5db",
             }}
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsFilterOpen(!isFilterOpen);
+            onClick={(event) => {
+              event.stopPropagation();
+              setIsFilterOpen((current) => !current);
             }}
           >
             Filter <FontAwesomeIcon icon={faFilter} />
@@ -292,12 +276,14 @@ export default function SystemAdminInstitutions() {
                 </tr>
               </thead>
               <tbody>
-                {institutions.map((inst) => (
-                  <tr key={inst.prefix}>
+                {institutions.map((institution) => (
+                  <tr key={institution.id}>
                     <td>
                       <img
                         src={
-                          inst.logo?.publicUrl || inst.logoUrl || ASSETS.logo
+                          institution.logo?.publicUrl ||
+                          institution.logoUrl ||
+                          ASSETS.logo
                         }
                         alt="Logo"
                         style={{
@@ -310,32 +296,30 @@ export default function SystemAdminInstitutions() {
                       />
                     </td>
                     <td style={{ fontWeight: "600", fontSize: "1rem" }}>
-                      {inst.name}
+                      {institution.name}
                     </td>
                     <td style={{ fontFamily: "monospace", color: "#6b7280" }}>
-                      {inst.prefix}
+                      {institution.prefix}
                     </td>
                     <td>
-                      {inst.city}, {inst.country}
+                      {institution.city}, {institution.country}
                     </td>
-                    <td>{formatDate(inst.createdAt)}</td>
+                    <td>{formatDate(institution.createdAt)}</td>
                     <td>
                       <span
-                        className={`status-pill ${
-                          inst.isBlocked ? "status-blocked" : "status-unblocked"
-                        }`}
+                        className={`status-pill ${institution.isBlocked ? "status-blocked" : "status-unblocked"}`}
                       >
-                        {inst.isBlocked ? "Blocked" : "Unblocked"}
+                        {institution.isBlocked ? "Blocked" : "Unblocked"}
                       </span>
                     </td>
                     <td>
                       <div
                         className="action-menu-wrapper"
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={(event) => event.stopPropagation()}
                       >
                         <button
                           className="action-menu-btn"
-                          onClick={(e) => toggleMenu(inst.prefix, e)}
+                          onClick={(event) => toggleMenu(institution.id, event)}
                           disabled={isLoading}
                         >
                           <FontAwesomeIcon icon={faEllipsisH} />
@@ -350,8 +334,7 @@ export default function SystemAdminInstitutions() {
         </div>
       )}
 
-      {/* Action Menu Dropdown - Rendered outside table for proper layering */}
-      {openMenuId !== null && (
+      {openMenuId !== null && filteredInstitution && (
         <div
           className="action-dropdown"
           style={{
@@ -361,46 +344,36 @@ export default function SystemAdminInstitutions() {
             minWidth: "150px",
             zIndex: 1000,
           }}
-          onClick={(e) => e.stopPropagation()}
+          onClick={(event) => event.stopPropagation()}
         >
-          {(() => {
-            const institution = institutions.find(
-              (i) => i.prefix === openMenuId,
-            );
-            return institution ? (
-              !institution.isBlocked ? (
-                <button
-                  className="dropdown-item"
-                  onClick={() => handleActionClick(institution.prefix, "block")}
-                >
-                  <FontAwesomeIcon
-                    icon={faBan}
-                    style={{ color: "#dc2626" }}
-                    fixedWidth
-                  />
-                  <span style={{ color: "#dc2626" }}>Block</span>
-                </button>
-              ) : (
-                <button
-                  className="dropdown-item"
-                  onClick={() =>
-                    handleActionClick(institution.prefix, "unblock")
-                  }
-                >
-                  <FontAwesomeIcon
-                    icon={faCheckCircle}
-                    style={{ color: "#059669" }}
-                    fixedWidth
-                  />
-                  <span style={{ color: "#059669" }}>Unblock</span>
-                </button>
-              )
-            ) : null;
-          })()}
+          {!filteredInstitution.isBlocked ? (
+            <button
+              className="dropdown-item"
+              onClick={() => openActionModal(filteredInstitution, "block")}
+            >
+              <FontAwesomeIcon
+                icon={faBan}
+                style={{ color: "#dc2626" }}
+                fixedWidth
+              />
+              <span style={{ color: "#dc2626" }}>Block</span>
+            </button>
+          ) : (
+            <button
+              className="dropdown-item"
+              onClick={() => openActionModal(filteredInstitution, "unblock")}
+            >
+              <FontAwesomeIcon
+                icon={faCheckCircle}
+                style={{ color: "#059669" }}
+                fixedWidth
+              />
+              <span style={{ color: "#059669" }}>Unblock</span>
+            </button>
+          )}
         </div>
       )}
 
-      {/* Pagination */}
       {!isLoading && totalPages > 1 && (
         <div
           style={{
@@ -413,7 +386,7 @@ export default function SystemAdminInstitutions() {
         >
           <button
             className="btn"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            onClick={() => setPage((current) => Math.max(1, current - 1))}
             disabled={page === 1 || isLoading}
             style={{ padding: "0.5rem 1rem" }}
           >
@@ -424,7 +397,9 @@ export default function SystemAdminInstitutions() {
           </span>
           <button
             className="btn"
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            onClick={() =>
+              setPage((current) => Math.min(totalPages, current + 1))
+            }
             disabled={page === totalPages || isLoading}
             style={{ padding: "0.5rem 1rem" }}
           >
@@ -433,10 +408,12 @@ export default function SystemAdminInstitutions() {
         </div>
       )}
 
-      {/* --- Confirmation & Message Modal --- */}
-      {isModalOpen && (
+      {isModalOpen && selectedInstitution && (
         <div className="modal-overlay" onClick={closeModal}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="modal-card"
+            onClick={(event) => event.stopPropagation()}
+          >
             <div className="modal-header">
               <h3 className="modal-title">
                 <FontAwesomeIcon
@@ -464,14 +441,14 @@ export default function SystemAdminInstitutions() {
                 {modalAction === "block" ? (
                   <>
                     Are you sure you want to block{" "}
-                    <strong>{selectedInst?.name}</strong>? This will restrict
-                    access for all associated users.
+                    <strong>{selectedInstitution.name}</strong>? This will
+                    restrict access for all associated users.
                   </>
                 ) : (
                   <>
                     Are you sure you want to unblock{" "}
-                    <strong>{selectedInst?.name}</strong>? This will restore
-                    access for all associated users.
+                    <strong>{selectedInstitution.name}</strong>? This will
+                    restore access for all associated users.
                   </>
                 )}
               </p>
@@ -492,10 +469,10 @@ export default function SystemAdminInstitutions() {
                     : "e.g. Your institution has been unblocked..."
                 }
                 value={blockMessage}
-                onChange={(e) => setBlockMessage(e.target.value)}
+                onChange={(event) => setBlockMessage(event.target.value)}
                 autoFocus
                 rows={4}
-              ></textarea>
+              />
               <p
                 style={{
                   fontSize: "0.75rem",
@@ -504,8 +481,8 @@ export default function SystemAdminInstitutions() {
                 }}
               >
                 This message will be sent via email to the institution owner
-                {selectedInst?.owner?.email
-                  ? ` (${selectedInst.owner.email})`
+                {selectedInstitution.owner?.email
+                  ? ` (${selectedInstitution.owner.email})`
                   : ""}
                 .
               </p>

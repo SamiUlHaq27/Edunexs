@@ -33,6 +33,12 @@ export default function AdminDashboard(): React.JSX.Element {
     <div
       className={`dashboard-layout ${isMinimized ? "sidebar-minimized" : ""}`}
     >
+      {/* Sidebar overlay for mobile */}
+      <div
+        className="sidebar-overlay"
+        onClick={() => setIsMinimized(true)}
+        aria-hidden="true"
+      />
       <aside className="dashboard-sidebar">
         <div className="sidebar-header">
           <img src={ASSETS.logo} alt={ASSETS.alt} className="sidebar-logo" />

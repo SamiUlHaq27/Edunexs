@@ -3,7 +3,7 @@
 /* --- Modern Dashboard Stats --- */
 .dashboard-grid-modern {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: var(--spacing-3);
   margin-bottom: var(--spacing-4);
 }
@@ -113,9 +113,50 @@
   margin-bottom: var(--spacing-4);
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 768px) {
   .charts-grid {
     grid-template-columns: 2fr 1fr;
+  }
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 767.98px) {
+  .dashboard-grid-modern {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-2);
+    margin-bottom: var(--spacing-3);
+  }
+
+  .stat-card-modern {
+    padding: var(--spacing-2);
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+  }
+
+  .stat-icon-wrapper {
+    width: 40px;
+    height: 40px;
+    font-size: 1.25rem;
+  }
+
+  .chart-card {
+    padding: var(--spacing-2);
+    min-height: auto;
+  }
+
+  .chart-title {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .chart-container {
+    min-height: 200px;
   }
 }
 
@@ -337,6 +378,32 @@
 .inst-calendar-panel {
   padding: 1.5rem;
   background: #f9fafb;
+}
+
+/* Mobile: stack profile card so action button sits on its own row */
+@media (max-width: 767.98px) {
+  .inst-profile-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .inst-profile-card > div:last-child {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-top: 0.25rem;
+  }
+
+  .inst-logo-large {
+    width: 84px;
+    height: 84px;
+    margin: 0 auto;
+  }
+
+  .inst-info {
+    text-align: center;
+  }
 }
 
 /* Event List Styling */

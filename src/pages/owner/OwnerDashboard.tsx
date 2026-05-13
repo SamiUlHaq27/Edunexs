@@ -6,114 +6,65 @@ import {
   faUserShield,
   faBookOpen,
   faEllipsisH,
-  faBell,
-  faCheckCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import "../../styles/owner-dashboard.css";
 import { institutionService } from "../../services/institution.service";
-import { institutionAdminService } from "../../services/institution-admin.service";
 import { courseService } from "../../services/course.service";
-import { Institution } from "../../types";
+import { studentService } from "../../services/student.service";
+import { teacherService } from "../../services/teacher.service";
+import { institutionAdminService } from "../../services/institution-admin.service";
+import { authService } from "../../services/auth.service";
+import { Institution, UserRole } from "../../types";
 
-// --- Bar Chart: Monthly Trends ---
-const AttendanceChart = () => {
-  const data = [65, 80, 45, 90, 60, 75, 50, 85, 95, 70];
-  const max = 100;
-  const steps = [0, 25, 50, 75, 100];
-  const labels = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-  ];
-
-  return (
-    <div style={{ width: "100%" }}>
-      <div className="chart-wrapper">
-        <div className="chart-y-axis">
-          {steps.map((step) => (
-            <span key={step}>{step}%</span>
-          ))}
-        </div>
-        <div className="chart-content">
-          <div className="chart-grid-lines">
-            {steps.map((_, i) => (
-              <div key={i} className="grid-line"></div>
-            ))}
-          </div>
-          <div className="chart-bars-container">
-            {data.map((value, index) => (
-              <div key={index} className="chart-bar-group">
-                <div
-                  className="chart-bar"
-                  style={{ height: `${(value / max) * 100}%` }}
-                  title={`${value}%`}
-                ></div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-      <div className="chart-x-axis">
-        {labels.map((label, index) => (
-          <span key={index} className="x-axis-label">
-            {label}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
+type DashboardStats = {
+  studentCount: number;
+  courseCount: number;
+  teacherCount: number;
+  adminCount: number;
 };
 
-// --- Donut Chart: Breakdown ---
-const AttendanceBreakdown = () => {
-  return (
-    <div className="donut-wrapper">
-      <h4
-        style={{ marginBottom: "1rem", fontSize: "0.9rem", color: "#6b7280" }}
-      >
-        Average Daily Status
-      </h4>
-      <div className="donut-chart">
-        <div className="donut-inner">
-          <span
-            style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#1e3a8a" }}
-          >
-            92%
-          </span>
-          <span style={{ fontSize: "0.7rem", color: "#6b7280" }}>Present</span>
-        </div>
-      </div>
-      <div className="donut-legend">
-        <div className="legend-item">
-          <div className="legend-dot" style={{ background: "#1e3a8a" }}></div>
-          <span>Present (75%)</span>
-        </div>
-        <div className="legend-item">
-          <div className="legend-dot" style={{ background: "#ef4444" }}></div>
-          <span>Absent (25%)</span>
-        </div>
-      </div>
-    </div>
-  );
+type RecentUpdateItem = {
+  id: string;
+  icon: typeof faUserGraduate;
+  title: string;
+  subtitle: string;
+  timeAgo: string;
+  iconClassName: string;
+  timestamp: number;
+};
+
+const formatRelativeTime = (dateString?: string) => {
+  if (!dateString) return "Recently";
+
+  const timestamp = new Date(dateString).getTime();
+  if (Number.isNaN(timestamp)) return "Recently";
+
+  const diffMinutes = Math.floor((Date.now() - timestamp) / (1000 * 60));
+  if (diffMinutes < 1) return "Just now";
+  if (diffMinutes < 60) return `${diffMinutes} min ago`;
+
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
 };
 
 const EventCalendar = () => {
   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const dates = Array.from({ length: 31 }, (_, i) => i + 1);
-  const activeDate = 9; // Updated active date
+  const now = new Date();
+  const activeDate = now.getDate();
+  const monthName = now.toLocaleString("en-US", { month: "long" });
+  const year = now.getFullYear();
+  const firstDay = new Date(year, now.getMonth(), 1).getDay();
+  const datesInMonth = new Date(year, now.getMonth() + 1, 0).getDate();
+  const dates = Array.from({ length: datesInMonth }, (_, i) => i + 1);
 
   return (
     <div>
       <div className="calendar-title-box">
-        <span>DECEMBER</span>
-        <span>2025</span>
+        <span>{monthName.toUpperCase()}</span>
+        <span>{year}</span>
       </div>
       <div className="calendar-grid">
         {days.map((day) => (
@@ -121,8 +72,9 @@ const EventCalendar = () => {
             {day}
           </div>
         ))}
-        {/* Dec 1, 2025 is a Monday, so 1 empty slot for Sunday */}
-        <div />
+        {Array.from({ length: firstDay }).map((_, idx) => (
+          <div key={`spacer-${idx}`} />
+        ))}
         {dates.map((date) => (
           <div
             key={date}
@@ -138,34 +90,126 @@ const EventCalendar = () => {
 
 export default function OwnerDashboard() {
   const [institution, setInstitution] = useState<Institution | null>(null);
-  const [adminCount, setAdminCount] = useState<number>(0);
-  const [courseCount, setCourseCount] = useState<number>(0);
+  const [stats, setStats] = useState<DashboardStats>({
+    studentCount: 0,
+    courseCount: 0,
+    teacherCount: 0,
+    adminCount: 0,
+  });
+  const [recentUpdates, setRecentUpdates] = useState<RecentUpdateItem[]>([]);
+  const isInstitutionAdmin =
+    authService.getUser()?.role === UserRole.INSTITUTION_ADMIN;
 
   useEffect(() => {
     let mounted = true;
 
     const fetchDashboardData = async () => {
-      try {
-        const [institutionData, adminsData, coursesData] = await Promise.all([
-          institutionService.getMyInstitution(),
-          institutionAdminService.getAdmins({
-            page: 1,
-            size: 200,
-            filters: {},
-          }),
-          courseService.getCourses({ page: 1, size: 1, filters: {} }),
-        ]);
+      const adminsListRequest = isInstitutionAdmin
+        ? Promise.resolve(null)
+        : institutionAdminService.getAdmins({ page: 1, size: 5, filters: {} });
 
-        if (!mounted) return;
-        setInstitution(institutionData);
-        setAdminCount(adminsData.total ?? adminsData.data?.length ?? 0);
-        setCourseCount(coursesData.total ?? coursesData.data?.length ?? 0);
-      } catch (_error) {
-        if (!mounted) return;
-        setInstitution(null);
-        setAdminCount(0);
-        setCourseCount(0);
-      }
+      const [
+        institutionResult,
+        studentsResult,
+        teachersResult,
+        coursesResult,
+        adminsResult,
+        adminsListResult,
+      ] = await Promise.allSettled([
+        institutionService.getMyInstitution(),
+        studentService.getStudents({ page: 1, size: 5, filters: {} }),
+        teacherService.getTeachers({ page: 1, size: 5, filters: {} }),
+        courseService.getCourses({ page: 1, size: 5, filters: {} }),
+        institutionAdminService.getAdminCount(),
+        adminsListRequest,
+      ]);
+
+      if (!mounted) return;
+
+      setInstitution(
+        institutionResult.status === "fulfilled" ? institutionResult.value : null,
+      );
+
+      setStats({
+        studentCount:
+          studentsResult.status === "fulfilled"
+            ? studentsResult.value.total ?? studentsResult.value.data?.length ?? 0
+            : 0,
+        teacherCount:
+          teachersResult.status === "fulfilled"
+            ? teachersResult.value.total ?? teachersResult.value.data?.length ?? 0
+            : 0,
+        courseCount:
+          coursesResult.status === "fulfilled"
+            ? coursesResult.value.total ?? coursesResult.value.data?.length ?? 0
+            : 0,
+        adminCount:
+          adminsResult.status === "fulfilled" ? adminsResult.value.total : 0,
+      });
+
+      const studentUpdates =
+        studentsResult.status === "fulfilled"
+          ? studentsResult.value.data.map((item) => ({
+              id: `student-${item.id}`,
+              icon: faUserGraduate,
+              title: "Student Added",
+              subtitle: item.name || item.username,
+              timeAgo: formatRelativeTime(item.createdAt),
+              iconClassName: "update-student",
+              timestamp: new Date(item.createdAt).getTime() || 0,
+            }))
+          : [];
+
+      const teacherUpdates =
+        teachersResult.status === "fulfilled"
+          ? teachersResult.value.data.map((item) => ({
+              id: `teacher-${item.id}`,
+              icon: faChalkboardTeacher,
+              title: "Teacher Added",
+              subtitle: item.name,
+              timeAgo: formatRelativeTime(item.createdAt),
+              iconClassName: "update-teacher",
+              timestamp: new Date(item.createdAt).getTime() || 0,
+            }))
+          : [];
+
+      const courseUpdates =
+        coursesResult.status === "fulfilled"
+          ? coursesResult.value.data.map((item) => ({
+              id: `course-${item.id}`,
+              icon: faBookOpen,
+              title: "Course Created",
+              subtitle: `${item.code} - ${item.title}`,
+              timeAgo: formatRelativeTime(item.createdAt),
+              iconClassName: "update-course",
+              timestamp: new Date(item.createdAt || "").getTime() || 0,
+            }))
+          : [];
+
+      const adminUpdates =
+        adminsListResult.status === "fulfilled" && adminsListResult.value?.data
+          ? adminsListResult.value.data.map((item) => ({
+              id: `admin-${item.id}`,
+              icon: faUserShield,
+              title: "Admin Added",
+              subtitle: item.name,
+              timeAgo: formatRelativeTime(item.createdAt),
+              iconClassName: "update-admin",
+              timestamp: new Date(item.createdAt).getTime() || 0,
+            }))
+          : [];
+
+      const updates = [
+        ...studentUpdates,
+        ...teacherUpdates,
+        ...courseUpdates,
+        ...adminUpdates,
+      ]
+        .filter((item) => item.timestamp > 0)
+        .sort((a, b) => b.timestamp - a.timestamp)
+        .slice(0, 6);
+
+      setRecentUpdates(updates);
     };
 
     void fetchDashboardData();
@@ -173,32 +217,88 @@ export default function OwnerDashboard() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [isInstitutionAdmin]);
+
+  const totalManagedUsers =
+    stats.studentCount + stats.teacherCount + stats.adminCount;
+  const roleDistribution = [
+    {
+      label: "Students",
+      count: stats.studentCount,
+      percent:
+        totalManagedUsers > 0
+          ? Math.round((stats.studentCount / totalManagedUsers) * 100)
+          : 0,
+      className: "students",
+    },
+    {
+      label: "Teachers",
+      count: stats.teacherCount,
+      percent:
+        totalManagedUsers > 0
+          ? Math.round((stats.teacherCount / totalManagedUsers) * 100)
+          : 0,
+      className: "teachers",
+    },
+    {
+      label: "Admins",
+      count: stats.adminCount,
+      percent:
+        totalManagedUsers > 0
+          ? Math.round((stats.adminCount / totalManagedUsers) * 100)
+          : 0,
+      className: "admins",
+    },
+  ];
+  const latestUpdate = recentUpdates[0];
+  const liveSnapshot = [
+    {
+      label: "Institution Prefix",
+      value: institution?.prefix || "Not Available",
+    },
+    {
+      label: "Total Managed Users",
+      value: totalManagedUsers.toLocaleString("en-US"),
+    },
+    {
+      label: "Latest Record Added",
+      value: latestUpdate?.subtitle || "No records yet",
+    },
+    {
+      label: "Last Activity",
+      value: latestUpdate?.timeAgo || "No recent activity",
+    },
+  ];
 
   return (
     <div className="owner-dashboard-container">
-      <div style={{ marginBottom: "1rem" }}>
-        <h2 style={{ marginBottom: "0.25rem", fontSize: "1.4rem" }}>
-          {institution?.name || "Owner Dashboard"}
-        </h2>
-        <p style={{ color: "#6b7280", margin: 0 }}>
-          {institution
-            ? `${institution.city}, ${institution.country}`
-            : "Connect your institution to see live metrics."}
-        </p>
+      <div className="dashboard-hero">
+        <div>
+          <p className="hero-kicker">
+            {isInstitutionAdmin
+              ? "Institution Admin Dashboard"
+              : "Institution Owner Dashboard"}
+          </p>
+          <h2 className="hero-title">
+            {institution?.name || "Institution Dashboard"}
+          </h2>
+          <p className="hero-subtitle">
+            {institution
+              ? `${institution.city}, ${institution.country}`
+              : "Connect your institution to see live metrics."}
+          </p>
+        </div>
       </div>
 
-      {/* 1. Summary Cards */}
       <div className="summary-cards-row">
         <div className="summary-card">
           <div>
             <p className="card-title">Total Students</p>
-            <h3 className="card-value">1,500</h3>
+            <h3 className="card-value">
+              {stats.studentCount.toLocaleString("en-US")}
+            </h3>
           </div>
-          <div
-            className="summary-icon-container"
-            style={{ background: "#dbeafe", color: "#2563eb" }}
-          >
+          <div className="summary-icon-container icon-student">
             <FontAwesomeIcon icon={faUserGraduate} />
           </div>
         </div>
@@ -206,12 +306,11 @@ export default function OwnerDashboard() {
         <div className="summary-card">
           <div>
             <p className="card-title">Total Courses</p>
-            <h3 className="card-value">{courseCount}</h3>
+            <h3 className="card-value">
+              {stats.courseCount.toLocaleString("en-US")}
+            </h3>
           </div>
-          <div
-            className="summary-icon-container"
-            style={{ background: "#fef3c7", color: "#d97706" }}
-          >
+          <div className="summary-icon-container icon-course">
             <FontAwesomeIcon icon={faBookOpen} />
           </div>
         </div>
@@ -219,194 +318,106 @@ export default function OwnerDashboard() {
         <div className="summary-card">
           <div>
             <p className="card-title">Total Teachers</p>
-            <h3 className="card-value">90</h3>
+            <h3 className="card-value">
+              {stats.teacherCount.toLocaleString("en-US")}
+            </h3>
           </div>
-          <div
-            className="summary-icon-container"
-            style={{ background: "#fce7f3", color: "#db2777" }}
-          >
+          <div className="summary-icon-container icon-teacher">
             <FontAwesomeIcon icon={faChalkboardTeacher} />
           </div>
         </div>
 
         <div className="summary-card">
           <div>
-            <p className="card-title">Inst. Admins</p>
-            <h3 className="card-value">{adminCount}</h3>
+            <p className="card-title">Institution Admins</p>
+            <h3 className="card-value">
+              {stats.adminCount.toLocaleString("en-US")}
+            </h3>
           </div>
-          <div
-            className="summary-icon-container"
-            style={{ background: "#d1fae5", color: "#059669" }}
-          >
+          <div className="summary-icon-container icon-admin">
             <FontAwesomeIcon icon={faUserShield} />
           </div>
         </div>
       </div>
 
-      {/* 2. Attendance Section (Bar + Donut) */}
-      <div className="attendance-section">
-        <h3
-          className="card-title"
-          style={{
-            marginBottom: "1.5rem",
-            fontWeight: "bold",
-            fontSize: "1.1rem",
-          }}
-        >
-          Monthly Student Attendance
-        </h3>
-        <div className="attendance-charts-split">
-          <AttendanceChart />
-          <div
-            style={{ borderLeft: "1px solid #e5e7eb", paddingLeft: "1.5rem" }}
-          >
-            <AttendanceBreakdown />
+      <div className="overview-grid">
+        <div className="card distribution-panel">
+          <div className="panel-header">
+            <h3 className="panel-title">Role Distribution</h3>
+            <FontAwesomeIcon icon={faEllipsisH} className="panel-icon" />
+          </div>
+
+          <p className="distribution-subtitle">
+            Total managed users: {totalManagedUsers.toLocaleString("en-US")}
+          </p>
+          <div className="distribution-list">
+            {roleDistribution.map((item) => (
+              <div key={item.label} className="distribution-item">
+                <div className="distribution-row">
+                  <span className="distribution-label">{item.label}</span>
+                  <span className="distribution-meta">
+                    {item.count.toLocaleString("en-US")} ({item.percent}%)
+                  </span>
+                </div>
+                <div className="distribution-track">
+                  <div
+                    className={`distribution-fill ${item.className}`}
+                    style={{ width: `${item.percent}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="card updates-panel">
+          <div className="panel-header">
+            <h3 className="panel-title">Recent Updates</h3>
+            <FontAwesomeIcon icon={faEllipsisH} className="panel-icon" />
+          </div>
+
+          <div className="updates-list">
+            {recentUpdates.length === 0 ? (
+              <p className="empty-updates">No recent updates found.</p>
+            ) : (
+              recentUpdates.map((item) => (
+                <div key={item.id} className="update-item">
+                  <div className={`update-icon ${item.iconClassName}`}>
+                    <FontAwesomeIcon icon={item.icon} />
+                  </div>
+                  <div className="update-content">
+                    <p className="update-title">{item.title}</p>
+                    <p className="update-subtitle">{item.subtitle}</p>
+                  </div>
+                  <span className="update-time">{item.timeAgo}</span>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
 
-      {/* 3. Bottom Row */}
       <div className="bottom-row">
-        {/* Recent Activities */}
-        <div className="card" style={{ flex: 1 }}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "1rem",
-            }}
-          >
-            <h3
-              className="card-title"
-              style={{ marginBottom: 0, fontWeight: "bold" }}
-            >
-              Recent Activities
-            </h3>
-            <FontAwesomeIcon
-              icon={faEllipsisH}
-              color="var(--color-text-secondary)"
-              cursor="pointer"
-            />
+        <div className="card live-snapshot-panel">
+          <div className="panel-header">
+            <h3 className="panel-title">Live Snapshot</h3>
+            <FontAwesomeIcon icon={faEllipsisH} className="panel-icon" />
           </div>
 
-          <div className="activity-list">
-            <div className="activity-item" style={{ alignItems: "center" }}>
-              <div
-                className="summary-icon-container"
-                style={{
-                  width: 40,
-                  height: 40,
-                  background: "#e0f2fe",
-                  color: "#0284c7",
-                  fontSize: "1rem",
-                }}
-              >
-                <FontAwesomeIcon icon={faCheckCircle} />
+          <div className="snapshot-list">
+            {liveSnapshot.map((item) => (
+              <div key={item.label} className="snapshot-item">
+                <span className="snapshot-label">{item.label}</span>
+                <span className="snapshot-value">{item.value}</span>
               </div>
-              <div style={{ flex: 1, paddingLeft: "1rem" }}>
-                <p style={{ fontWeight: "600", margin: 0 }}>
-                  Attendance Marked
-                </p>
-                <p
-                  style={{
-                    fontSize: "0.8rem",
-                    color: "var(--color-text-secondary)",
-                    margin: 0,
-                  }}
-                >
-                  Class 10-A • Physics
-                </p>
-              </div>
-              <span style={{ fontSize: "0.8rem", color: "#6b7280" }}>
-                10 min ago
-              </span>
-            </div>
-
-            <div className="activity-item" style={{ alignItems: "center" }}>
-              <div
-                className="summary-icon-container"
-                style={{
-                  width: 40,
-                  height: 40,
-                  background: "#dcfce7",
-                  color: "#16a34a",
-                  fontSize: "1rem",
-                }}
-              >
-                <FontAwesomeIcon icon={faUserGraduate} />
-              </div>
-              <div style={{ flex: 1, paddingLeft: "1rem" }}>
-                <p style={{ fontWeight: "600", margin: 0 }}>
-                  New Student Enrolled
-                </p>
-                <p
-                  style={{
-                    fontSize: "0.8rem",
-                    color: "var(--color-text-secondary)",
-                    margin: 0,
-                  }}
-                >
-                  Ali Khan • Class 9-B
-                </p>
-              </div>
-              <span style={{ fontSize: "0.8rem", color: "#6b7280" }}>
-                1 hour ago
-              </span>
-            </div>
-
-            <div className="activity-item" style={{ alignItems: "center" }}>
-              <div
-                className="summary-icon-container"
-                style={{
-                  width: 40,
-                  height: 40,
-                  background: "#fef3c7",
-                  color: "#d97706",
-                  fontSize: "1rem",
-                }}
-              >
-                <FontAwesomeIcon icon={faBell} />
-              </div>
-              <div style={{ flex: 1, paddingLeft: "1rem" }}>
-                <p style={{ fontWeight: "600", margin: 0 }}>
-                  Exam Schedule Published
-                </p>
-                <p
-                  style={{
-                    fontSize: "0.8rem",
-                    color: "var(--color-text-secondary)",
-                    margin: 0,
-                  }}
-                >
-                  Mid-Term Fall 2025
-                </p>
-              </div>
-              <span style={{ fontSize: "0.8rem", color: "#6b7280" }}>
-                Yesterday
-              </span>
-            </div>
+            ))}
           </div>
-        </div>
+          </div>
 
-        {/* Event Calendar */}
         <div className="card">
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "0.5rem",
-            }}
-          >
-            <h3 className="card-title" style={{ marginBottom: 0 }}>
-              Event Calendar
-            </h3>
-            <FontAwesomeIcon
-              icon={faEllipsisH}
-              color="var(--color-text-secondary)"
-              cursor="pointer"
-            />
+          <div className="panel-header compact">
+            <h3 className="panel-title">Calendar</h3>
+            <FontAwesomeIcon icon={faEllipsisH} className="panel-icon" />
           </div>
           <EventCalendar />
         </div>

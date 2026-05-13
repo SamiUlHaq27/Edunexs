@@ -4,6 +4,7 @@ import axios, {
   InternalAxiosRequestConfig,
   AxiosResponse,
 } from "axios";
+import { toastService } from "../services/toast.service";
 
 // API Configuration
 const API_BASE_URL =
@@ -57,6 +58,16 @@ apiClient.interceptors.response.use(
       (error.response?.data as { message?: string })?.message ||
       error.message ||
       "An unexpected error occurred";
+
+    // Show error toast (but suppress on specific paths to avoid duplicates)
+    const suppressToastPaths = ["/login", "/signup", "/forgot-password", "/verify-email"];
+    const shouldShowToast = !suppressToastPaths.some((path) =>
+      window.location.pathname.includes(path)
+    );
+
+    if (shouldShowToast) {
+      toastService.error(errorMessage);
+    }
 
     return Promise.reject(new Error(errorMessage));
   }

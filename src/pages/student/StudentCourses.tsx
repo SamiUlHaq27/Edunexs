@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -28,27 +28,20 @@ import {
   type StudentAssignmentItem,
   type StudentQuizGradeItem,
   type StudentAttendanceItem,
+  type StudentAssessmentGradeItem,
 } from "../../services";
 import { feeService, type FeeInvoice } from "../../services/fee.service";
 import StripePaymentModal from "../../components/StripePaymentModal";
 
 type ActiveTab = "assignments" | "quizzes" | "attendance" | "grades";
 
-interface StudentGradeItem {
-  gradeId: number;
-  gradeType: "assignment" | "quiz" | "custom";
-  assessmentId: number | null;
-  title: string | null;
-  maxGrade: number | null;
-  score: number;
-  percentage: number | null;
-  feedback: string | null;
-  gradedAt: string;
-  offering: {
-    id: number | null;
-    sectionName: string | null;
-    courseName: string | null;
-  };
+function isActiveTab(value: unknown): value is ActiveTab {
+  return (
+    value === "assignments" ||
+    value === "quizzes" ||
+    value === "attendance" ||
+    value === "grades"
+  );
 }
 
 const FEE_HISTORY = [
@@ -105,7 +98,15 @@ function getErrorMessage(error: unknown): string {
 }
 
 export default function StudentCourses() {
-  const [activeTab, setActiveTab] = useState<ActiveTab>("assignments");
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const maybeActiveTab = location.state?.activeTab;
+  const selectedActiveTab = isActiveTab(maybeActiveTab) ? maybeActiveTab : null;
+
+  const [activeTab, setActiveTab] = useState<ActiveTab>(
+    selectedActiveTab || "assignments",
+  );
   const [offerings, setOfferings] = useState<StudentOfferingSummary[]>([]);
   const [isLoadingOfferings, setIsLoadingOfferings] = useState(true);
   const [offeringsError, setOfferingsError] = useState<string | null>(null);
@@ -117,7 +118,7 @@ export default function StudentCourses() {
   const [attendanceRows, setAttendanceRows] = useState<StudentAttendanceItem[]>(
     [],
   );
-  const [gradeRows, setGradeRows] = useState<StudentGradeItem[]>([]);
+  const [gradeRows, setGradeRows] = useState<StudentAssessmentGradeItem[]>([]);
   const [feeRows, setFeeRows] = useState<FeeInvoice[]>([]);
   const [feeIsLoading, setFeeIsLoading] = useState(false);
   const [selectedFeeForPayment, setSelectedFeeForPayment] =
@@ -125,9 +126,6 @@ export default function StudentCourses() {
 
   const [tabLoading, setTabLoading] = useState(false);
   const [tabError, setTabError] = useState<string | null>(null);
-
-  const location = useLocation();
-  const navigate = useNavigate();
 
   const isFeePage = location.pathname === "/student/fees";
   const maybeOfferingId = location.state?.offeringId;
@@ -140,6 +138,32 @@ export default function StudentCourses() {
     () => offerings.find((item) => item.id === selectedOfferingId) || null,
     [offerings, selectedOfferingId],
   );
+
+  useEffect(() => {
+    if (!selectedActiveTab) {
+      return;
+    }
+
+    setActiveTab(selectedActiveTab);
+  }, [selectedActiveTab]);
+
+  const loadFees = useCallback(async () => {
+    try {
+      setFeeIsLoading(true);
+      setTabError(null);
+      const response = await feeService.getStudentFees({
+        page: 1,
+        size: 50,
+        filters: {},
+      });
+      setFeeRows(response.data || []);
+    } catch (error) {
+      setTabError(getErrorMessage(error));
+      setFeeRows([]);
+    } finally {
+      setFeeIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (isFeePage) {
@@ -210,7 +234,7 @@ export default function StudentCourses() {
           offeringId: selectedOfferingId,
         });
 
-        setGradeRows((response.data || []) as StudentGradeItem[]);
+        setGradeRows(response.data || []);
       } catch (error) {
         setTabError(getErrorMessage(error));
       } finally {
@@ -225,32 +249,15 @@ export default function StudentCourses() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [activeTab, selectedOfferingId, isFeePage]);
 
+  useEffect(() => {
+    if (!isFeePage) {
+      return;
+    }
+
+    void loadFees();
+  }, [isFeePage, loadFees]);
+
   if (isFeePage) {
-    const loadFees = async () => {
-      try {
-        setFeeIsLoading(true);
-        setTabError(null);
-        const response = await feeService.getStudentFees({
-          page: 1,
-          size: 50,
-          filters: {},
-        });
-        setFeeRows(response.data || []);
-      } catch (error) {
-        setTabError(getErrorMessage(error));
-        setFeeRows([]);
-      } finally {
-        setFeeIsLoading(false);
-      }
-    };
-
-    useEffect(() => {
-      void loadFees();
-    }, []);
-
-    const pendingFee = feeRows.find((f) => f.status === "PENDING");
-    const totalOutstanding = pendingFee ? pendingFee.amount : 0;
-
     const handlePaymentSuccess = () => {
       setSelectedFeeForPayment(null);
       void loadFees();
@@ -269,12 +276,6 @@ export default function StudentCourses() {
             <p className="hero-subtitle">
               Check your payment history and pending dues.
             </p>
-          </div>
-          <div className="hero-progress-box" style={{ width: "auto" }}>
-            <small style={{ color: "#6b7280" }}>Total Outstanding</small>
-            <h2 style={{ margin: 0, color: "#ef4444" }}>
-              Rs. {totalOutstanding.toFixed(2)}
-            </h2>
           </div>
         </div>
 
@@ -387,23 +388,26 @@ export default function StudentCourses() {
                           </span>
                         </td>
                         <td style={{ padding: "1.2rem" }}>
-                          {fee.status === "PAID" ? (
+                          {fee.status !== "PAID" ? (
+                            <button
+                              className="btn btn-primary btn-sm"
+                              onClick={() => setSelectedFeeForPayment(fee)}
+                            >
+                              <FontAwesomeIcon icon={faCreditCard} /> Pay
+                            </button>
+                          ) : (
                             <button
                               className="btn btn-sm"
                               style={{
                                 background: "#eff6ff",
                                 color: "#2563eb",
                                 border: "none",
+                                cursor: "not-allowed",
+                                opacity: 0.65,
                               }}
+                              disabled
                             >
-                              <FontAwesomeIcon icon={faDownload} /> Receipt
-                            </button>
-                          ) : (
-                            <button
-                              className="btn btn-primary btn-sm"
-                              onClick={() => setSelectedFeeForPayment(fee)}
-                            >
-                              <FontAwesomeIcon icon={faCreditCard} /> Pay
+                              <FontAwesomeIcon icon={faDownload} /> Paid
                             </button>
                           )}
                         </td>
@@ -434,42 +438,20 @@ export default function StudentCourses() {
   if (!selectedOfferingId) {
     return (
       <div className="student-course-page">
-        <div
-          className="student-header-card"
-          style={{
-            background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
-            marginBottom: "0.5rem",
-            position: "relative",
-            overflow: "hidden",
-            minHeight: "150px",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-          }}
-        >
-          <div className="hero-content">
-            <span className="badge badge-outline">Academic Workspace</span>
-            <h1
-              className="hero-title"
-              style={{ fontSize: "2rem", marginTop: "0.75rem" }}
-            >
-              My Courses
-            </h1>
-            <p className="hero-subtitle">
+        <div className="student-header-card">
+          <div className="student-header-card-content">
+            <span className="student-header-card-badge">
+              Academic Workspace
+            </span>
+            <h1 className="student-header-card-title">My Courses</h1>
+            <p className="student-header-card-subtitle">
               Select a course to open assignments, quizzes, attendance, and
               grades.
             </p>
           </div>
           <FontAwesomeIcon
             icon={faBookReader}
-            style={{
-              position: "absolute",
-              right: "18px",
-              bottom: "-16px",
-              fontSize: "7rem",
-              opacity: 0.15,
-              transform: "rotate(-12deg)",
-            }}
+            className="student-header-card-graphic"
           />
         </div>
 
@@ -500,99 +482,75 @@ export default function StudentCourses() {
             {offerings.map((offering) => (
               <div
                 key={offering.id}
-                className="card settings-container"
+                className="card settings-container course-card-enhanced student-course-card"
                 style={{
-                  borderRadius: "14px",
-                  padding: "1.25rem",
-                  border: "1px solid #e2e8f0",
                   display: "flex",
                   flexDirection: "column",
-                  gap: "0.95rem",
+                  gap: "1rem",
+                  padding: 0,
+                  overflow: "hidden",
                 }}
               >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "flex-start",
-                    gap: "0.8rem",
-                  }}
-                >
-                  <div
-                    className="task-icon"
-                    style={{
-                      background: "#e0f2fe",
-                      color: "#0369a1",
-                      margin: 0,
-                    }}
-                  >
-                    <FontAwesomeIcon icon={faChalkboardTeacher} />
+                <div className="course-card-accent" />
+
+                <div className="course-card-body">
+                  <div className="course-card-top-row">
+                    <div
+                      className="course-card-icon"
+                      style={{
+                        background: offering.isActive ? "#dbeafe" : "#f1f5f9",
+                        color: offering.isActive ? "#1d4ed8" : "#475569",
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faChalkboardTeacher} />
+                    </div>
+
+                    <span
+                      className={`course-card-status ${offering.isActive ? "is-active" : "is-inactive"}`}
+                    >
+                      {offering.isActive ? "Active" : "Inactive"}
+                    </span>
                   </div>
-                  <span
-                    className="status-badge"
-                    style={{
-                      background: offering.isActive ? "#dcfce7" : "#fef2f2",
-                      color: offering.isActive ? "#166534" : "#b91c1c",
-                    }}
-                  >
-                    {offering.isActive ? "Active" : "Inactive"}
-                  </span>
-                </div>
 
-                <div>
-                  <h4
-                    style={{
-                      margin: "0 0 0.45rem 0",
-                      fontSize: "1.15rem",
-                      color: "#111827",
-                    }}
-                  >
-                    {offering.courseTitle || `Course ${offering.courseId}`}
-                  </h4>
-                  <p
-                    style={{ margin: 0, color: "#64748b", fontSize: "0.9rem" }}
-                  >
-                    Instructor: {offering.teacherName || "Teacher"}
-                  </p>
-                </div>
+                  <div>
+                    <h4 className="course-card-title">
+                      {offering.courseTitle || `Course ${offering.courseId}`}
+                    </h4>
+                    <p className="course-card-subtitle">
+                      Instructor: {offering.teacherName || "Teacher"}
+                    </p>
+                  </div>
 
-                <div
-                  style={{
-                    display: "grid",
-                    gap: "0.45rem",
-                    color: "#334155",
-                    fontSize: "0.9rem",
-                  }}
-                >
-                  <span>Section: {offering.sectionName || "N/A"}</span>
-                  <span>Course Code: {offering.courseCode || "N/A"}</span>
-                  <span>Offering ID: {offering.id}</span>
-                </div>
+                  <div className="course-card-meta-grid">
+                    <span className="course-card-meta-item">
+                      <strong>Section</strong>
+                      <span>{offering.sectionName || "N/A"}</span>
+                    </span>
+                    <span className="course-card-meta-item">
+                      <strong>Code</strong>
+                      <span>{offering.courseCode || "N/A"}</span>
+                    </span>
+                    <span className="course-card-meta-item">
+                      <strong>Students</strong>
+                      <span>{offering.studentProfileIds.length}</span>
+                    </span>
+                  </div>
 
-                <button
-                  type="button"
-                  className="btn"
-                  style={{
-                    background: "#f8fafc",
-                    color: "#1d4ed8",
-                    border: "1px solid #dbeafe",
-                    width: "100%",
-                    justifyContent: "center",
-                    marginTop: "auto",
-                    fontWeight: 700,
-                  }}
-                  onClick={() =>
-                    navigate("/student/courses", {
-                      state: { offeringId: offering.id },
-                    })
-                  }
-                >
-                  Open Course
-                  <FontAwesomeIcon
-                    icon={faArrowRight}
-                    style={{ marginLeft: "0.5rem" }}
-                  />
-                </button>
+                  <div className="course-card-footer-row">
+                    <button
+                      type="button"
+                      className="btn course-card-cta"
+                      onClick={() =>
+                        navigate("/student/courses", {
+                          state: { offeringId: offering.id },
+                        })
+                      }
+                    >
+                      Open Course
+                      <FontAwesomeIcon icon={faArrowRight} />
+                    </button>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -768,6 +726,7 @@ export default function StudentCourses() {
                             offeringId: selectedOffering.id,
                             quizId: quiz.quizId,
                             quizTitle: quiz.title,
+                            activeTab: "quizzes",
                           },
                         })
                       }
@@ -911,7 +870,10 @@ export default function StudentCourses() {
                           fontWeight: 900,
                         }}
                       >
-                        {grade.score}/{grade.maxGrade ?? 100}
+                        {grade.score}/
+                        {grade.maxGrade !== null && grade.maxGrade !== undefined
+                          ? grade.maxGrade
+                          : "-"}
                       </span>
                     </div>
                     <div style={{ width: "100%" }}>

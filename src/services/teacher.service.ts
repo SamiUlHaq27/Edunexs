@@ -28,11 +28,12 @@ export interface DeleteTeacherDto {
 export interface Teacher {
   id: number;
   name: string;
-  email?: string;
+  recoveryEmail?: string;
   username?: string;
   password?: string;
+  role?: string;
   isActive: boolean;
-  institutionId: number;
+  institutionPrefix?: string;
   profilePictureFileId?: string;
   profilePicture?: {
     id: string;
@@ -47,20 +48,13 @@ interface PaginatedTeachersResponse {
   data: Teacher[];
   total: number;
   page: number;
-  limit: number;
+  size: number;
+  totalPages: number;
 }
 
-interface CreateTeacherResponse {
-  success: boolean;
-  message: string;
-  teacher?: Teacher;
-}
+type CreateTeacherResponse = Teacher;
 
-interface UpdateTeacherResponse {
-  success: boolean;
-  message: string;
-  teacher?: Teacher;
-}
+type UpdateTeacherResponse = Teacher;
 
 interface DeleteTeacherResponse {
   success: boolean;

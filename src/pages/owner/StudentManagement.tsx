@@ -22,9 +22,13 @@ import {
 import {
   studentService,
   studentGroupService,
+  authService,
   Student as ApiStudent,
   StudentGroup as ApiStudentGroup,
 } from "../../services";
+import { OtpType } from "../../types";
+import { toastService } from "../../services/toast.service";
+import ConfirmActionModal from "../../components/ConfirmActionModal";
 import "../../styles/owner.css";
 
 export default function StudentManagement() {
@@ -38,7 +42,9 @@ export default function StudentManagement() {
 
   // --- UI State ---
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState<"All" | "Active" | "Inactive">("All");
+  const [filterStatus, setFilterStatus] = useState<
+    "All" | "Active" | "Inactive"
+  >("All");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [studentMenuPosition, setStudentMenuPosition] = useState({
@@ -50,6 +56,11 @@ export default function StudentManagement() {
   const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
   const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [pendingDeleteAction, setPendingDeleteAction] = useState<{
+    type: "student" | "group";
+    id: number;
+  } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [profilePhotoPreview, setProfilePhotoPreview] = useState<string>(
     "/dummy/teacher-dummy-profile-picture.png",
@@ -63,6 +74,7 @@ export default function StudentManagement() {
     rollNo: "",
     name: "",
     recoveryEmail: "",
+    otp: "",
     grade: "",
     password: "",
   });
@@ -79,19 +91,28 @@ export default function StudentManagement() {
       setError("");
       const [studentsResponse, groupsResponse] = await Promise.all([
         studentService.getStudents({ page: 1, size: 100, filters: {} }),
-        studentGroupService.getStudentGroups({ page: 1, size: 100, filters: {} }),
+        studentGroupService.getStudentGroups({
+          page: 1,
+          size: 100,
+          filters: {},
+        }),
       ]);
       setStudents(studentsResponse.data || []);
       setGroups(groupsResponse.data || []);
     } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || "Failed to load data");
+      setError(
+        err?.response?.data?.message || err?.message || "Failed to load data",
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    const handleClickOutside = () => { setOpenMenuId(null); setIsFilterOpen(false); };
+    const handleClickOutside = () => {
+      setOpenMenuId(null);
+      setIsFilterOpen(false);
+    };
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
@@ -154,11 +175,13 @@ export default function StudentManagement() {
         rollNo: student.rollNo,
         name: student.name,
         recoveryEmail: student.recoveryEmail || "",
+        otp: "",
         grade: student.grade,
         password: "",
       });
       setProfilePhotoPreview(
-        student.profilePicture?.publicUrl || "/dummy/teacher-dummy-profile-picture.png",
+        student.profilePicture?.publicUrl ||
+          "/dummy/teacher-dummy-profile-picture.png",
       );
     } else {
       setStudentForm({
@@ -167,6 +190,7 @@ export default function StudentManagement() {
         rollNo: "",
         name: "",
         recoveryEmail: "",
+        otp: "",
         grade: "",
         password: "",
       });
@@ -181,6 +205,16 @@ export default function StudentManagement() {
     e.preventDefault();
     setError("");
     const rollNo = studentForm.rollNo.trim();
+
+    if (
+      studentForm.id === 0 &&
+      studentForm.recoveryEmail.trim() &&
+      studentForm.otp.trim().length < 6
+    ) {
+      setError("OTP is required when email is provided");
+      return;
+    }
+
     try {
       setIsSaving(true);
       if (studentForm.id !== 0) {
@@ -201,6 +235,7 @@ export default function StudentManagement() {
           grade: studentForm.grade,
           password: studentForm.password,
           recoveryEmail: studentForm.recoveryEmail || undefined,
+          otp: studentForm.otp || undefined,
           ...(profilePhotoFile && { profilePicture: profilePhotoFile }),
         });
         setSuccessMessage("Student created successfully!");
@@ -208,23 +243,72 @@ export default function StudentManagement() {
       await loadData();
       setIsStudentModalOpen(false);
     } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || "Failed to save student");
+      setError(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Failed to save student",
+      );
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleDeleteStudent = async (id: number) => {
-    if (!window.confirm("Remove this student?")) return;
+  const handleSendOtp = async () => {
+    const email = studentForm.recoveryEmail.trim();
+    if (!email) {
+      setError("Please enter an email address first");
+      return;
+    }
+
+    setIsSendingOtp(true);
+    setError("");
+    setSuccessMessage("");
+
+    try {
+      await authService.sendOtp({ email, type: OtpType.EMAIL_VERIFICATION });
+      setSuccessMessage(`OTP sent successfully to ${email}`);
+    } catch (err: any) {
+      setError(
+        err?.response?.data?.message || err?.message || "Failed to send OTP",
+      );
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
+  const requestDeleteStudent = (id: number) => {
+    setPendingDeleteAction({ type: "student", id });
+  };
+
+  const requestDeleteGroup = (id: number) => {
+    setPendingDeleteAction({ type: "group", id });
+  };
+
+  const handleDeleteSelected = async () => {
+    if (!pendingDeleteAction) return;
+
     try {
       setError("");
-      await studentService.deleteStudent(id);
-      setSuccessMessage("Student removed successfully!");
+
+      if (pendingDeleteAction.type === "student") {
+        await studentService.deleteStudent(pendingDeleteAction.id);
+        setSuccessMessage("Student removed successfully!");
+      } else {
+        await studentGroupService.deleteStudentGroup(pendingDeleteAction.id);
+        setSuccessMessage("Group deleted successfully!");
+      }
+
       await loadData();
     } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || "Failed to remove student");
+      const fallbackMessage =
+        pendingDeleteAction.type === "student"
+          ? "Failed to remove student"
+          : "Failed to delete group";
+      setError(err?.response?.data?.message || err?.message || fallbackMessage);
+    } finally {
+      setPendingDeleteAction(null);
+      setOpenMenuId(null);
     }
-    setOpenMenuId(null);
   };
 
   const toggleStudentStatus = async (student: ApiStudent) => {
@@ -234,10 +318,16 @@ export default function StudentManagement() {
         studentId: student.id,
         isActive: !student.isActive,
       });
-      setSuccessMessage(`Student ${student.isActive ? "deactivated" : "activated"} successfully!`);
+      setSuccessMessage(
+        `Student ${student.isActive ? "deactivated" : "activated"} successfully!`,
+      );
       await loadData();
     } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || "Failed to update student status");
+      setError(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Failed to update student status",
+      );
     }
     setOpenMenuId(null);
   };
@@ -296,25 +386,16 @@ export default function StudentManagement() {
       await loadData();
       setIsGroupModalOpen(false);
     } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || "Failed to save group");
+      setError(
+        err?.response?.data?.message || err?.message || "Failed to save group",
+      );
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDeleteGroup = async (id: number) => {
-    if (!window.confirm("Delete this group? Students will remain in the directory.")) {
-      return;
-    }
-    try {
-      setError("");
-      await studentGroupService.deleteStudentGroup(id);
-      setSuccessMessage("Group deleted successfully!");
-      await loadData();
-    } catch (err: any) {
-      setError(err?.response?.data?.message || err?.message || "Failed to delete group");
-    }
-    setOpenMenuId(null);
+    requestDeleteGroup(id);
   };
 
   const toggleGroupStudent = (studentProfileId: number) => {
@@ -375,45 +456,101 @@ export default function StudentManagement() {
           Loading students and groups...
         </div>
       )}
-      
+
       {/* --- Page Header & Action Buttons --- */}
-      <div style={{ marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#111827', margin: 0 }}>Student Management</h2>
-          
+      <div style={{ marginBottom: "2rem" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "1.5rem",
+          }}
+        >
+          <h2
+            style={{
+              fontSize: "1.75rem",
+              fontWeight: "bold",
+              color: "#111827",
+              margin: 0,
+            }}
+          >
+            Student Management
+          </h2>
+
           {/* Contextual Top-Right Action Button */}
-          {activeTab === 'students' ? (
-            <button className="btn btn-primary" style={{ backgroundColor: '#1e3a8a' }} onClick={() => handleOpenStudentModal()}>
+          {activeTab === "students" ? (
+            <button
+              className="btn btn-primary"
+              style={{ backgroundColor: "#1e3a8a" }}
+              onClick={() => handleOpenStudentModal()}
+            >
               <FontAwesomeIcon icon={faPlus} /> Register Student
             </button>
           ) : (
-            <button className="btn btn-primary" style={{ backgroundColor: '#1e3a8a' }} onClick={() => handleOpenGroupModal()}>
+            <button
+              className="btn btn-primary"
+              style={{ backgroundColor: "#1e3a8a" }}
+              onClick={() => handleOpenGroupModal()}
+            >
               <FontAwesomeIcon icon={faPlus} /> Create New Group
             </button>
           )}
         </div>
-        
+
         {/* Professional Tabs */}
-        <div style={{ display: 'flex', gap: '1.5rem', borderBottom: '2px solid #e5e7eb' }}>
-          <button 
-            style={{ 
-              padding: '0.75rem 0', border: 'none', background: 'none', 
-              borderBottom: activeTab === 'students' ? '2px solid var(--color-primary-500)' : '2px solid transparent', 
-              color: activeTab === 'students' ? 'var(--color-primary-500)' : '#6b7280', 
-              fontWeight: '600', fontSize: '1rem', cursor: 'pointer', display: 'flex', gap: '0.5rem', 
-              alignItems: 'center', marginBottom: '-2px', transition: 'all 0.2s' 
+        <div
+          style={{
+            display: "flex",
+            gap: "1.5rem",
+            borderBottom: "2px solid #e5e7eb",
+          }}
+        >
+          <button
+            style={{
+              padding: "0.75rem 0",
+              border: "none",
+              background: "none",
+              borderBottom:
+                activeTab === "students"
+                  ? "2px solid var(--color-primary-500)"
+                  : "2px solid transparent",
+              color:
+                activeTab === "students"
+                  ? "var(--color-primary-500)"
+                  : "#6b7280",
+              fontWeight: "600",
+              fontSize: "1rem",
+              cursor: "pointer",
+              display: "flex",
+              gap: "0.5rem",
+              alignItems: "center",
+              marginBottom: "-2px",
+              transition: "all 0.2s",
             }}
             onClick={() => setActiveTab("students")}
           >
             <FontAwesomeIcon icon={faAddressBook} /> Student Directory
           </button>
-          <button 
-            style={{ 
-              padding: '0.75rem 0', border: 'none', background: 'none', 
-              borderBottom: activeTab === 'groups' ? '2px solid var(--color-primary-500)' : '2px solid transparent', 
-              color: activeTab === 'groups' ? 'var(--color-primary-500)' : '#6b7280', 
-              fontWeight: '600', fontSize: '1rem', cursor: 'pointer', display: 'flex', gap: '0.5rem', 
-              alignItems: 'center', marginBottom: '-2px', transition: 'all 0.2s' 
+          <button
+            style={{
+              padding: "0.75rem 0",
+              border: "none",
+              background: "none",
+              borderBottom:
+                activeTab === "groups"
+                  ? "2px solid var(--color-primary-500)"
+                  : "2px solid transparent",
+              color:
+                activeTab === "groups" ? "var(--color-primary-500)" : "#6b7280",
+              fontWeight: "600",
+              fontSize: "1rem",
+              cursor: "pointer",
+              display: "flex",
+              gap: "0.5rem",
+              alignItems: "center",
+              marginBottom: "-2px",
+              transition: "all 0.2s",
             }}
             onClick={() => setActiveTab("groups")}
           >
@@ -424,43 +561,82 @@ export default function StudentManagement() {
 
       {/* --- TAB: STUDENTS --- */}
       {activeTab === "students" && (
-        <div className="card" style={{ padding: '1.5rem', minHeight: '400px', border: 'none' }}>
-          
+        <div
+          className="card"
+          style={{ padding: "1.5rem", minHeight: "400px", border: "none" }}
+        >
           {/* Search & Filter Bar (Right Aligned) */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginBottom: '1.5rem', position: 'relative' }}>
-            
-            <div className="input-with-icon" style={{ margin: 0, width: '300px' }}>
-              <span className="input-icon"><FontAwesomeIcon icon={faSearch} /></span>
-              <input className="auth-input" placeholder="Search by name or roll number..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={{ height: '38px', fontSize: '0.9rem' }} />
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              gap: "1rem",
+              marginBottom: "1.5rem",
+              position: "relative",
+            }}
+          >
+            <div
+              className="input-with-icon"
+              style={{ margin: 0, width: "300px" }}
+            >
+              <span className="input-icon">
+                <FontAwesomeIcon icon={faSearch} />
+              </span>
+              <input
+                className="auth-input"
+                placeholder="Search by name or roll number..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{ height: "38px", fontSize: "0.9rem" }}
+              />
             </div>
 
             {/* Filter Dropdown */}
-            <div style={{ position: 'relative' }}>
-              <button 
-                className="btn" 
-                style={{ height: '38px', background: '#fff', border: '1px solid #d1d5db', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem' }}
+            <div style={{ position: "relative" }}>
+              <button
+                className="btn"
+                style={{
+                  height: "38px",
+                  background: "#fff",
+                  border: "1px solid #d1d5db",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                  fontSize: "0.9rem",
+                }}
                 onClick={toggleFilter}
               >
-                {filterStatus === "All" ? "Filter" : filterStatus} <FontAwesomeIcon icon={faFilter} />
+                {filterStatus === "All" ? "Filter" : filterStatus}{" "}
+                <FontAwesomeIcon icon={faFilter} />
               </button>
-              
+
               {isFilterOpen && (
                 <div className="filter-dropdown">
-                  {['All', 'Active', 'Inactive'].map((status) => (
-                    <button 
-                      key={status} 
-                      className="dropdown-item" 
-                      onClick={() => { setFilterStatus(status as any); setIsFilterOpen(false); }}
-                      style={{ justifyContent: 'space-between', padding: '0.6rem 1rem' }}
+                  {["All", "Active", "Inactive"].map((status) => (
+                    <button
+                      key={status}
+                      className="dropdown-item"
+                      onClick={() => {
+                        setFilterStatus(status as any);
+                        setIsFilterOpen(false);
+                      }}
+                      style={{
+                        justifyContent: "space-between",
+                        padding: "0.6rem 1rem",
+                      }}
                     >
                       {status}
-                      {filterStatus === status && <FontAwesomeIcon icon={faCheck} style={{ color: '#10b981' }} />}
+                      {filterStatus === status && (
+                        <FontAwesomeIcon
+                          icon={faCheck}
+                          style={{ color: "#10b981" }}
+                        />
+                      )}
                     </button>
                   ))}
                 </div>
               )}
             </div>
-            
           </div>
 
           <div className="admin-table-container">
@@ -477,31 +653,85 @@ export default function StudentManagement() {
               </thead>
               <tbody>
                 {filteredStudents.length > 0 ? (
-                  filteredStudents.map(student => (
+                  filteredStudents.map((student) => (
                     <tr key={student.id}>
                       <td className="col-profile">
-                        <img src={student.profilePicture?.publicUrl || "/dummy/teacher-dummy-profile-picture.png"} alt="Profile" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} />
+                        <img
+                          src={
+                            student.profilePicture?.publicUrl ||
+                            "/dummy/teacher-dummy-profile-picture.png"
+                          }
+                          alt="Profile"
+                          style={{
+                            width: "40px",
+                            height: "40px",
+                            borderRadius: "50%",
+                            objectFit: "cover",
+                          }}
+                        />
                       </td>
                       <td className="col-name">
-                          <div style={{ fontWeight: '600', color: '#111827' }}>{student.name}</div>
-                          <div style={{ fontSize: '0.75rem', color: '#6b7280', fontFamily: 'monospace' }}>{student.rollNo}</div>
+                        <div style={{ fontWeight: "600", color: "#111827" }}>
+                          {student.name}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: "0.75rem",
+                            color: "#6b7280",
+                            fontFamily: "monospace",
+                          }}
+                        >
+                          {student.rollNo}
+                        </div>
                       </td>
                       <td>
-                          <div style={{ color: '#374151', fontSize: '0.9rem', fontWeight: '500' }}>{student.grade}</div>
-                          <div style={{ fontSize: '0.75rem', color: '#8b5cf6', fontWeight: 'bold' }}>{getStudentGroup(student.id)}</div>
+                        <div
+                          style={{
+                            color: "#374151",
+                            fontSize: "0.9rem",
+                            fontWeight: "500",
+                          }}
+                        >
+                          {student.grade}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: "0.75rem",
+                            color: "#8b5cf6",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          {getStudentGroup(student.id)}
+                        </div>
                       </td>
                       <td>
-                          <div style={{ color: '#4b5563', fontSize: '0.85rem' }}>{student.recoveryEmail || "-"}</div>
-                          {student.recoveryEmail && <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>Recovery Email</div>}
+                        <div style={{ color: "#4b5563", fontSize: "0.85rem" }}>
+                          {student.recoveryEmail || "-"}
+                        </div>
+                        {student.recoveryEmail && (
+                          <div
+                            style={{ fontSize: "0.75rem", color: "#9ca3af" }}
+                          >
+                            Recovery Email
+                          </div>
+                        )}
                       </td>
                       <td className="col-status">
-                        <span className={`status-pill ${student.isActive ? 'status-active' : 'status-inactive'}`}>{student.isActive ? "Active" : "Inactive"}</span>
+                        <span
+                          className={`status-pill ${student.isActive ? "status-active" : "status-inactive"}`}
+                        >
+                          {student.isActive ? "Active" : "Inactive"}
+                        </span>
                       </td>
                       <td className="col-actions">
                         <div className="action-btn-wrapper">
                           <button
                             className="btn action-btn"
-                            style={{ background: 'transparent', padding: '0.4rem', color: '#6b7280' }}
+                            style={{
+                              background: "transparent",
+                              padding: "0.4rem",
+                              color: "#6b7280",
+                            }}
                             onClick={(e) => toggleStudentMenu(student.id, e)}
                           >
                             <FontAwesomeIcon icon={faEllipsisH} />
@@ -512,8 +742,19 @@ export default function StudentManagement() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} style={{ textAlign: 'center', padding: '3rem 1rem', color: '#6b7280' }}>
-                      <FontAwesomeIcon icon={faUserGraduate} size="2x" style={{ marginBottom: '1rem', color: '#d1d5db' }} />
+                    <td
+                      colSpan={6}
+                      style={{
+                        textAlign: "center",
+                        padding: "3rem 1rem",
+                        color: "#6b7280",
+                      }}
+                    >
+                      <FontAwesomeIcon
+                        icon={faUserGraduate}
+                        size="2x"
+                        style={{ marginBottom: "1rem", color: "#d1d5db" }}
+                      />
                       <p>No students found in the directory.</p>
                     </td>
                   </tr>
@@ -533,7 +774,9 @@ export default function StudentManagement() {
               }}
             >
               {(() => {
-                const selectedStudent = students.find((s) => s.id === openMenuId);
+                const selectedStudent = students.find(
+                  (s) => s.id === openMenuId,
+                );
                 if (!selectedStudent) return null;
                 return (
                   <>
@@ -559,7 +802,7 @@ export default function StudentManagement() {
                     <button
                       className="dropdown-item danger"
                       onClick={() => {
-                        handleDeleteStudent(selectedStudent.id);
+                        requestDeleteStudent(selectedStudent.id);
                         setOpenMenuId(null);
                       }}
                     >
@@ -572,72 +815,177 @@ export default function StudentManagement() {
           )}
 
           {/* Pagination Footer */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', color: '#6b7280', fontSize: '0.85rem' }}>
-             <span>Showing {filteredStudents.length} of {students.length} students</span>
-             <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button className="btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', background: '#fff', border: '1px solid #d1d5db', cursor: 'not-allowed', color: '#9ca3af' }} disabled>Previous</button>
-                <button className="btn btn-primary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}>1</button>
-                <button className="btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', background: '#fff', border: '1px solid #d1d5db', cursor: 'not-allowed', color: '#9ca3af' }} disabled>Next</button>
-             </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginTop: "1.5rem",
+              color: "#6b7280",
+              fontSize: "0.85rem",
+            }}
+          >
+            <span>
+              Showing {filteredStudents.length} of {students.length} students
+            </span>
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <button
+                className="btn"
+                style={{
+                  padding: "0.4rem 0.8rem",
+                  fontSize: "0.85rem",
+                  background: "#fff",
+                  border: "1px solid #d1d5db",
+                  cursor: "not-allowed",
+                  color: "#9ca3af",
+                }}
+                disabled
+              >
+                Previous
+              </button>
+              <button
+                className="btn btn-primary"
+                style={{ padding: "0.4rem 0.8rem", fontSize: "0.85rem" }}
+              >
+                1
+              </button>
+              <button
+                className="btn"
+                style={{
+                  padding: "0.4rem 0.8rem",
+                  fontSize: "0.85rem",
+                  background: "#fff",
+                  border: "1px solid #d1d5db",
+                  cursor: "not-allowed",
+                  color: "#9ca3af",
+                }}
+                disabled
+              >
+                Next
+              </button>
+            </div>
           </div>
-
         </div>
       )}
 
       {/* --- TAB: GROUPS --- */}
       {activeTab === "groups" && (
         <div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.5rem' }}>
-            {groups.map(group => (
-               <div key={group.id} className="card" style={{ 
-                 padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', 
-                 borderTop: '4px solid var(--color-primary-500)', transition: 'transform 0.2s, box-shadow 0.2s' 
-               }}>
-                 {/* Group Header */}
-                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                   <div>
-                     <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 'bold', color: '#111827' }}>{group.name}</h3>
-                     <p style={{ margin: '0.35rem 0 0 0', fontSize: '0.85rem', color: '#6b7280', fontWeight: '500' }}>
-                       <FontAwesomeIcon icon={faUsers} style={{ marginRight: '0.25rem' }}/> {group.studentIds?.length || 0} Students Enrolled
-                     </p>
-                   </div>
-                   <div className="action-btn-wrapper">
-                      <button className="btn action-btn" onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === group.id ? null : group.id); }}>
-                        <FontAwesomeIcon icon={faEllipsisH} />
-                      </button>
-                      {openMenuId === group.id && (
-                        <div className="action-menu-dropdown">
-                          <button className="dropdown-item" onClick={() => handleOpenGroupModal(group)}><FontAwesomeIcon icon={faEdit} fixedWidth /> Edit Group</button>
-                          <button className="dropdown-item danger" onClick={() => handleDeleteGroup(group.id)}><FontAwesomeIcon icon={faTrash} fixedWidth /> Delete Group</button>
-                        </div>
-                      )}
-                   </div>
-                 </div>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))",
+              gap: "1.5rem",
+            }}
+          >
+            {groups.map((group) => (
+              <div
+                key={group.id}
+                className="card"
+                style={{
+                  padding: "1.5rem",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "1.25rem",
+                  borderTop: "4px solid var(--color-primary-500)",
+                  transition: "transform 0.2s, box-shadow 0.2s",
+                }}
+              >
+                {/* Group Header */}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                  }}
+                >
+                  <div>
+                    <h3
+                      style={{
+                        margin: 0,
+                        fontSize: "1.25rem",
+                        fontWeight: "bold",
+                        color: "#111827",
+                      }}
+                    >
+                      {group.name}
+                    </h3>
+                    <p
+                      style={{
+                        margin: "0.35rem 0 0 0",
+                        fontSize: "0.85rem",
+                        color: "#6b7280",
+                        fontWeight: "500",
+                      }}
+                    >
+                      <FontAwesomeIcon
+                        icon={faUsers}
+                        style={{ marginRight: "0.25rem" }}
+                      />{" "}
+                      {group.studentIds?.length || 0} Students Enrolled
+                    </p>
+                  </div>
+                  <div className="action-btn-wrapper">
+                    <button
+                      className="btn action-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenMenuId(
+                          openMenuId === group.id ? null : group.id,
+                        );
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faEllipsisH} />
+                    </button>
+                    {openMenuId === group.id && (
+                      <div className="action-menu-dropdown">
+                        <button
+                          className="dropdown-item"
+                          onClick={() => handleOpenGroupModal(group)}
+                        >
+                          <FontAwesomeIcon icon={faEdit} fixedWidth /> Edit
+                          Group
+                        </button>
+                        <button
+                          className="dropdown-item danger"
+                          onClick={() => requestDeleteGroup(group.id)}
+                        >
+                          <FontAwesomeIcon icon={faTrash} fixedWidth /> Delete
+                          Group
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-                 {/* Spacer to push button down if needed */}
-                 <div style={{ flexGrow: 1 }}></div>
+                {/* Spacer to push button down if needed */}
+                <div style={{ flexGrow: 1 }}></div>
 
-                 {/* Manage Button */}
-                 <button 
-                   className="btn" 
-                   style={{ 
-                     width: '100%', 
-                     background: '#e0e7ff',
-                     color: '#4338ca',     
-                     border: 'none', 
-                     fontWeight: '600',
-                     justifyContent: 'center',
-                     padding: '0.6rem 1rem',
-                     borderRadius: '6px',
-                     transition: 'all 0.2s ease'
-                   }} 
-                   onMouseEnter={(e) => e.currentTarget.style.background = '#c7d2fe'}
-                   onMouseLeave={(e) => e.currentTarget.style.background = '#e0e7ff'}
-                   onClick={() => handleOpenGroupModal(group)}
-                 >
-                   Manage Group
-                 </button>
-               </div>
+                {/* Manage Button */}
+                <button
+                  className="btn"
+                  style={{
+                    width: "100%",
+                    background: "#e0e7ff",
+                    color: "#4338ca",
+                    border: "none",
+                    fontWeight: "600",
+                    justifyContent: "center",
+                    padding: "0.6rem 1rem",
+                    borderRadius: "6px",
+                    transition: "all 0.2s ease",
+                  }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.background = "#c7d2fe")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.background = "#e0e7ff")
+                  }
+                  onClick={() => handleOpenGroupModal(group)}
+                >
+                  Manage Group
+                </button>
+              </div>
             ))}
           </div>
         </div>
@@ -646,28 +994,93 @@ export default function StudentManagement() {
       {/* --- MODAL: STUDENT REGISTRATION --- */}
       {isStudentModalOpen && (
         <div className="owner-modal-overlay">
-          <div className="owner-modal" style={{ width: '650px' }}>
-            <div className="owner-modal-header" style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <h3 style={{ margin: 0 }}>{studentForm.id === 0 ? "Register Student" : "Edit Student Details"}</h3>
-              <button onClick={() => setIsStudentModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><FontAwesomeIcon icon={faTimes} size="lg" color="#6b7280" /></button>
+          <div className="owner-modal" style={{ width: "650px" }}>
+            <div
+              className="owner-modal-header"
+              style={{ display: "flex", justifyContent: "space-between" }}
+            >
+              <h3 style={{ margin: 0 }}>
+                {studentForm.id === 0
+                  ? "Register Student"
+                  : "Edit Student Details"}
+              </h3>
+              <button
+                onClick={() => setIsStudentModalOpen(false)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                <FontAwesomeIcon icon={faTimes} size="lg" color="#6b7280" />
+              </button>
             </div>
             <form onSubmit={handleSaveStudent}>
-              <div style={{ display: 'flex', justifyContent: 'center', padding: '1.5rem 1.5rem 1rem', borderBottom: '1px solid #e5e7eb' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-                  <img src={profilePhotoPreview} alt="Preview" style={{ width: '120px', height: '120px', borderRadius: '50%', objectFit: 'cover', border: '3px solid #e5e7eb' }} />
-                  <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="image/*" onChange={handleFileChange} />
-                  <button type="button" className="btn" onClick={() => fileInputRef.current?.click()} disabled={isSaving} style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', backgroundColor: '#f3f4f6', border: '1px solid #d1d5db', color: '#374151' }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  padding: "1.5rem 1.5rem 1rem",
+                  borderBottom: "1px solid #e5e7eb",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: "1rem",
+                  }}
+                >
+                  <img
+                    src={profilePhotoPreview}
+                    alt="Preview"
+                    style={{
+                      width: "120px",
+                      height: "120px",
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                      border: "3px solid #e5e7eb",
+                    }}
+                  />
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    style={{ display: "none" }}
+                    accept="image/*"
+                    onChange={handleFileChange}
+                  />
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isSaving}
+                    style={{
+                      padding: "0.5rem 1rem",
+                      fontSize: "0.875rem",
+                      backgroundColor: "#f3f4f6",
+                      border: "1px solid #d1d5db",
+                      color: "#374151",
+                    }}
+                  >
                     <FontAwesomeIcon icon={faCamera} /> Upload Photo
                   </button>
                 </div>
               </div>
 
               <div className="owner-modal-body modal-form-grid">
-
                 <div className="password-row">
                   <div>
                     <label className="auth-label">Full Name</label>
-                    <input className="auth-input" required value={studentForm.name} onChange={e => setStudentForm({...studentForm, name: e.target.value})} placeholder="e.g. John Doe" />
+                    <input
+                      className="auth-input"
+                      required
+                      value={studentForm.name}
+                      onChange={(e) =>
+                        setStudentForm({ ...studentForm, name: e.target.value })
+                      }
+                      placeholder="e.g. John Doe"
+                    />
                   </div>
                   <div>
                     <label className="auth-label">Roll Number</label>
@@ -676,7 +1089,10 @@ export default function StudentManagement() {
                       required
                       value={studentForm.rollNo}
                       onChange={(e) =>
-                        setStudentForm({ ...studentForm, rollNo: e.target.value })
+                        setStudentForm({
+                          ...studentForm,
+                          rollNo: e.target.value,
+                        })
                       }
                       placeholder="e.g. STD-001"
                     />
@@ -686,30 +1102,139 @@ export default function StudentManagement() {
                 <div className="password-row">
                   <div>
                     <label className="auth-label">Primary Email</label>
-                    <input type="email" className="auth-input" value={studentForm.recoveryEmail} onChange={e => setStudentForm({...studentForm, recoveryEmail: e.target.value})} placeholder="parent@gmail.com" />
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: "0.5rem",
+                        alignItems: "center",
+                      }}
+                    >
+                      <input
+                        type="email"
+                        className="auth-input"
+                        value={studentForm.recoveryEmail}
+                        onChange={(e) =>
+                          setStudentForm({
+                            ...studentForm,
+                            recoveryEmail: e.target.value,
+                          })
+                        }
+                        placeholder="parent@gmail.com"
+                      />
+                      {studentForm.id === 0 && (
+                        <button
+                          type="button"
+                          className="btn"
+                          onClick={handleSendOtp}
+                          disabled={
+                            isSendingOtp ||
+                            !studentForm.recoveryEmail.trim() ||
+                            isSaving
+                          }
+                          style={{
+                            background: "#fff",
+                            border: "1px solid #d1d5db",
+                            whiteSpace: "nowrap",
+                            height: "40px",
+                          }}
+                        >
+                          {isSendingOtp ? "Sending..." : "Send OTP"}
+                        </button>
+                      )}
+                    </div>
                   </div>
+                  {studentForm.id === 0 && studentForm.recoveryEmail.trim() && (
+                    <div>
+                      <label className="auth-label">Email OTP *</label>
+                      <input
+                        className="auth-input"
+                        value={studentForm.otp}
+                        onChange={(e) =>
+                          setStudentForm({
+                            ...studentForm,
+                            otp: e.target.value,
+                          })
+                        }
+                        placeholder="Enter 6-digit OTP"
+                        maxLength={6}
+                        required
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div className="password-row">
                   <div>
                     <label className="auth-label">Grade / Class Level</label>
-                    <input className="auth-input" required value={studentForm.grade} onChange={e => setStudentForm({...studentForm, grade: e.target.value})} placeholder="e.g. 10th Grade" />
+                    <input
+                      className="auth-input"
+                      required
+                      value={studentForm.grade}
+                      onChange={(e) =>
+                        setStudentForm({
+                          ...studentForm,
+                          grade: e.target.value,
+                        })
+                      }
+                      placeholder="e.g. 10th Grade"
+                    />
                   </div>
                   <div>
-                    <label className="auth-label">Temporary Password {studentForm.id !== 0 && "(Optional)"}</label>
-                    <div className="input-with-icon has-right" style={{ margin: 0 }}>
-                      <input type={showPassword ? "text" : "password"} className="auth-input" required={studentForm.id === 0} value={studentForm.password} onChange={e => setStudentForm({...studentForm, password: e.target.value})} placeholder="••••••••" style={{ paddingLeft: '1rem' }} />
-                      <button type="button" className="input-right-icon" onClick={() => setShowPassword(!showPassword)}>
-                        <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+                    <label className="auth-label">
+                      Temporary Password {studentForm.id !== 0 && "(Optional)"}
+                    </label>
+                    <div
+                      className="input-with-icon has-right"
+                      style={{ margin: 0 }}
+                    >
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        className="auth-input"
+                        required={studentForm.id === 0}
+                        value={studentForm.password}
+                        onChange={(e) =>
+                          setStudentForm({
+                            ...studentForm,
+                            password: e.target.value,
+                          })
+                        }
+                        placeholder="••••••••"
+                        style={{ paddingLeft: "1rem" }}
+                      />
+                      <button
+                        type="button"
+                        className="input-right-icon"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        <FontAwesomeIcon
+                          icon={showPassword ? faEyeSlash : faEye}
+                        />
                       </button>
                     </div>
                   </div>
                 </div>
-
               </div>
               <div className="owner-modal-footer">
-                <button type="button" className="btn" onClick={() => setIsStudentModalOpen(false)} style={{ background: 'white', border: '1px solid #d1d5db' }}>Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={isSaving} style={{ backgroundColor: '#1e3a8a' }}>{isSaving ? "Saving..." : studentForm.id === 0 ? "Register Student" : "Save Changes"}</button>
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => setIsStudentModalOpen(false)}
+                  style={{ background: "white", border: "1px solid #d1d5db" }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={isSaving}
+                  style={{ backgroundColor: "#1e3a8a" }}
+                >
+                  {isSaving
+                    ? "Saving..."
+                    : studentForm.id === 0
+                      ? "Register Student"
+                      : "Save Changes"}
+                </button>
               </div>
             </form>
           </div>
@@ -719,49 +1244,195 @@ export default function StudentManagement() {
       {/* --- MODAL: GROUP MANAGEMENT --- */}
       {isGroupModalOpen && (
         <div className="owner-modal-overlay">
-          <div className="owner-modal" style={{ width: '550px' }}>
-            <div className="owner-modal-header" style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <h3 style={{ margin: 0 }}>{groupForm.id === 0 ? "Create Student Group" : "Manage Group"}</h3>
-              <button onClick={() => setIsGroupModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><FontAwesomeIcon icon={faTimes} size="lg" color="#6b7280" /></button>
+          <div className="owner-modal" style={{ width: "550px" }}>
+            <div
+              className="owner-modal-header"
+              style={{ display: "flex", justifyContent: "space-between" }}
+            >
+              <h3 style={{ margin: 0 }}>
+                {groupForm.id === 0 ? "Create Student Group" : "Manage Group"}
+              </h3>
+              <button
+                onClick={() => setIsGroupModalOpen(false)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                <FontAwesomeIcon icon={faTimes} size="lg" color="#6b7280" />
+              </button>
             </div>
-            
+
             <form onSubmit={handleSaveGroup}>
-              <div className="owner-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', background: '#f9fafb' }}>
-                
-                <div style={{ background: 'white', padding: '1rem', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+              <div
+                className="owner-modal-body"
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "1.5rem",
+                  background: "#f9fafb",
+                }}
+              >
+                <div
+                  style={{
+                    background: "white",
+                    padding: "1rem",
+                    borderRadius: "8px",
+                    border: "1px solid #e5e7eb",
+                  }}
+                >
                   <label className="auth-label">Group Name</label>
-                  <input className="auth-input" required value={groupForm.name} onChange={e => setGroupForm({...groupForm, name: e.target.value})} placeholder="e.g. Science Batch A" />
+                  <input
+                    className="auth-input"
+                    required
+                    value={groupForm.name}
+                    onChange={(e) =>
+                      setGroupForm({ ...groupForm, name: e.target.value })
+                    }
+                    placeholder="e.g. Science Batch A"
+                  />
                 </div>
 
                 {/* Add/Remove Students from Group */}
-                <div style={{ background: 'white', padding: '1rem', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-                    <label className="auth-label" style={{ display: 'block', marginBottom: '0.5rem' }}>
-                      Select Students for Group ({groupForm.studentProfileIds.length} Selected)
-                    </label>
-                    <div style={{ maxHeight: '250px', overflowY: 'auto', border: '1px solid #e5e7eb', borderRadius: '8px' }}>
-                      {students.map(student => (
-                        <label key={student.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.6rem 1rem', borderBottom: '1px solid #f3f4f6', cursor: 'pointer', margin: 0, transition: 'background 0.2s' }} className="hover:bg-gray-50">
-                          <input type="checkbox" checked={groupForm.studentProfileIds.includes(student.studentProfileId)} onChange={() => toggleGroupStudent(student.studentProfileId)} />
-                          <img src={student.profilePicture?.publicUrl || "/dummy/teacher-dummy-profile-picture.png"} alt="Pfp" style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} />
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: '0.85rem', fontWeight: '600', color: '#111827' }}>{student.name}</div>
-                            <div style={{ fontSize: '0.75rem', color: '#6b7280', fontFamily: 'monospace' }}>{student.rollNo}</div>
+                <div
+                  style={{
+                    background: "white",
+                    padding: "1rem",
+                    borderRadius: "8px",
+                    border: "1px solid #e5e7eb",
+                  }}
+                >
+                  <label
+                    className="auth-label"
+                    style={{ display: "block", marginBottom: "0.5rem" }}
+                  >
+                    Select Students for Group (
+                    {groupForm.studentProfileIds.length} Selected)
+                  </label>
+                  <div
+                    style={{
+                      maxHeight: "250px",
+                      overflowY: "auto",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "8px",
+                    }}
+                  >
+                    {students.map((student) => (
+                      <label
+                        key={student.id}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.75rem",
+                          padding: "0.6rem 1rem",
+                          borderBottom: "1px solid #f3f4f6",
+                          cursor: "pointer",
+                          margin: 0,
+                          transition: "background 0.2s",
+                        }}
+                        className="hover:bg-gray-50"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={groupForm.studentProfileIds.includes(
+                            student.studentProfileId,
+                          )}
+                          onChange={() =>
+                            toggleGroupStudent(student.studentProfileId)
+                          }
+                        />
+                        <img
+                          src={
+                            student.profilePicture?.publicUrl ||
+                            "/dummy/teacher-dummy-profile-picture.png"
+                          }
+                          alt="Pfp"
+                          style={{
+                            width: "32px",
+                            height: "32px",
+                            borderRadius: "50%",
+                            objectFit: "cover",
+                          }}
+                        />
+                        <div style={{ flex: 1 }}>
+                          <div
+                            style={{
+                              fontSize: "0.85rem",
+                              fontWeight: "600",
+                              color: "#111827",
+                            }}
+                          >
+                            {student.name}
                           </div>
-                        </label>
-                      ))}
-                    </div>
+                          <div
+                            style={{
+                              fontSize: "0.75rem",
+                              color: "#6b7280",
+                              fontFamily: "monospace",
+                            }}
+                          >
+                            {student.rollNo}
+                          </div>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
                 </div>
-
               </div>
               <div className="owner-modal-footer">
-                <button type="button" className="btn" onClick={() => setIsGroupModalOpen(false)} style={{ background: 'white', border: '1px solid #d1d5db' }}>Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={isSaving} style={{ backgroundColor: '#1e3a8a' }}>{isSaving ? "Saving..." : groupForm.id === 0 ? "Create Group" : "Save Group"}</button>
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => setIsGroupModalOpen(false)}
+                  style={{ background: "white", border: "1px solid #d1d5db" }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={isSaving}
+                  style={{ backgroundColor: "#1e3a8a" }}
+                >
+                  {isSaving
+                    ? "Saving..."
+                    : groupForm.id === 0
+                      ? "Create Group"
+                      : "Save Group"}
+                </button>
               </div>
             </form>
           </div>
         </div>
       )}
 
+      <ConfirmActionModal
+        isOpen={pendingDeleteAction !== null}
+        title={
+          pendingDeleteAction?.type === "student"
+            ? "Delete Student"
+            : "Delete Group"
+        }
+        message={
+          pendingDeleteAction?.type === "student" ? (
+            <>
+              Are you sure you want to remove this student? This cannot be
+              undone.
+            </>
+          ) : (
+            <>Delete this group? Students will remain in the directory.</>
+          )
+        }
+        confirmLabel={
+          pendingDeleteAction?.type === "student"
+            ? "Delete Student"
+            : "Delete Group"
+        }
+        onConfirm={handleDeleteSelected}
+        onCancel={() => setPendingDeleteAction(null)}
+        isProcessing={isSaving}
+      />
     </div>
   );
 }

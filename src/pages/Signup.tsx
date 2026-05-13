@@ -15,6 +15,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import AuthSidebar from "../components/AuthSidebar";
 import { authService } from "../services/auth.service";
+import { toastService } from "../services/toast.service";
 import { OtpType, UserRole } from "../types";
 
 export default function Signup(): React.JSX.Element {
@@ -46,7 +47,7 @@ export default function Signup(): React.JSX.Element {
 
   const [profilePicture, setProfilePicture] = useState<File | null>(null);
   const [profilePreview, setProfilePreview] = useState<string | null>(
-    rolePlaceholder(UserRole.INSTITUTION_OWNER)
+    rolePlaceholder(UserRole.INSTITUTION_OWNER),
   );
   const [selectedRole] = useState<UserRole>(UserRole.INSTITUTION_OWNER);
 
@@ -56,8 +57,6 @@ export default function Signup(): React.JSX.Element {
 
   // Loading & Error States
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (profilePicture) {
@@ -89,8 +88,6 @@ export default function Signup(): React.JSX.Element {
     if (!canSubmitDetails) return;
 
     setIsLoading(true);
-    setError(null);
-    setSuccessMessage(null);
 
     try {
       await authService.sendOtp({
@@ -98,14 +95,13 @@ export default function Signup(): React.JSX.Element {
         type: OtpType.SIGNUP,
       });
 
-      setSuccessMessage(`Verification code sent to ${email}`);
+      toastService.success(`Verification code sent to ${email}`);
       setTimeout(() => {
         setStep(2);
-        setSuccessMessage(null);
       }, 1500);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to send verification code"
+      toastService.error(
+        err instanceof Error ? err.message : "Failed to send verification code",
       );
     } finally {
       setIsLoading(false);
@@ -116,13 +112,11 @@ export default function Signup(): React.JSX.Element {
     e.preventDefault();
     const code = otp.join("");
     if (code.length < 6) {
-      setError("Please enter the complete 6-digit code.");
+      toastService.error("Please enter the complete 6-digit code.");
       return;
     }
 
     setIsLoading(true);
-    setError(null);
-    setSuccessMessage(null);
 
     try {
       const response = await authService.signup(
@@ -132,17 +126,19 @@ export default function Signup(): React.JSX.Element {
           password,
           otp: code,
         },
-        profilePicture || undefined
+        profilePicture || undefined,
       );
 
-      setSuccessMessage("Account created successfully!");
+      toastService.success("Account created successfully!");
 
       // Redirect to Create Institution Page after a short delay
       setTimeout(() => {
         navigate("/create-institution");
       }, 1000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create account");
+      toastService.error(
+        err instanceof Error ? err.message : "Failed to create account",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -159,7 +155,7 @@ export default function Signup(): React.JSX.Element {
 
   const handleOtpKeyDown = (
     index: number,
-    e: React.KeyboardEvent<HTMLInputElement>
+    e: React.KeyboardEvent<HTMLInputElement>,
   ) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       otpRefs.current[index - 1]?.focus();
@@ -280,40 +276,6 @@ export default function Signup(): React.JSX.Element {
               </div>
 
               <div className="auth-main">
-                {/* Error Message */}
-                {error && (
-                  <div
-                    style={{
-                      padding: "0.75rem 1rem",
-                      marginBottom: "1rem",
-                      backgroundColor: "#fee",
-                      border: "1px solid #fcc",
-                      borderRadius: "0.5rem",
-                      color: "#c33",
-                      fontSize: "0.875rem",
-                    }}
-                  >
-                    {error}
-                  </div>
-                )}
-
-                {/* Success Message */}
-                {successMessage && (
-                  <div
-                    style={{
-                      padding: "0.75rem 1rem",
-                      marginBottom: "1rem",
-                      backgroundColor: "#efe",
-                      border: "1px solid #cfc",
-                      borderRadius: "0.5rem",
-                      color: "#383",
-                      fontSize: "0.875rem",
-                    }}
-                  >
-                    {successMessage}
-                  </div>
-                )}
-
                 <form onSubmit={onDetailsSubmit} className="auth-form">
                   {/* Name */}
                   <label className="auth-label" htmlFor="name">
@@ -476,40 +438,6 @@ export default function Signup(): React.JSX.Element {
                 <strong>{email}</strong>
               </p>
 
-              {/* Error Message */}
-              {error && (
-                <div
-                  style={{
-                    padding: "0.75rem 1rem",
-                    marginBottom: "1rem",
-                    backgroundColor: "#fee",
-                    border: "1px solid #fcc",
-                    borderRadius: "0.5rem",
-                    color: "#c33",
-                    fontSize: "0.875rem",
-                  }}
-                >
-                  {error}
-                </div>
-              )}
-
-              {/* Success Message */}
-              {successMessage && (
-                <div
-                  style={{
-                    padding: "0.75rem 1rem",
-                    marginBottom: "1rem",
-                    backgroundColor: "#efe",
-                    border: "1px solid #cfc",
-                    borderRadius: "0.5rem",
-                    color: "#383",
-                    fontSize: "0.875rem",
-                  }}
-                >
-                  {successMessage}
-                </div>
-              )}
-
               <form onSubmit={onVerifySubmit} className="auth-form">
                 <div className="otp-container" onPaste={handlePaste}>
                   {otp.map((digit, index) => (
@@ -546,7 +474,6 @@ export default function Signup(): React.JSX.Element {
                 <button
                   onClick={() => {
                     setStep(1);
-                    setError(null);
                     setOtp(new Array(6).fill(""));
                   }}
                   className="link"

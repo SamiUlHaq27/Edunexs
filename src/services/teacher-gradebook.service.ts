@@ -89,6 +89,10 @@ export interface UpdateTeacherGradeDto {
   feedback?: string;
 }
 
+export interface DeleteTeacherGradeDto {
+  gradeId: number;
+}
+
 class TeacherGradebookService {
   private readonly BASE_PATH = "/v1/assessment/teacher";
 
@@ -130,6 +134,14 @@ class TeacherGradebookService {
   async updateGrade(data: UpdateTeacherGradeDto) {
     const response = await apiClient.post(
       `${this.BASE_PATH}/grade/update`,
+      data,
+    );
+    return response.data;
+  }
+
+  async deleteGrade(data: DeleteTeacherGradeDto) {
+    const response = await apiClient.post(
+      `${this.BASE_PATH}/grade/delete`,
       data,
     );
     return response.data;

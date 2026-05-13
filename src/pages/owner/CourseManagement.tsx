@@ -15,6 +15,7 @@ import {
   faTimes,
 } from "@fortawesome/free-solid-svg-icons";
 import { courseService, institutionService } from "../../services";
+import { toastService } from "../../services/toast.service";
 import type { Course } from "../../services/course.service";
 import type { Institution } from "../../types";
 import "../../styles/owner.css";
@@ -103,6 +104,7 @@ export default function CourseManagement(): React.JSX.Element {
           err?.message ||
           "Failed to load course management data";
         setError(errorMessage);
+        toastService.error(errorMessage);
         console.error("Error loading course management data:", err);
       } finally {
         setIsLoading(false);
@@ -278,9 +280,15 @@ export default function CourseManagement(): React.JSX.Element {
     const rect = (e.currentTarget as HTMLButtonElement).getBoundingClientRect();
     const menuWidth = 170;
     const menuHeight = 92;
-    const left = Math.max(8, Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - 8));
+    const left = Math.max(
+      8,
+      Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - 8),
+    );
     const spaceBelow = window.innerHeight - rect.bottom;
-    const top = spaceBelow >= menuHeight ? rect.bottom + 8 : Math.max(8, rect.top - menuHeight - 8);
+    const top =
+      spaceBelow >= menuHeight
+        ? rect.bottom + 8
+        : Math.max(8, rect.top - menuHeight - 8);
 
     setMenuPosition({ top, left });
     setOpenMenuId(courseId);

@@ -11,7 +11,9 @@ import {
   faUserGraduate,
   faCalendarAlt,
 } from "@fortawesome/free-solid-svg-icons";
+import ConfirmActionModal from "../../components/ConfirmActionModal";
 import { teacherQuizService } from "../../services";
+import { toastService } from "../../services/toast.service";
 import type {
   CreateTeacherQuizDto,
   QuizAttempt,
@@ -36,6 +38,8 @@ const buildEmptyQuestion = (id: number): QuestionForm => ({
   correctOptionIndex: 0,
 });
 
+const toUtcISOString = (value: string) => new Date(value).toISOString();
+
 export default function TeacherQuizzes({ offeringId }: TeacherQuizzesProps) {
   const [view, setView] = useState<"list" | "create" | "submissions">("list");
   const [isLoading, setIsLoading] = useState(false);
@@ -45,6 +49,8 @@ export default function TeacherQuizzes({ offeringId }: TeacherQuizzesProps) {
   const [quizzes, setQuizzes] = useState<TeacherQuiz[]>([]);
   const [selectedQuiz, setSelectedQuiz] = useState<TeacherQuiz | null>(null);
   const [attempts, setAttempts] = useState<QuizAttempt[]>([]);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [quizToDelete, setQuizToDelete] = useState<TeacherQuiz | null>(null);
 
   const [title, setTitle] = useState("");
   const [startsAt, setStartsAt] = useState("");
@@ -108,6 +114,30 @@ export default function TeacherQuizzes({ offeringId }: TeacherQuizzesProps) {
     }
   };
 
+  const requestDeleteQuiz = (quiz: TeacherQuiz) => {
+    setQuizToDelete(quiz);
+    setIsConfirmOpen(true);
+  };
+
+  const handleDeleteQuiz = async () => {
+    if (!quizToDelete) return;
+
+    try {
+      setIsSubmitting(true);
+      setErrorMessage(null);
+      await teacherQuizService.deleteQuiz(quizToDelete.id);
+      toastService.success("Quiz and associated grades deleted successfully.");
+      setIsConfirmOpen(false);
+      setQuizToDelete(null);
+      await loadQuizzes();
+    } catch (error) {
+      console.error("Failed to delete quiz", error);
+      toastService.error("Failed to delete quiz.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const addQuestion = () => {
     setQuestions((prev) => [...prev, buildEmptyQuestion(Date.now())]);
   };
@@ -157,8 +187,8 @@ export default function TeacherQuizzes({ offeringId }: TeacherQuizzesProps) {
     const payload: CreateTeacherQuizDto = {
       offeringId,
       title: title.trim(),
-      startsAt,
-      endsAt,
+      startsAt: toUtcISOString(startsAt),
+      endsAt: toUtcISOString(endsAt),
       maxAttempts,
       questions: sanitizedQuestions,
     };
@@ -620,6 +650,21 @@ export default function TeacherQuizzes({ offeringId }: TeacherQuizzesProps) {
                   >
                     <FontAwesomeIcon icon={faEye} /> View Submissions
                   </button>
+                  <button
+                    className="btn"
+                    onClick={() => requestDeleteQuiz(quiz)}
+                    style={{
+                      borderRadius: "10px",
+                      padding: "0.6rem 1.1rem",
+                      marginLeft: "0.6rem",
+                      border: "1px solid #fecaca",
+                      color: "#b91c1c",
+                      background: "#fff",
+                    }}
+                    title="Delete quiz and all associated grades"
+                  >
+                    <FontAwesomeIcon icon={faTrash} /> Delete Quiz
+                  </button>
                 </div>
               ))}
 
@@ -631,6 +676,25 @@ export default function TeacherQuizzes({ offeringId }: TeacherQuizzesProps) {
           </div>
         </div>
       )}
+
+      <ConfirmActionModal
+        isOpen={isConfirmOpen}
+        title="Delete quiz"
+        message={
+          <span>
+            Delete this quiz and all associated grades and attempts? This action
+            cannot be undone.
+          </span>
+        }
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        isProcessing={isSubmitting}
+        onConfirm={handleDeleteQuiz}
+        onCancel={() => {
+          setIsConfirmOpen(false);
+          setQuizToDelete(null);
+        }}
+      />
     </div>
   );
 }

@@ -35,6 +35,7 @@ import TeacherCourses from "./pages/teacher/TeacherCourses";
 
 // Student Pages
 import StudentLayout from "./pages/student/StudentLayout";
+import StudentDashboard from "./pages/student/StudentDashboard";
 import StudentCourses from "./pages/student/StudentCourses";
 import StudentQuizAttempt from "./pages/student/StudentQuizAttempt";
 import StudentAssignmentSubmit from "./pages/student/StudentAssignmentSubmit";
@@ -151,7 +152,7 @@ export default function App(): React.JSX.Element {
           }
         >
           <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard" element={<StudentCourses />} />
+          <Route path="dashboard" element={<StudentDashboard />} />
           <Route path="courses" element={<StudentCourses />} />
           {/* FIX: Path add kiya taaki sidebar se Fees click karne par StudentCourses load ho aur logout na ho */}
           <Route path="fees" element={<StudentCourses />} />

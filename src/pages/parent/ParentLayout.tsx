@@ -3,7 +3,8 @@ import { Outlet, NavLink } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faSignOutAlt,
-  faBars,
+  faChevronLeft,
+  faChevronRight,
   faUserTie,
   faChild,
 } from "@fortawesome/free-solid-svg-icons";
@@ -135,29 +136,36 @@ export default function ParentLayout(): React.JSX.Element {
     );
   };
 
+  // Close sidebar on mobile when navigation occurs
+  const handleNavClick = () => {
+    // Only close sidebar on mobile (< 768px)
+    if (window.matchMedia("(max-width: 767.98px)").matches) {
+      setIsMinimized(true);
+    }
+  };
+
   return (
     <div
       className={`dashboard-layout ${isMinimized ? "sidebar-minimized" : ""}`}
     >
-      <aside className="dashboard-sidebar" style={{ paddingTop: "1rem" }}>
+      {/* Sidebar overlay for mobile */}
+      <div
+        className="sidebar-overlay"
+        onClick={() => setIsMinimized(true)}
+        aria-hidden="true"
+      />
+      <aside className="dashboard-sidebar">
         <div className="sidebar-header">
-          <img
-            src={instProfile.logo}
-            alt="Logo"
-            className="sidebar-logo"
-            style={{
-              borderRadius: "50%",
-              objectFit: "cover",
-              background: "#fff",
-            }}
-          />
+          <img src={instProfile.logo} alt="Logo" className="sidebar-logo" />
         </div>
         <div className="sidebar-title-div">
           <button
             onClick={() => setIsMinimized(!isMinimized)}
             className="toggle-btn"
           >
-            <FontAwesomeIcon icon={faBars} />
+            <FontAwesomeIcon
+              icon={isMinimized ? faChevronRight : faChevronLeft}
+            />
           </button>
           <h1 className="dashboard-sidebar-title">Parent Portal</h1>
         </div>
@@ -194,7 +202,7 @@ export default function ParentLayout(): React.JSX.Element {
         </div>
 
         <div className="sidebar-footer">
-          <NavLink to="/logout" className="nav-item">
+          <NavLink to="/logout" className="nav-item" onClick={handleNavClick}>
             <FontAwesomeIcon icon={faSignOutAlt} className="nav-icon" />
             <span className="nav-text">Logout</span>
           </NavLink>
@@ -203,6 +211,17 @@ export default function ParentLayout(): React.JSX.Element {
 
       <main className="dashboard-main">
         <header className="main-header">
+          <button
+            type="button"
+            onClick={() => setIsMinimized(!isMinimized)}
+            className="dashboard-mobile-toggle"
+            aria-label="Toggle sidebar"
+            aria-expanded={isMinimized}
+          >
+            <FontAwesomeIcon
+              icon={isMinimized ? faChevronRight : faChevronLeft}
+            />
+          </button>
           <div className="header-greeting">
             <h2>{instProfile.name}</h2>
             <p>Parent Dashboard</p>
